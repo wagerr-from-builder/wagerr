@@ -7,6 +7,7 @@
 #include <rpc/blockchain.h>
 
 #include <amount.h>
+#include <base58.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -43,6 +44,7 @@
 #include <llmq/chainlocks.h>
 #include <llmq/instantsend.h>
 
+#include <assert.h>
 #include <stdint.h>
 
 #include <univalue.h>
