@@ -50,6 +50,7 @@ LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
 LIBBITCOINCONSENSUS=libdashconsensus.la
+LIBBITCOINCORE=libdashcore.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -91,6 +92,7 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_ZMQ)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
+lib_LTLIBRARIES = $(LIBBITCOINCORE) $(LIBBITCOINCONSENSUS)
 noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
@@ -463,6 +465,31 @@ libbitcoin_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
+libdashcore_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libdashcore_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+
+libdashcore_a_SOURCES = \
+  wagerrlib/wagerrlib.cpp \
+  script/sigcommon.cpp \
+  hash.cpp \
+  hash.h \
+  key.cpp \
+  key.h \
+  primitives/transaction.cpp \
+  primitives/transaction.h \
+  pubkey.cpp \
+  pubkey.h \
+  random.cpp \
+  random.h \
+  support/cleanse.cpp \
+  support/cleanse.h \
+  uint256.cpp \
+  uint256.h \
+  util/strencodings.cpp \
+  util/strencodings.h \
+  util/time.cpp \
+  util/time.h
+
 if ENABLE_WALLET
 libbitcoin_server_a_SOURCES += wallet/init.cpp
 endif
@@ -636,6 +663,7 @@ libbitcoin_consensus_a_SOURCES = \
   script/script.h \
   script/script_error.cpp \
   script/script_error.h \
+  script/sigcommon.cpp \
   serialize.h \
   span.h \
   streams.h \
@@ -841,6 +869,22 @@ dash_wallet_LDADD = \
   $(LIBUNIVALUE)
 
 dash_wallet_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(ZMQ_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+#
+
+# dashcore library #
+if BUILD_BITCOIN_LIBS
+libdashcore_la_SOURCES = $(libdashcore_a_SOURCES) $(crypto_libdash_crypto_a_SOURCES)
+
+if GLIBC_BACK_COMPAT
+  libdashcore_la_SOURCES += compat/glibc_compat.cpp
+endif
+
+libdashcore_la_LDFLAGS = $(AM_LDFLAGS) $(SSL_LIBS) $(CRYPTO_LIBS) $(BOOST_LIBS) -no-undefined $(RELDFLAGS)
+libdashcore_la_LIBADD = $(LIBSECP256K1)
+libdashcore_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(BOOST_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libdashcore_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+
+endif
 #
 
 # dashconsensus library #
