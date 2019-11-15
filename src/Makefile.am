@@ -155,6 +155,7 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/tokengroups.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
@@ -342,6 +343,7 @@ BITCOIN_CORE_H = \
   wallet/wallettool.h \
   wallet/walletutil.h \
   wallet/coinselection.h \
+  wallet/tokengroupwallet.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqnotificationinterface.h \
@@ -373,6 +375,7 @@ libbitcoin_server_a_SOURCES = \
   coinjoin/coinjoin.cpp \
   coinjoin/options.cpp \
   coinjoin/server.cpp \
+  consensus/tokengroups.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
@@ -532,6 +535,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
+  wallet/tokengroupwallet.cpp \
   wallet/salvage.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/wallet.cpp \
@@ -685,6 +689,7 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
   bip39.cpp \
+  wagerraddrenc.cpp \
   bloom.cpp \
   chainparams.cpp \
   coins.cpp \
