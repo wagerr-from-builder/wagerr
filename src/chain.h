@@ -178,6 +178,9 @@ public:
         BLOCK_STAKE_ENTROPY = (1 << 1),  // entropy bit for stake modifier
         BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
     };
+    uint64_t nStakeModifier;             // hash modifier for proof-of-stake
+    uint256 nStakeModifierV2;
+    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
 
     //! block header
     int32_t nVersion{0};
@@ -193,6 +196,10 @@ public:
     unsigned int nTimeMax{0};
 
     unsigned int nFlags{0};
+
+        nStakeModifier = 0;
+        nStakeModifierV2 = uint256();
+        nStakeModifierChecksum = 0;
 
     CBlockIndex()
     {
@@ -292,6 +299,28 @@ public:
         nFlags |= BLOCK_PROOF_OF_STAKE;
     }
 
+    unsigned int GetStakeEntropyBit() const;
+
+    bool SetStakeEntropyBit(unsigned int nEntropyBit)
+    {
+        if (nEntropyBit > 1)
+            return false;
+        nFlags |= (nEntropyBit ? BLOCK_STAKE_ENTROPY : 0);
+        return true;
+    }
+
+    bool GeneratedStakeModifier() const
+    {
+        return (nFlags & BLOCK_STAKE_MODIFIER);
+    }
+
+    void SetStakeModifier(uint64_t nModifier, bool fGeneratedStakeModifier)
+    {
+        nStakeModifier = nModifier;
+        if (fGeneratedStakeModifier)
+            nFlags |= BLOCK_STAKE_MODIFIER;
+    }
+
     std::string ToString() const
     {
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
@@ -378,6 +407,15 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+
+        READWRITE(VARINT(obj.nFlags));
+        if(this->nVersion > 7) {
+        // v1/v2 modifier selection.
+        if (this->nVersion > 10) {
+            READWRITE(nStakeModifierV2);
+        } else {
+            READWRITE(nStakeModifier);
+        }
     }
 
     uint256 GetBlockHash() const
