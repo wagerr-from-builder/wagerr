@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -75,6 +76,22 @@ public:
     bool HaveWatchOnly() const override;
 
     virtual bool GetHDChain(CHDChain& hdChainRet) const;
+
+    class CheckTxDestination : public boost::static_visitor<bool>
+    {
+        const CKeyStore *keystore;
+
+    public:
+        CheckTxDestination(const CKeyStore *keystore) : keystore(keystore) {}
+        bool operator()(const CKeyID &id) const { return keystore->HaveKey(id); }
+        bool operator()(const CScriptID &id) const { return keystore->HaveCScript(id); }
+        bool operator()(const CNoDestination &) const { return false; }
+    };
+
+    virtual bool HaveTxDestination(const CTxDestination &addr)
+    {
+        return boost::apply_visitor(CheckTxDestination(this), addr);
+    }
 };
 
 #endif // BITCOIN_KEYSTORE_H

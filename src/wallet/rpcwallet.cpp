@@ -1,27 +1,41 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2019-2021 The ION Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
+#include <betting/bet.h>
+#include "betting/bet_common.h"
+#include "betting/bet_db.h"
+#include "betting/bet_tx.h"
 #include <chain.h>
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <dstencode.h>
 #include <httpserver.h>
+#include <masternode/masternode-sync.h>
 #include <keepass.h>
 #include <net.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
+#include <pos/kernel.h>
+#include <pos/staker.h>
+#include <pos/staking-manager.h>
+#include <reward-manager.h>
 #include <rpc/mining.h>
 #include <rpc/rawtransaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <timedata.h>
+#include <transactionrecord.h>
 #include <txmempool.h>
+#include <tokens/tokengroupwallet.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <interfaces/wallet.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
@@ -92,6 +106,16 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
     }
 }
 
+void EnsureEnoughWagerr(CWallet * const pwallet, CAmount total)
+{
+
+    CAmount nBalance = pwallet->GetBalance();
+
+    if (total > nBalance) {
+         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Error: Not enough funds in wallet or account");
+    }
+}
+
 void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
     AssertLockHeld(cs_main); // for mapBlockIndex
@@ -148,13 +172,13 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "getnewaddress ( \"label\" )\n"
-            "\nReturns a new Dash address for receiving payments.\n"
+            "\nReturns a new Wagerr address for receiving payments.\n"
             "If 'label' is specified, it is added to the address book \n"
             "so payments received with the address will be associated with 'label'.\n"
             "\nArguments:\n"
             "1. \"label\"        (string, optional) The label name for the address to be linked to. If not provided, the default label \"\" is used. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name.\n"
             "\nResult:\n"
-            "\"address\"    (string) The new dash address\n"
+            "\"address\"    (string) The new wagerr address\n"
             "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleRpc("getnewaddress", "")
@@ -204,19 +228,19 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("getaccountaddress (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("getaccountaddress (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccountaddress is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccountaddress is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaccountaddress \"account\"\n"
-            "\n\nDEPRECATED. Returns the current Dash address for receiving payments to this account.\n"
+            "\n\nDEPRECATED. Returns the current Wagerr address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
-            "\"address\"          (string) The account dash address\n"
+            "\"address\"          (string) The account wagerr address\n"
             "\nExamples:\n"
             + HelpExampleCli("getaccountaddress", "")
             + HelpExampleCli("getaccountaddress", "\"\"")
@@ -248,7 +272,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 0)
         throw std::runtime_error(
             "getrawchangeaddress\n"
-            "\nReturns a new Dash address, for receiving change.\n"
+            "\nReturns a new Wagerr address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -287,9 +311,9 @@ UniValue setlabel(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "setaccount") {
         if (request.fHelp) {
-            throw std::runtime_error("setaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("setaccount (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "setaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "setaccount is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() != 2)
@@ -297,7 +321,7 @@ UniValue setlabel(const JSONRPCRequest& request)
             "setlabel \"address\" \"label\"\n"
             "\nSets the label associated with the given address.\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address to be associated with a label.\n"
+            "1. \"address\"         (string, required) The wagerr address to be associated with a label.\n"
             "2. \"label\"           (string, required) The label to assign to the address.\n"
             "\nExamples:\n"
             + HelpExampleCli("setlabel", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" \"tabby\"")
@@ -308,7 +332,7 @@ UniValue setlabel(const JSONRPCRequest& request)
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Wagerr address");
     }
 
     std::string old_label = pwallet->mapAddressBook[dest].name;
@@ -353,9 +377,9 @@ UniValue getaccount(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("getaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("getaccount (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccount is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() != 1)
@@ -363,7 +387,7 @@ UniValue getaccount(const JSONRPCRequest& request)
             "getaccount \"address\"\n"
             "\nDEPRECATED. Returns the account associated with the given address.\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address for account lookup.\n"
+            "1. \"address\"         (string, required) The wagerr address for account lookup.\n"
             "\nResult:\n"
             "\"accountname\"        (string) the account address\n"
             "\nExamples:\n"
@@ -375,7 +399,7 @@ UniValue getaccount(const JSONRPCRequest& request)
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Wagerr address");
     }
 
     std::string strAccount;
@@ -398,9 +422,9 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("getaddressbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("getaddressbyaccount (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaddressesbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaddressesbyaccount is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() != 1)
@@ -411,7 +435,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
             "1. \"account\"        (string, required) The account name.\n"
             "\nResult:\n"
             "[                     (json array of string)\n"
-            "  \"address\"         (string) a dash address associated with the given account\n"
+            "  \"address\"         (string) a wagerr address associated with the given account\n"
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
@@ -454,7 +478,7 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
         mapValue["DS"] = "1";
     }
 
-    // Parse Dash address
+    // Parse Wagerr address
     CScript scriptPubKey = GetScriptForDestination(address);
 
     // Create and send the transaction
@@ -464,6 +488,47 @@ static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &
     std::vector<CRecipient> vecSend;
     int nChangePosRet = -1;
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    CTransactionRef tx;
+    if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control)) {
+        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    CValidationState state;
+    if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, std::move(fromAccount), reservekey, g_connman.get(), state)) {
+        strError = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    return tx;
+}
+
+static CTransactionRef BurnWithData(CWallet * const pwallet, const CScript& data, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount)
+{
+    CAmount curBalance = pwallet->GetBalance();
+
+    // Check amount
+    if (nValue <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nValue > curBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    if (pwallet->GetBroadcastTransactions() && !g_connman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    }
+
+    if (coin_control.IsUsingCoinJoin()) {
+        mapValue["DS"] = "1";
+    }
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwallet);
+    CAmount nFeeRequired;
+    std::string strError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    CRecipient recipient = {data, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     CTransactionRef tx;
     if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control)) {
@@ -494,7 +559,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase(pwallet) +
             "\nArguments:\n"
-            "1. \"address\"            (string, required) The dash address to send to.\n"
+            "1. \"address\"            (string, required) The wagerr address to send to.\n"
             "2. \"amount\"             (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
             "3. \"comment\"            (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
@@ -502,7 +567,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             to which you're sending the transaction. This is not part of the \n"
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less amount of Dash than you enter in the amount field.\n"
+            "                             The recipient will receive less amount of Wagerr than you enter in the amount field.\n"
             "6. \"use_is\"             (bool, optional, default=false) Deprecated and ignored\n"
             "7. \"use_cj\"             (bool, optional, default=false) Use CoinJoin funds only\n"
             "8. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
@@ -599,7 +664,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             "[\n"
             "  [\n"
             "    [\n"
-            "      \"address\",            (string) The dash address\n"
+            "      \"address\",            (string) The wagerr address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
             "      \"label\"               (string, optional) The label\n"
             "    ]\n"
@@ -654,7 +719,7 @@ UniValue listaddressbalances(const JSONRPCRequest& request)
             "1. minamount               (numeric, optional, default=0) Minimum balance in " + CURRENCY_UNIT + " an address should have to be shown in the list\n"
             "\nResult:\n"
             "{\n"
-            "  \"address\": amount,       (string) The dash address and the amount in " + CURRENCY_UNIT + "\n"
+            "  \"address\": amount,       (string) The wagerr address and the amount in " + CURRENCY_UNIT + "\n"
             "  ,...\n"
             "}\n"
             "\nExamples:\n"
@@ -697,7 +762,7 @@ UniValue signmessage(const JSONRPCRequest& request)
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address to use for the private key.\n"
+            "1. \"address\"         (string, required) The wagerr address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -759,7 +824,7 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
             "getreceivedbyaddress \"address\" ( minconf addlocked )\n"
             "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address for transactions.\n"
+            "1. \"address\"         (string, required) The wagerr address for transactions.\n"
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. addlocked           (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "\nResult:\n"
@@ -781,10 +846,10 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Dash address
+    // Wagerr address
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Wagerr address");
     }
     CScript scriptPubKey = GetScriptForDestination(dest);
     if (!IsMine(*pwallet, scriptPubKey)) {
@@ -825,9 +890,9 @@ UniValue getreceivedbylabel(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "getreceivedbyaccount") {
         if (request.fHelp) {
-            throw std::runtime_error("getreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("getreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
@@ -909,7 +974,7 @@ UniValue getbalance(const JSONRPCRequest& request)
             "The server total may be different to the balance in the default \"\" account.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. This argument will be removed in V0.18. \n"
-            "                     To use this deprecated argument, start dashd with -deprecatedrpc=accounts.\n"
+            "                     To use this deprecated argument, start wagerrd with -deprecatedrpc=accounts.\n"
             "                     The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf           (numeric, optional) Only include transactions confirmed at least this many times.\n"
             "                     The default is 1 if an account is provided or 0 if no account is provided\n")
@@ -1000,6 +1065,35 @@ UniValue getunconfirmedbalance(const JSONRPCRequest &request)
     return ValueFromAmount(pwallet->GetUnconfirmedBalance());
 }
 
+UniValue getextendedbalance(const JSONRPCRequest &request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 0)
+        throw std::runtime_error(
+                "getextendedbalance\n"
+                "Returns extended balance information\n");
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("blocks", (int)chainActive.Height()));
+    obj.push_back(Pair("balance", ValueFromAmount(pwallet->GetBalance())));
+    obj.push_back(Pair("balance_unconfirmed", ValueFromAmount(pwallet->GetUnconfirmedBalance())));
+    obj.push_back(Pair("balance_immature", ValueFromAmount(pwallet->GetImmatureBalance())));
+    obj.push_back(Pair("watchonly_balance_unconfirmed", ValueFromAmount(pwallet->GetUnconfirmedWatchOnlyBalance())));
+    obj.push_back(Pair("watchonly_balance_immature", ValueFromAmount(pwallet->GetImmatureWatchOnlyBalance())));
+    obj.push_back(Pair("balance_unlocked", ValueFromAmount(pwallet->GetUnlockedBalance())));
+    obj.push_back(Pair("balance_locked", ValueFromAmount(pwallet->GetLockedBalance())));
+    obj.push_back(Pair("watchonly_balance_locked", ValueFromAmount(pwallet->GetLockedWatchOnlyBalance())));
+    obj.push_back(Pair("available_balance", ValueFromAmount(pwallet->GetAvailableBalance())));
+    return obj;
+}
 
 UniValue movecmd(const JSONRPCRequest& request)
 {
@@ -1012,9 +1106,9 @@ UniValue movecmd(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("move (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("move (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "move is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "move is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
@@ -1071,23 +1165,23 @@ UniValue sendfrom(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("sendfrom (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("sendfrom (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "sendfrom is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "sendfrom is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
             "sendfrom \"fromaccount\" \"toaddress\" amount ( minconf addlocked \"comment\" \"comment_to\" )\n"
-            "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a dash address."
+            "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a wagerr address."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
             "                       Specifying an account does not influence coin selection, but it does associate the newly created\n"
             "                       transaction with the account, so the account's balance computation and transaction history can reflect\n"
             "                       the spend.\n"
-            "2. \"toaddress\"         (string, required) The dash address to send funds to.\n"
+            "2. \"toaddress\"         (string, required) The wagerr address to send funds to.\n"
             "3. amount              (numeric or string, required) The amount in " + CURRENCY_UNIT + " (transaction fee is added on top).\n"
             "4. minconf             (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
             "5. addlocked         (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
@@ -1117,7 +1211,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     std::string strAccount = LabelFromValue(request.params[0]);
     CTxDestination dest = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Wagerr address");
     }
     CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
@@ -1160,13 +1254,13 @@ UniValue sendmany(const JSONRPCRequest& request)
         help_text = "sendmany \"\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_cj conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             "Note that the \"fromaccount\" argument has been removed in V0.17. To use this RPC with a \"fromaccount\" argument, restart\n"
-            "dashd with -deprecatedrpc=accounts\n"
+            "wagerrd with -deprecatedrpc=accounts\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             "1. \"dummy\"           (string, required) Must be set to \"\" for backwards compatibility.\n"
             "2. \"amounts\"               (string, required) A json object with addresses and amounts\n"
             "    {\n"
-            "      \"address\":amount     (numeric or string) The dash address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+            "      \"address\":amount     (numeric or string) The wagerr address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
@@ -1174,7 +1268,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "5. \"comment\"               (string, optional) A comment\n"
             "6. subtractfeefrom         (array, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less dashs than you enter in their corresponding amount field.\n"
+            "                           Those recipients will receive less wagerrs than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
             "    [\n"
             "      \"address\"          (string) Subtract fee from this address\n"
@@ -1205,7 +1299,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "1. \"fromaccount\"           (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
             "2. \"amounts\"               (string, required) A json object with addresses and amounts\n"
             "    {\n"
-            "      \"address\":amount     (numeric or string) The dash address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+            "      \"address\":amount     (numeric or string) The wagerr address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
@@ -1213,7 +1307,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "5. \"comment\"               (string, optional) A comment\n"
             "6. subtractfeefrom         (array, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
-            "                           Those recipients will receive less dashs than you enter in their corresponding amount field.\n"
+            "                           Those recipients will receive less wagerrs than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
             "    [\n"
             "      \"address\"          (string) Subtract fee from this address\n"
@@ -1299,7 +1393,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     for (const std::string& name_ : keys) {
         CTxDestination dest = DecodeDestination(name_);
         if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + name_);
         }
 
         if (destinations.count(dest)) {
@@ -1364,16 +1458,16 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     {
         std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"label\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
-            "Each key is a Dash address or hex-encoded public key.\n"
+            "Each key is a Wagerr address or hex-encoded public key.\n"
             "This functionality is only intended for use with non-watchonly addresses.\n"
             "See `importaddress` for watchonly p2sh address support.\n"
             "If 'label' is specified, assign address to that label.\n"
 
             "\nArguments:\n"
             "1. nrequired                      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\"                         (string, required) A json array of dash addresses or hex-encoded public keys\n"
+            "2. \"keys\"                         (string, required) A json array of wagerr addresses or hex-encoded public keys\n"
             "     [\n"
-            "       \"address\"                  (string) dash address or hex-encoded public key\n"
+            "       \"address\"                  (string) wagerr address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
             "3. \"label\"                        (string, optional) A label to assign the addresses to.\n"
@@ -1657,9 +1751,9 @@ UniValue listreceivedbylabel(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "listreceivedbyaccount") {
         if (request.fHelp) {
-            throw std::runtime_error("listreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("listreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() > 4)
@@ -1835,7 +1929,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n"
             "Note that the \"account\" argument and \"otheraccount\" return value have been removed in V0.17. To use this RPC with an \"account\" argument, restart\n"
-            "dashd with -deprecatedrpc=accounts\n"
+            "wagerrd with -deprecatedrpc=accounts\n"
             "\nArguments:\n"
             "1. \"label\"    (string, optional) If set, should be a valid label name to return only incoming transactions\n"
             "              with the specified label, or \"*\" to disable filtering and return all transactions.\n"
@@ -1845,7 +1939,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for \n"
+            "    \"address\":\"address\",    (string) The wagerr address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
             "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
             "                                                transaction between accounts, and not associated with an address,\n"
@@ -1900,7 +1994,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "  {\n"
             "    \"account\":\"accountname\",       (string) DEPRECATED. This field will be removed in V0.18. The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
-            "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for \n"
+            "    \"address\":\"address\",    (string) The wagerr address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
             "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
             "                                                transaction between accounts, and not associated with an address,\n"
@@ -2023,6 +2117,121 @@ UniValue listtransactions(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue listtransactionrecords(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+                "listtransactionrecords ( \"account\" count from includeWatchonly)\n"
+                "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+
+                "\nArguments:\n"
+                "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+                "                                     If \"\" is set, it will list transactions for the default account.\n"
+                "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+                "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+                "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+
+                "\nResult:\n"
+                "[\n"
+                "  {\n"
+                "    \"type\" : \"type\",                         (string) The output type.\n"
+                "    \"transactionid\" : \"hash\",                (string) The transaction hash in hex.\n"
+                "    \"outputindex\" : n,                       (numeric) The transaction output index.\n"
+                "    \"time\" : ttt,                            (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT).\n"
+                "    \"debit\" : x.xxx,                         (numeric) The transaction debit amount. This is negative and only available \n"
+                "                                                 for the 'send' category of transactions.\n"
+                "    \"credit\" : x.xxx,                        (numeric) The transaction debit amount. Available for the 'receive' category \n"
+                "                                                 of transactions.\n"
+                "    \"involvesWatchonly\" : true|false,        (boolean) Only returned if imported addresses were involved in transaction.\n"
+                "    \"depth\" : n,                             (numeric) The depth of the transaction in the blockchain.\n"
+                "    \"status\" : \"status\",                     (string) The transaction status.\n"
+                "    \"countsForBalance\" : true|false,         (boolean) Does the transaction count towards the available balance.\n"
+                "    \"matures_in\" : n,                        (numeric) The number of blocks until the transaction is mature.\n"
+                "    \"open_for\" : n,                          (numeric) The number of blocks that need to be mined before finalization.\n"
+                "    \"cur_num_blocks\" : n,                    (numeric) The current number of blocks.\n"
+                "    \"cur_num_ix_locks\" : n,                  (numeric) When to update transaction for ix locks.\n"
+                "  }\n"
+                "]\n"
+
+                "\nExamples:\n"
+                "\nList the most recent 10 transactions in the systems\n" +
+                HelpExampleCli("listtransactionrecords", "") +
+                "\nList the most recent 10 transactions for the tabby account\n" +
+                HelpExampleCli("listtransactionrecords", "\"tabby\"") +
+                "\nList transactions 100 to 120 from the tabby account\n" +
+                HelpExampleCli("listtransactionrecords", "\"tabby\" 20 100") +
+                "\nAs a json rpc call\n" +
+                HelpExampleRpc("listtransactionrecords", "\"tabby\", 20, 100"));
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    std::string strAccount = "*";
+    if (request.params.size() > 0)
+        strAccount = request.params[0].get_str();
+    int nCount = 10;
+    if (request.params.size() > 1)
+        nCount = request.params[1].get_int();
+    int nFrom = 0;
+    if (request.params.size() > 2)
+        nFrom = request.params[2].get_int();
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (request.params.size() > 3)
+        if (request.params[3].get_bool())
+            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    UniValue ret(UniValue::VARR);
+
+    const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
+
+    // iterate backwards until we have nCount items to return:
+    for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        CWalletTx* const pwtx = (*it).second.first;
+        if (pwtx != 0){}
+            ListTransactionRecords(wallet, pwtx->GetHash(), strAccount, 0, true, ret, filter);
+        CAccountingEntry* const pacentry = (*it).second.second;
+        if (pacentry != 0)
+            AcentryToJSON(*pacentry, strAccount, ret);
+
+        if ((int)ret.size() >= (nCount + nFrom)) break;
+    }
+    // ret is newest to oldest
+
+    if (nFrom > (int)ret.size())
+        nFrom = ret.size();
+    if ((nFrom + nCount) > (int)ret.size())
+        nCount = ret.size() - nFrom;
+
+    std::vector<UniValue> arrTmp = ret.getValues();
+
+    std::vector<UniValue>::iterator first = arrTmp.begin();
+    std::advance(first, nFrom);
+    std::vector<UniValue>::iterator last = arrTmp.begin();
+    std::advance(last, nFrom+nCount);
+
+    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
+    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+
+    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+
+    ret.clear();
+    ret.setArray();
+    ret.push_backV(arrTmp);
+
+    return ret;
+}
+
 UniValue listaccounts(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -2034,9 +2243,9 @@ UniValue listaccounts(const JSONRPCRequest& request)
 
     if (!IsDeprecatedRPCEnabled("accounts")) {
         if (request.fHelp) {
-            throw std::runtime_error("listaccounts (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+            throw std::runtime_error("listaccounts (Deprecated, will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts)");
         }
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listaccounts is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listaccounts is deprecated and will be removed in V0.18. To use this command, start wagerrd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() > 3)
@@ -2146,8 +2355,8 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"account\":\"accountname\",  (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account name associated with the transaction. Will be \"\" for the default account.\n"
-            "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for move transactions (category = move).\n"
+            "    \"account\":\"accountname\",  (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start wagerrd with -deprecatedrpc=accounts. The account name associated with the transaction. Will be \"\" for the default account.\n"
+            "    \"address\":\"address\",    (string) The wagerr address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",  (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
             "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
@@ -2297,8 +2506,8 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"account\" : \"accountname\",      (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account name involved in the transaction, can be \"\" for the default account.\n"
-            "      \"address\" : \"address\",          (string) The dash address involved in the transaction\n"
+            "      \"account\" : \"accountname\",      (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start wagerrd with -deprecatedrpc=accounts. The account name involved in the transaction, can be \"\" for the default account.\n"
+            "      \"address\" : \"address\",          (string) The wagerr address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,               (numeric) The amount in " + CURRENCY_UNIT + "\n"
             "      \"label\" : \"label\",              (string) A comment for the address/transaction, if any\n"
@@ -2502,20 +2711,20 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
         throw std::runtime_error(
-            "walletpassphrase \"passphrase\" timeout ( mixingonly )\n"
+            "walletpassphrase \"passphrase\" timeout ( stakingonly )\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending dashs\n"
+            "This is needed prior to performing transactions related to private keys such as sending wagerrs\n"
             "\nArguments:\n"
             "1. \"passphrase\"        (string, required) The wallet passphrase\n"
             "2. timeout             (numeric, required) The time to keep the decryption key in seconds; capped at 100000000 (~3 years).\n"
-            "3. mixingonly          (boolean, optional, default=false) If is true sending functions are disabled.\n"
+            "3. stakingonly         (boolean, optional, default=false) If is true sending functions are disabled.\n"
             "\nNote:\n"
             "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
             "time that overrides the old one.\n"
             "\nExamples:\n"
             "\nUnlock the wallet for 60 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
-            "\nUnlock the wallet for 60 seconds but allow CoinJoin only\n"
+            "\nUnlock the wallet for 60 seconds but allow staking only\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 true") +
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
@@ -2565,8 +2774,11 @@ UniValue walletpassphrase(const JSONRPCRequest& request)
 
     pwallet->TopUpKeyPool();
 
-    pwallet->nRelockTime = GetTime() + nSleepTime;
-    RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), std::bind(LockWallet, pwallet), nSleepTime);
+    if (nSleepTime != 0)
+    {
+        pwallet->nRelockTime = GetTime() + nSleepTime;
+        RPCRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), std::bind(LockWallet, pwallet), nSleepTime);
+    }
 
     return NullUniValue;
 }
@@ -2685,7 +2897,7 @@ UniValue encryptwallet(const JSONRPCRequest& request)
             "\nExamples:\n"
             "\nEncrypt your wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-            "\nNow set the passphrase to use the wallet, such as for signing or sending dash\n"
+            "\nNow set the passphrase to use the wallet, such as for signing or sending wagerr\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can do something like sign\n"
             + HelpExampleCli("signmessage", "\"address\" \"test message\"") +
@@ -2735,7 +2947,7 @@ UniValue lockunspent(const JSONRPCRequest& request)
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
             "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
-            "A locked transaction output will not be chosen by automatic coin selection, when spending dashs.\n"
+            "A locked transaction output will not be chosen by automatic coin selection, when spending wagerrs.\n"
             "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
             "is always cleared (by virtue of process exit) when a node stops or fails.\n"
             "Also see the listunspent call\n"
@@ -2931,64 +3143,6 @@ UniValue settxfee(const JSONRPCRequest& request)
 
     payTxFee = CFeeRate(nAmount, 1000);
     return true;
-}
-
-UniValue setcoinjoinrounds(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "setcoinjoinrounds rounds\n"
-            "\nSet the number of rounds for CoinJoin.\n"
-            "\nArguments:\n"
-            "1. rounds         (numeric, required) The default number of rounds is " + std::to_string(DEFAULT_COINJOIN_ROUNDS) +
-            " Cannot be more than " + std::to_string(MAX_COINJOIN_ROUNDS) + " nor less than " + std::to_string(MIN_COINJOIN_ROUNDS) +
-            "\nExamples:\n"
-            + HelpExampleCli("setcoinjoinrounds", "4")
-            + HelpExampleRpc("setcoinjoinrounds", "16")
-        );
-
-    int nRounds = request.params[0].get_int();
-
-    if (nRounds > MAX_COINJOIN_ROUNDS || nRounds < MIN_COINJOIN_ROUNDS)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid number of rounds");
-
-    CCoinJoinClientOptions::SetRounds(nRounds);
-
-    return NullUniValue;
-}
-
-UniValue setcoinjoinamount(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            "setcoinjoinamount amount\n"
-            "\nSet the goal amount in " + CURRENCY_UNIT + " for CoinJoin.\n"
-            "\nArguments:\n"
-            "1. amount         (numeric, required) The default amount is " + std::to_string(DEFAULT_COINJOIN_AMOUNT) +
-            " Cannot be more than " + std::to_string(MAX_COINJOIN_AMOUNT) + " nor less than " + std::to_string(MIN_COINJOIN_AMOUNT) +
-            "\nExamples:\n"
-            + HelpExampleCli("setcoinjoinamount", "500")
-            + HelpExampleRpc("setcoinjoinamount", "208")
-        );
-
-    int nAmount = request.params[0].get_int();
-
-    if (nAmount > MAX_COINJOIN_AMOUNT || nAmount < MIN_COINJOIN_AMOUNT)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount of " + CURRENCY_UNIT + " as mixing goal amount");
-
-    CCoinJoinClientOptions::SetAmount(nAmount);
-
-    return NullUniValue;
 }
 
 UniValue getwalletinfo(const JSONRPCRequest& request)
@@ -3290,7 +3444,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
         throw std::runtime_error(
             "loadwallet \"filename\"\n"
             "\nLoads a wallet from a wallet file or directory."
-            "\nNote that all wallet command-line options used when starting dashd will be"
+            "\nNote that all wallet command-line options used when starting wagerrd will be"
             "\napplied to the new wallet (eg -zapwallettxes, upgradewallet, rescan, etc).\n"
             "\nArguments:\n"
             "1. \"filename\"    (string, required) The wallet directory or .dat file.\n"
@@ -3487,9 +3641,9 @@ UniValue listunspent(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
             "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
-            "3. \"addresses\"      (string) A json array of dash addresses to filter\n"
+            "3. \"addresses\"      (string) A json array of wagerr addresses to filter\n"
             "    [\n"
-            "      \"address\"     (string) dash address\n"
+            "      \"address\"     (string) wagerr address\n"
             "      ,...\n"
             "    ]\n"
             "4. include_unsafe (bool, optional, default=true) Include outputs that are not safe to spend\n"
@@ -3509,9 +3663,9 @@ UniValue listunspent(const JSONRPCRequest& request)
             "  {\n"
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
-            "    \"address\" : \"address\",    (string) the dash address\n"
+            "    \"address\" : \"address\",    (string) the wagerr address\n"
             "    \"label\" : \"label\",        (string) The associated label, or \"\" for the default label\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The associated account, or \"\" for the default account\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start wagerrd with -deprecatedrpc=accounts. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
@@ -3554,7 +3708,7 @@ UniValue listunspent(const JSONRPCRequest& request)
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + input.get_str());
             }
             if (!destinations.insert(dest).second) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + input.get_str());
@@ -3695,7 +3849,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
                             "2. options                 (object, optional)\n"
                             "   {\n"
-                            "     \"changeAddress\"          (string, optional, default pool address) The dash address to receive the change\n"
+                            "     \"changeAddress\"          (string, optional, default pool address) The wagerr address to receive the change\n"
                             "     \"changePosition\"         (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
@@ -3703,7 +3857,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
                             "                              The outputs are specified by their zero-based index, before any change output is added.\n"
-                            "                              Those recipients will receive less dash than you enter in their corresponding amount field.\n"
+                            "                              Those recipients will receive less wagerr than you enter in their corresponding amount field.\n"
                             "                              If no outputs are specified here, the sender pays the fee.\n"
                             "                                  [vout_index,...]\n"
                             "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
@@ -3769,7 +3923,7 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
             CTxDestination dest = DecodeDestination(options["changeAddress"].get_str());
 
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid dash address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "changeAddress must be a valid wagerr address");
             }
 
             coinControl.destChange = dest;
@@ -3918,6 +4072,103 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     return SignTransaction(mtx, request.params[1], pwallet, false, request.params[2]);
 }
 
+UniValue setstakesplitthreshold(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "setstakesplitthreshold value\n"
+            "\nThis will set the output size of your stakes to never be below this number\n" +
+            HelpRequiringPassphrase(pwallet) + "\n"
+
+            "\nArguments:\n"
+            "1. value   (numeric, required) Threshold value between 1 and 999999\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"threshold\": n,    (numeric) Threshold value set\n"
+            "  \"saved\": true|false    (boolean) 'true' if successfully saved to the wallet file\n"
+            "}\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("setstakesplitthreshold", "5000") + HelpExampleRpc("setstakesplitthreshold", "5000"));
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    uint64_t nStakeSplitThreshold = request.params[0].get_int64();
+
+    if (nStakeSplitThreshold > 999999)
+        throw std::runtime_error("Value out of range, max allowed is 999999");
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue result(UniValue::VOBJ);
+    if (!pwallet->SetStakeSplitThreshold(nStakeSplitThreshold)) {
+        throw std::runtime_error(std::string(__func__) + ": writing generated key failed");
+    }
+
+    result.push_back(Pair("threshold", int(pwallet->GetStakeSplitThreshold())));
+    result.push_back(Pair("saved", "true"));
+
+    return result;
+}
+
+UniValue autocombinedust(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    bool fEnable;
+    size_t nParamsSize = request.params.size();
+    if (nParamsSize >= 1)
+        fEnable = request.params[0].get_bool();
+
+    if (request.fHelp || nParamsSize < 1 || (!fEnable && nParamsSize > 1) || nParamsSize > 2)
+        throw std::runtime_error(
+            "autocombinedust enable ( threshold )\n"
+            "\nWallet will automatically monitor for any coins with value below the threshold amount, and combine them if they reside with the same Wagerr address\n"
+            "When autocombinedust runs it will create a transaction, and therefore will be subject to transaction fees.\n"
+
+            "\nArguments:\n"
+            "1. enable                  (boolean, required) Enable auto combine (true) or disable (false)\n"
+            "2. threshold amount        (numeric, optional) Coins with an aggregated value of this amount will be combined (default: 0)\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("autocombinedust", "true 500") + HelpExampleRpc("autocombinedust", "true 500"));
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CAmount nThresholdAmount = 0;
+
+    if (fEnable) {
+        nThresholdAmount = request.params[1].get_int64();
+        if (nThresholdAmount < 0)
+            throw std::runtime_error("Value out of range, minimum allowed is 0");
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue result(UniValue::VOBJ);
+    if (!pwallet->SetAutoCombineSettings(fEnable, nThresholdAmount)) {
+        throw std::runtime_error("Changed settings in wallet but failed to save to database\n");
+    }
+
+    result.push_back(Pair("threshold", int(rewardManager->GetAutoCombineThresholdAmount())));
+    result.push_back(Pair("enabled", rewardManager->IsAutoCombineEnabled()));
+
+    return result;
+}
+
 #if ENABLE_MINER
 UniValue generate(const JSONRPCRequest& request)
 {
@@ -3945,25 +4196,23 @@ UniValue generate(const JSONRPCRequest& request)
     }
 
     int num_generate = request.params[0].get_int();
-    uint64_t max_tries = 1000000;
+    uint64_t max_tries = std::numeric_limits<uint64_t>::max();
     if (!request.params[1].isNull()) {
         max_tries = request.params[1].get_int();
     }
 
-    std::shared_ptr<CReserveScript> coinbase_script;
-    pwallet->GetScriptForMining(coinbase_script);
+    std::shared_ptr<CReserveKey> coinbase_key;
+    CPubKey coinbase_pubkey;
+    if (!pwallet->GetKeyForMining(coinbase_key, coinbase_pubkey)){
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No key for coinbase available");
+    }
 
     // If the keypool is exhausted, no script is returned at all.  Catch this.
-    if (!coinbase_script) {
+    if (!coinbase_key) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
-    //throw an error if no script was provided
-    if (coinbase_script->reserveScript.empty()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
-    }
-
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    return generateHybridBlocks(coinbase_key, num_generate, max_tries, true, pwallet);
 }
 #else
 UniValue generate(const JSONRPCRequest& request)
@@ -3971,6 +4220,58 @@ UniValue generate(const JSONRPCRequest& request)
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
 }
 #endif //ENABLE_MINING
+
+UniValue getstakingstatus(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 0)
+        throw std::runtime_error(
+            "getstakingstatus\n"
+            "\nReturns an object containing various staking information.\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"validtime\": true|false,          (boolean) if the chain tip is within staking phases\n"
+            "  \"haveconnections\": true|false,    (boolean) if network connections are present\n"
+            "  \"walletunlocked\": true|false,     (boolean) if the wallet is unlocked\n"
+            "  \"mintablecoins\": true|false,      (boolean) if the wallet has mintable coins\n"
+            "  \"enoughcoins\": true|false,        (boolean) if available coins are greater than reserve balance\n"
+            "  \"mnsync\": true|false,             (boolean) if masternode data is synced\n"
+            "  \"staking status\": true|false,     (boolean) if the wallet is staking or not\n"
+            "}\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("getstakingstatus", "") + HelpExampleRpc("getstakingstatus", ""));
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    bool fValidTime = chainActive.Tip()->nTime > 1471482000;
+    bool fHaveConnections = !g_connman ? false : g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) > 0;
+    bool fWalletUnlocked = !pwallet->IsLocked(true);
+    bool fMintableCoins = stakingManager->MintableCoins();
+    bool fEnoughCoins = stakingManager->nReserveBalance <= pwallet->GetBalance();
+    bool fMnSync = masternodeSync.IsSynced();
+    bool fStakingStatus = stakingManager->IsStaking();
+
+    UniValue obj(UniValue::VOBJ);
+    obj.push_back(Pair("validtime", fValidTime));
+    obj.push_back(Pair("haveconnections", fHaveConnections));
+    if (pwallet) {
+        obj.push_back(Pair("walletunlocked", fWalletUnlocked));
+        obj.push_back(Pair("mintablecoins", fMintableCoins));
+        obj.push_back(Pair("enoughcoins", fEnoughCoins));
+    }
+    obj.push_back(Pair("mnsync", fMnSync));
+    obj.push_back(Pair("staking_status", fStakingStatus));
+
+    return obj;
+}
 
 UniValue rescanblockchain(const JSONRPCRequest& request)
 {
@@ -4132,13 +4433,13 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             "getaddressinfo \"address\"\n"
-            "\nReturn information about the given dash address. Some information requires the address\n"
+            "\nReturn information about the given wagerr address. Some information requires the address\n"
             "to be in the wallet.\n"
             "\nArguments:\n"
-            "1. \"address\"                    (string, required) The dash address to get the information of.\n"
+            "1. \"address\"                    (string, required) The wagerr address to get the information of.\n"
             "\nResult:\n"
             "{\n"
-            "  \"address\" : \"address\",        (string) The dash address validated\n"
+            "  \"address\" : \"address\",        (string) The wagerr address validated\n"
             "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
@@ -4155,7 +4456,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
             "  \"label\" :  \"label\"         (string) The label associated with the address, \"\" is the default account\n"
-            "  \"account\" : \"account\"         (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account associated with the address, \"\" is the default account\n"
+            "  \"account\" : \"account\"         (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start wagerrd with -deprecatedrpc=accounts. The account associated with the address, \"\" is the default account\n"
             "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
             "  \"hdchainid\" : \"<hash>\"        (string, optional) The ID of the HD chain\n"
@@ -4335,6 +4636,1819 @@ UniValue listlabels(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue placebet(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
+        throw std::runtime_error(
+            "placebet \"event-id\" outcome amount ( \"comment\" \"comment-to\" )\n"
+            "\nWARNING - Betting closes 20 minutes before event start time.\n"
+            "Any bets placed after this time will be invalid and will not be paid out! \n"
+            "\nPlace an amount as a bet on an event. The amount is rounded to the nearest 0.00000001\n" +
+            HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. \"event-id\"    (numeric, required) The event to bet on.\n"
+            "2. outcome         (numeric, required) 1 means home team win,\n"
+            "                                       2 means away team win,\n"
+            "                                       3 means a draw."
+            "3. amount          (numeric, required) The amount in wgr to send.\n"
+            "4. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "5. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                             to which you're sending the transaction. This is not part of the \n"
+            "                             transaction, just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("placebet", "\"000\" \"1\" 25\"donation\" \"seans outpost\"") +
+            HelpExampleRpc("placebet", "\"000\", \"1\", 25, \"donation\", \"seans outpost\""));
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+    LOCK2(cs_main, mempool.cs);
+    LOCK(pwallet->cs_wallet);
+
+    CAmount nAmount = AmountFromValue(request.params[2]);
+
+    // Validate bet amount so its between 25 - 10000 WGR inclusive.
+    if (nAmount < (Params().GetConsensus().MinBetPayoutRange()  * COIN ) || nAmount > (Params().GetConsensus().MaxBetPayoutRange() * COIN)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is between 25 - 10000 WGR inclusive.");
+    }
+
+    // Wallet comments
+    mapValue_t mapValue;
+    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+        mapValue["comment"] = request.params[3].get_str();
+    if (!request.params[4].isNull() && !request.params[4].get_str().empty())
+        mapValue["to"] = request.params[4].get_str();
+
+    bool fSubtractFeeFromAmount = false;
+    CCoinControl coin_control;
+
+    EnsureWalletIsUnlocked(pwallet);
+    EnsureEnoughWagerr(pwallet, nAmount);
+
+    uint32_t eventId = static_cast<uint32_t>(request.params[0].get_int64());
+    uint8_t outcome = (uint8_t) request.params[1].get_int();
+
+    if (outcome < moneyLineHomeWin || outcome > totalUnder)
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet outcome type.");
+
+    if (chainActive.Height() >= Params().GetConsensus().WagerrProtocolV4StartHeight()) {
+        CPeerlessExtendedEventDB plEvent;
+        if (!bettingsView->events->Read(EventKey{eventId}, plEvent)) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such Event: " + std::to_string(eventId));
+        }
+
+        if (GetBetPotentialOdds(CPeerlessLegDB{eventId, (OutcomeType)outcome}, plEvent) == 0) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: potential odds is zero for event: " + std::to_string(eventId) + " outcome: " + std::to_string(outcome));
+        }
+    }
+
+    CPeerlessBetTx plBet(eventId, outcome);
+
+    CDataStream ss(SER_NETWORK, CLIENT_VERSION);
+    ss << (uint8_t) BTX_PREFIX << (uint8_t) BTX_FORMAT_VERSION << (uint8_t) plBetTxType << plBet;
+    std::vector<unsigned char> betData;
+    ss >> betData;
+    CScript betScript = CScript() << OP_RETURN << betData;
+
+    CTransactionRef tx = BurnWithData(pwallet, betScript, nAmount, fSubtractFeeFromAmount, coin_control, std::move(mapValue), {} /* fromAccount */);
+    return tx->GetHash().GetHex();
+}
+
+UniValue placeparlaybet(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
+        throw std::runtime_error(
+            "placeparlaybet [{\"eventId\": event_id, \"outcome\": outcome_type}, ...] ( \"comment\" \"comment-to\" )\n"
+            "\nWARNING - Betting closes 20 minutes before event start time.\n"
+            "Any bets placed after this time will be invalid and will not be paid out! \n"
+            "\nPlace an amount as a bet on an event. The amount is rounded to the nearest 0.00000001\n" +
+            HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. Legs array     (array of json objects, required) The list of bets.\n"
+            "  [\n"
+            "    {\n"
+            "      \"eventId\": id      (numeric, required) The event to bet on.\n"
+            "      \"outcome\": type    (numeric, required) 1 - home win, 2 - away win, 3 - draw,\n"
+            "                                               4 - spread home, 5 - spread away,\n"
+            "                                               6 - total over, 7 - total under\n"
+            "    }\n"
+            "  ]\n"
+            "2. amount          (numeric, required) The amount in wgr to send. Min: 25, max: 4000.\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for.\n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization\n"
+            "                             to which you're sending the transaction. This is not part of the\n"
+            "                             transaction, just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("placeparlaybet", "\"[{\"eventId\": 228, \"outcome\": 1}, {\"eventId\": 322, \"outcome\": 2}]\" 25 \"Parlay bet\" \"seans outpost\"") +
+            HelpExampleRpc("placeparlaybet", "\"[{\"eventId\": 228, \"outcome\": 1}, {\"eventId\": 322, \"outcome\": 2}]\", 25, \"Parlay bet\", \"seans outpost\""));
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+    LOCK2(cs_main, mempool.cs);
+    LOCK(pwallet->cs_wallet);
+
+    CPeerlessParlayBetTx parlayBetTx;
+    UniValue legsArr = request.params[0].get_array();
+    for (uint32_t i = 0; i < legsArr.size(); i++) {
+        const UniValue obj = legsArr[i].get_obj();
+
+        RPCTypeCheckObj(obj,
+            {
+                {"eventId", UniValueType(UniValue::VNUM)},
+                {"outcome", UniValueType(UniValue::VNUM)},
+            });
+
+        uint32_t eventId = static_cast<uint32_t>(find_value(obj, "eventId").get_int64());
+        uint8_t outcome = (uint8_t) find_value(obj, "outcome").get_int();
+
+        if (outcome < moneyLineHomeWin || outcome > totalUnder)
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet outcome type.");
+
+        if (chainActive.Height() >= Params().GetConsensus().WagerrProtocolV4StartHeight()) {
+            CPeerlessExtendedEventDB plEvent;
+            if (!bettingsView->events->Read(EventKey{eventId}, plEvent)) {
+                throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such Event: " + std::to_string(eventId));
+            }
+
+            if (GetBetPotentialOdds(CPeerlessLegDB{eventId, (OutcomeType)outcome}, plEvent) == 0) {
+                throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: potential odds is zero for event: " + std::to_string(eventId) + " outcome: " + std::to_string(outcome));
+            }
+
+            if (plEvent.nStage != 0) {
+                throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: event " + std::to_string(eventId) + " cannot be part of parlay bet");
+            }
+        }
+
+        parlayBetTx.legs.emplace_back(eventId, outcome);
+    }
+
+    CDataStream ss(SER_NETWORK, CLIENT_VERSION);
+    ss << (uint8_t) BTX_PREFIX << (uint8_t) BTX_FORMAT_VERSION << (uint8_t) plParlayBetTxType << parlayBetTx;
+    std::vector<unsigned char> betData;
+    ss >> betData;
+    CScript betScript = CScript() << OP_RETURN << betData;
+
+    CAmount nAmount = AmountFromValue(request.params[1]);
+
+    // Validate parlay bet amount so its between 25 - 4000 WGR inclusive.
+    if (nAmount < (Params().GetConsensus().MinBetPayoutRange()  * COIN ) || nAmount > (Params().GetConsensus().MaxParlayBetPayoutRange() * COIN)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is between 25 - 4000 WGR inclusive.");
+    }
+
+    // Wallet comments
+    mapValue_t mapValue;
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
+        mapValue["comment"] = request.params[2].get_str();
+    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+        mapValue["to"] = request.params[3].get_str();
+
+    bool fSubtractFeeFromAmount = false;
+    CCoinControl coin_control;
+
+    EnsureWalletIsUnlocked(pwallet);
+    EnsureEnoughWagerr(pwallet, nAmount);
+
+    CTransactionRef tx = BurnWithData(pwallet, betScript, nAmount, fSubtractFeeFromAmount, coin_control, std::move(mapValue), {} /* fromAccount */);
+    return tx->GetHash().GetHex();
+}
+
+UniValue placefieldbet(const JSONRPCRequest& request) {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 4 || request.params.size() > 6) {
+        throw std::runtime_error(
+            "placefieldbet event_id market_type contender_id amount ( \"comment\" \"comment-to\" )\n"
+            "\nWARNING - Betting closes 20 minutes before field event start time.\n"
+            "Any bets placed after this time will be invalid and will not be paid out! \n"
+            "\nPlace an amount as a bet on an field event. The amount is rounded to the nearest 0.00000001\n" +
+            HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. event_id        (numeric, required) The field event id to bet on.\n"
+            "2. market_type     (numeric, required) 1 means outright,\n"
+            "                                       2 means place,\n"
+            "                                       3 means show."
+            "3. contender_id    (numeric, required) The field event participant identifier."
+            "4. amount          (numeric, required) The amount in wgr to send.\n"
+            "5. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "6. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+            "                             to which you're sending the transaction. This is not part of the \n"
+            "                             transaction, just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("placefieldbet", "1 1 100 25 \"donation\" \"seans outpost\"") +
+            HelpExampleRpc("placefieldbet", "1 1 100 25 \"donation\" \"seans outpost\""));
+    }
+
+    if (chainActive.Height() < Params().GetConsensus().WagerrProtocolV4StartHeight()) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: placefieldbet deactived for now");
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    CAmount nAmount = AmountFromValue(request.params[3]);
+    // Validate bet amount so its between 25 - 10000 WGR inclusive.
+    if (nAmount < (Params().GetConsensus().MinBetPayoutRange()  * COIN ) || nAmount > (Params().GetConsensus().MaxBetPayoutRange() * COIN)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is between 25 - 10000 WGR inclusive.");
+    }
+
+    // Wallet comments
+    mapValue_t mapValue;
+    if (!request.params[4].isNull() && !request.params[4].get_str().empty())
+        mapValue["comment"] = request.params[4].get_str();
+    if (!request.params[5].isNull() && !request.params[5].get_str().empty())
+        mapValue["to"] = request.params[5].get_str();
+
+    bool fSubtractFeeFromAmount = false;
+    CCoinControl coin_control;
+
+    EnsureWalletIsUnlocked(pwallet);
+    EnsureEnoughWagerr(pwallet, nAmount);
+
+    uint32_t eventId = static_cast<uint32_t>(request.params[0].get_int64());
+    FieldBetOutcomeType marketType = static_cast<FieldBetOutcomeType>(request.params[1].get_int());
+    uint32_t contenderId = static_cast<uint32_t>(request.params[2].get_int64());
+
+    if (marketType < outright || marketType > show) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet market type for FieldEvent: " + std::to_string(eventId));
+    }
+
+    CFieldEventDB fEvent;
+    if (!bettingsView->fieldEvents->Read(FieldEventKey{eventId}, fEvent)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such FieldEvent: " + std::to_string(eventId));
+    }
+
+    if (!fEvent.IsMarketOpen(marketType)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: market " + std::to_string((uint8_t)marketType) + " is closed for event " + std::to_string(eventId));
+    }
+
+
+    const auto& contender_it = fEvent.contenders.find(contenderId);
+    if (contender_it == fEvent.contenders.end()) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such contenderId " + std::to_string(contenderId) + " in event " + std::to_string(eventId));
+    }
+
+    if (bettingsView->fieldResults->Exists(FieldResultKey{eventId})) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: FieldEvent " + std::to_string(eventId) + " was been resulted");
+    }
+
+    if (GetBetPotentialOdds(CFieldLegDB{eventId, marketType, contenderId}, fEvent) == 0) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: contender odds is zero for event: " + std::to_string(eventId) + " contenderId: " + std::to_string(contenderId));
+    }
+
+    CFieldBetTx fBetTx{eventId, static_cast<uint8_t>(marketType), contenderId};
+
+    // TODO `address` isn't used when adding the following transaction to the
+    // blockchain, so ideally it would not need to be supplied to `SendMoney`.
+    // Ideally an alternative function, such as `BurnMoney`, would be developed
+    // and used, which would take the `OP_RETURN` value in place of the address
+    // value.
+    // Note that, during testing, the `opReturn` value is added to the
+    // blockchain incorrectly if its length is less than 5. This behaviour would
+    // ideally be investigated and corrected/justified when time allows.
+    CDataStream ss(SER_NETWORK, CLIENT_VERSION);
+    ss << (uint8_t) BTX_PREFIX << (uint8_t) BTX_FORMAT_VERSION << (uint8_t) fBetTxType << fBetTx;
+    std::vector<unsigned char> betData;
+    ss >> betData;
+    CScript betScript = CScript() << OP_RETURN << betData;
+
+    CTransactionRef tx = BurnWithData(pwallet, betScript, nAmount, fSubtractFeeFromAmount, coin_control, std::move(mapValue), {} /* fromAccount */);
+    return tx->GetHash().GetHex();
+}
+
+UniValue placefieldparlaybet(const JSONRPCRequest& request) {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 4) {
+        throw std::runtime_error(
+            "placefieldparlaybet [{\"eventId\": event_id, \"marketType\": market_type, \"contenderId\": contender_id}, ...] amount ( \"comment\" \"comment-to\" )\n"
+            "\nWARNING - Betting closes 20 minutes before field event start time.\n"
+            "Any bets placed after this time will be invalid and will not be paid out! \n"
+            "\nPlace an amount as a bet on an field event. The amount is rounded to the nearest 0.00000001\n" +
+            HelpRequiringPassphrase(pwallet) +
+            "\nArguments:\n"
+            "1. Legs array     (array of json objects, required) The list of field bets.\n"
+            "  [\n"
+            "    {\n"
+            "      \"eventId\": id               (numeric, required) The field event id to bet on.\n"
+            "      \"marketType\": market_type   (numeric, required) 1 means outright,\n"
+            "                                                        2 means place,\n"
+            "                                                        3 means show."
+            "      \"contenderId\": contender_id (numeric, required) The field event participant identifier."
+            "    }\n"
+            "  ]\n"
+            "2. amount          (numeric, required) The amount in wgr to send. Min: 25, max: 4000.\n"
+            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for.\n"
+            "                             This is not part of the transaction, just kept in your wallet.\n"
+            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization\n"
+            "                             to which you're sending the transaction. This is not part of the\n"
+            "                             transaction, just kept in your wallet.\n"
+            "\nResult:\n"
+            "\"transactionid\"  (string) The transaction id.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("placefieldparlaybet", "\"[{\"eventId\": 1, \"marketType\": 1, \"contenderId\": 100}, {\"eventId\": 2, \"marketType\": 2, \"contenderId\": 200}]\" 25 \"Parlay bet\" \"seans outpost\"") +
+            HelpExampleRpc("placefieldparlaybet", "\"[{\"eventId\": 1, \"marketType\": 1, \"contenderId\": 100}, {\"eventId\": 322,\"marketType\": 2, \"contenderId\": 200}]\", 25, \"Parlay bet\", \"seans outpost\""));
+    }
+
+    if (chainActive.Height() < Params().GetConsensus().WagerrProtocolV4StartHeight()) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: placefieldbet deactived for now");
+    }
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    CAmount nAmount = AmountFromValue(request.params[1]);
+    // Validate bet amount so its between 25 - 10000 WGR inclusive.
+    if (nAmount < (Params().GetConsensus().MinBetPayoutRange()  * COIN ) || nAmount > (Params().GetConsensus().MaxBetPayoutRange() * COIN)) {
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is between 25 - 10000 WGR inclusive.");
+    }
+
+    // Wallet comments
+    mapValue_t mapValue;
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty())
+        mapValue["comment"] = request.params[2].get_str();
+    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
+        mapValue["to"] = request.params[3].get_str();
+
+    bool fSubtractFeeFromAmount = false;
+    CCoinControl coin_control;
+
+    EnsureWalletIsUnlocked(pwallet);
+    EnsureEnoughWagerr(pwallet, nAmount);
+
+    CFieldParlayBetTx fParlayBetTx;
+    UniValue legsArr = request.params[0].get_array();
+    for (uint32_t i = 0; i < legsArr.size(); i++) {
+        const UniValue obj = legsArr[i].get_obj();
+
+        uint32_t eventId = static_cast<uint32_t>(find_value(obj, "eventId").get_int64());
+        FieldBetOutcomeType marketType = static_cast<FieldBetOutcomeType>(find_value(obj, "marketType").get_int());
+        uint32_t contenderId = static_cast<uint32_t>(find_value(obj, "contenderId").get_int64());
+
+        if (marketType < outright || marketType > show) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet market type for FieldEvent: " + std::to_string(eventId));
+        }
+
+        CFieldEventDB fEvent;
+        if (!bettingsView->fieldEvents->Read(FieldEventKey{eventId}, fEvent)) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such FieldEvent: " + std::to_string(eventId));
+        }
+
+        if (!fEvent.IsMarketOpen(marketType)) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: market " + std::to_string((uint8_t)marketType) + " is closed for event " + std::to_string(eventId));
+        }
+
+        const auto& contender_it = fEvent.contenders.find(contenderId);
+        if (contender_it == fEvent.contenders.end()) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: there is no such contenderId " + std::to_string(contenderId) + " in event " + std::to_string(eventId));
+        }
+
+        if (GetBetPotentialOdds(CFieldLegDB{eventId, marketType, contenderId}, fEvent) == 0) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: contender odds is zero for event: " + std::to_string(eventId) + " contenderId: " + std::to_string(contenderId));
+        }
+
+        if (fEvent.nStage != 0) {
+            throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: event " + std::to_string(eventId) + " cannot be part of parlay bet");
+        }
+
+        fParlayBetTx.legs.emplace_back(eventId, marketType, contenderId);
+    }
+
+    CDataStream ss(SER_NETWORK, CLIENT_VERSION);
+    ss << (uint8_t) BTX_PREFIX << (uint8_t) BTX_FORMAT_VERSION << (uint8_t) fParlayBetTxType << fParlayBetTx;
+    std::vector<unsigned char> betData;
+    ss >> betData;
+    CScript betScript = CScript() << OP_RETURN << betData;
+
+    CTransactionRef tx = BurnWithData(pwallet, betScript, nAmount, fSubtractFeeFromAmount, coin_control, std::move(mapValue), {} /* fromAccount */);
+    return tx->GetHash().GetHex();
+}
+
+
+// TODO: There is a lot of code shared between `bets` and `listtransactions`.
+// This would ideally be abstracted when time allows.
+// TODO: The first parameter for account isn't used.
+UniValue listbets(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "listbets ( \"account\" count from includeWatchonly)\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+            "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"event-id\":\"accountname\",       (string) The ID of the event being bet on.\n"
+            "    \"team-to-win\":\"wagerraddress\",  (string) The team to win.\n"
+            "    \"amount\": x.xxx,                  (numeric) The amount bet in WGR.\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n"
+            "\nList the most recent 10 bets in the systems\n" +
+            HelpExampleCli("listbets", ""));
+
+    std::string strAccount = "*";
+    if (request.params.size() > 0)
+        strAccount = request.params[0].get_str();
+    int nCount = 10;
+    if (request.params.size() > 1)
+        nCount = request.params[1].get_int();
+    int nFrom = 0;
+    if (request.params.size() > 2)
+        nFrom = request.params[2].get_int();
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (request.params.size() > 3)
+        if (request.params[3].get_bool())
+            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    UniValue result{UniValue::VARR};
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    const CWallet::TxItems & txOrdered{pwallet->wtxOrdered};
+
+    // iterate backwards until we have nCount items to return:
+    for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        CWalletTx* const pwtx = (*it).second.first;
+        if (pwtx != 0) {
+
+            uint256 txHash = (*pwtx).GetHash();
+
+            for (unsigned int i = 0; i < pwtx->tx->vout.size(); i++) {
+                const CTxOut& txout = pwtx->tx->vout[i];
+                auto bettingTx = ParseBettingTx(txout);
+
+                if (bettingTx == nullptr) continue;
+
+                auto txType = bettingTx->GetTxType();
+
+                if (txType == plBetTxType) {
+                    CPeerlessBetTx* plBet = (CPeerlessBetTx*) bettingTx.get();
+                    UniValue entry(UniValue::VOBJ);
+                    entry.push_back(Pair("tx-id", txHash.ToString().c_str()));
+                    entry.push_back(Pair("event-id", (uint64_t) plBet->nEventId));
+
+                    // Retrieve the event details
+                    CPeerlessExtendedEventDB plEvent;
+                    if (bettingsView->events->Read(EventKey{plBet->nEventId}, plEvent)) {
+
+                        entry.push_back(Pair("starting", plEvent.nStartTime));
+                        CMappingDB mapping;
+                        if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nHomeTeam}, mapping)) {
+                            entry.push_back(Pair("home", mapping.sName));
+                        }
+                        if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nAwayTeam}, mapping)) {
+                            entry.push_back(Pair("away", mapping.sName));
+                        }
+                        if (bettingsView->mappings->Read(MappingKey{tournamentMapping, plEvent.nTournament}, mapping)) {
+                            entry.push_back(Pair("tournament", mapping.sName));
+                        }
+                    }
+
+                    entry.push_back(Pair("team-to-win", (uint64_t) plBet->nOutcome));
+                    entry.push_back(Pair("amount", ValueFromAmount(txout.nValue)));
+
+                    std::string betResult = "pending";
+                    CPeerlessResultDB plResult;
+                    if (bettingsView->results->Read(ResultKey{plBet->nEventId}, plResult)) {
+
+                        switch (plBet->nOutcome) {
+                            case OutcomeType::moneyLineHomeWin:
+                                betResult = plResult.nHomeScore > plResult.nAwayScore ? "win" : "lose";
+
+                                break;
+                            case OutcomeType::moneyLineAwayWin:
+                                betResult = plResult.nAwayScore > plResult.nHomeScore ? "win" : "lose";
+
+                                break;
+                            case OutcomeType::moneyLineDraw :
+                                betResult = plResult.nHomeScore == plResult.nAwayScore ? "win" : "lose";
+
+                                break;
+                            case OutcomeType::spreadHome:
+                                betResult = "Check block explorer for result.";
+
+                                break;
+                            case OutcomeType::spreadAway:
+                                betResult = "Check block explorer for result.";
+
+                                break;
+                            case OutcomeType::totalOver:
+                                betResult = "Check block explorer for result.";
+
+                                break;
+                            case OutcomeType::totalUnder:
+                                betResult = "Check block explorer for result.";
+
+                                break;
+                            default :
+                                LogPrintf("Invalid bet outcome");
+                        }
+                    }
+
+                    entry.push_back(Pair("result", betResult));
+
+                    result.push_back(entry);
+                }
+            }
+        }
+
+        if ((int)result.size() >= (nCount + nFrom)) break;
+    }
+    // ret is newest to oldest
+
+    if (nFrom > (int)result.size())
+        nFrom = result.size();
+    if ((nFrom + nCount) > (int)result.size())
+        nCount = result.size() - nFrom;
+
+    std::vector<UniValue> arrTmp = result.getValues();
+
+    std::vector<UniValue>::iterator first = arrTmp.begin();
+    std::advance(first, nFrom);
+    std::vector<UniValue>::iterator last = arrTmp.begin();
+    std::advance(last, nFrom+nCount);
+
+    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
+    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+
+    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+
+    result.clear();
+    result.setArray();
+    result.push_backV(arrTmp);
+
+    return result;
+}
+
+UniValue getbet(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "getbet \"txid\" ( includeWatchonly )\n"
+            "\nGet detailed information about in-wallet bet <txid>\n"
+
+            "\nArguments:\n"
+            "1. \"txid\"    (string, required) The transaction id\n"
+            "2. \"includeWatchonly\"    (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"tx-id\":\"accountname\",           (string) The transaction id.\n"
+            "  \"event-id\":\"accountname\",        (string) The ID of the event being bet on.\n"
+            "  \"starting\":\"accountname\",        (string) The event start time.\n"
+            "  \"home\":\"accountname\",            (string) The home team name.\n"
+            "  \"away\":\"accountname\",            (string) The away team name.\n"
+            "  \"tournament\":\"accountname\",      (string) The tournament name\n"
+            "  \"team-to-win\":\"wagerraddress\",   (string) The team to win.\n"
+            "  \"amount\": x.xxx,                   (numeric) The amount bet in WGR.\n"
+            "  \"result\":\"wagerraddress\",        (string) The bet result i.e win/lose.\n"
+            "}\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("getbet", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"") +
+            HelpExampleCli("getbet", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true") +
+            HelpExampleRpc("getbet", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\""));
+
+    LOCK(cs_main);
+
+    uint256 txHash;
+    txHash.SetHex(request.params[0].get_str());
+    CBlockIndex* blockindex = nullptr;
+
+    CTransactionRef tx;
+    uint256 hash_block;
+    if (!GetTransaction(txHash, tx, Params().GetConsensus(), hash_block, true, blockindex)) {
+        std::string errmsg;
+        if (blockindex) {
+            if (!(blockindex->nStatus & BLOCK_HAVE_DATA)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not available");
+            }
+            errmsg = "No such transaction found in the provided block";
+        } else {
+            errmsg = fTxIndex
+              ? "No such mempool or blockchain transaction"
+              : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+        }
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
+    }
+
+    UniValue ret(UniValue::VOBJ);
+
+    for (unsigned int i = 0; i < tx->vout.size(); i++) {
+        const CTxOut& txout = tx->vout[i];
+
+        auto bettingTx = ParseBettingTx(txout);
+
+        if (bettingTx == nullptr) continue;
+
+        if (bettingTx->GetTxType() == plBetTxType) {
+            CPeerlessBetTx* plBet = (CPeerlessBetTx*) bettingTx.get();
+
+            ret.push_back(Pair("tx-id", txHash.ToString().c_str()));
+            ret.push_back(Pair("event-id", (uint64_t)plBet->nEventId));
+
+            // Retrieve the event details
+            CPeerlessExtendedEventDB plEvent;
+            if (bettingsView->events->Read(EventKey{plBet->nEventId}, plEvent)) {
+
+                ret.push_back(Pair("starting", plEvent.nStartTime));
+                CMappingDB mapping;
+                if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nHomeTeam}, mapping)) {
+                    ret.push_back(Pair("home", mapping.sName));
+                }
+                if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nAwayTeam}, mapping)) {
+                    ret.push_back(Pair("away", mapping.sName));
+                }
+                if (bettingsView->mappings->Read(MappingKey{tournamentMapping, plEvent.nTournament}, mapping)) {
+                    ret.push_back(Pair("tournament", mapping.sName));
+                }
+            }
+
+            ret.push_back(Pair("team-to-win", (uint64_t)plBet->nOutcome));
+            ret.push_back(Pair("amount", ValueFromAmount(txout.nValue)));
+
+            std::string betResult = "pending";
+            CPeerlessResultDB plResult;
+            if (bettingsView->results->Read(ResultKey{plBet->nEventId}, plResult)) {
+
+                switch (plBet->nOutcome) {
+                case OutcomeType::moneyLineHomeWin:
+                    betResult = plResult.nHomeScore > plResult.nAwayScore ? "win" : "lose";
+
+                    break;
+                case OutcomeType::moneyLineAwayWin:
+                    betResult = plResult.nAwayScore > plResult.nHomeScore ? "win" : "lose";
+
+                    break;
+                case OutcomeType::moneyLineDraw:
+                    betResult = plResult.nHomeScore == plResult.nAwayScore ? "win" : "lose";
+
+                    break;
+                case OutcomeType::spreadHome:
+                    betResult = "Check block explorer for result.";
+
+                    break;
+                case OutcomeType::spreadAway:
+                    betResult = "Check block explorer for result.";
+
+                    break;
+                case OutcomeType::totalOver:
+                    betResult = "Check block explorer for result.";
+
+                    break;
+                case OutcomeType::totalUnder:
+                    betResult = "Check block explorer for result.";
+
+                    break;
+                default:
+                    LogPrintf("Invalid bet outcome");
+                }
+            }
+            ret.push_back(Pair("result", betResult));
+        }
+        break;
+    }
+
+    return ret;
+}
+
+std::string BetResultTypeToStr(BetResultType resType)
+{
+    switch (resType) {
+        case betResultUnknown: return std::string("pending");
+        case betResultWin: return std::string("win");
+        case betResultLose: return std::string("lose");
+        case betResultRefund: return std::string("refund");
+        case betResultPartialWin: return std::string("partial-win");
+        case betResultPartialLose: return std::string("partial-lose");
+        default: return std::string("error");
+    }
+}
+
+std::string EventResultTypeToStr(ResultType resType)
+{
+    switch (resType) {
+        case standardResult: return std::string("standard");
+        case eventRefund: return std::string("event refund");
+        case mlRefund: return std::string("ml refund");
+        case spreadsRefund: return std::string("spreads refund");
+        case totalsRefund: return std::string("totals refund");
+        default: return std::string("error");
+    }
+}
+
+std::string ContenderResultToString(uint8_t result) {
+    switch(result) {
+        case ContenderResult::DNF:
+            return "DNF";
+        case ContenderResult::place1:
+            return "Place1";
+        case ContenderResult::place2:
+            return "Place2";
+        case ContenderResult::place3:
+            return "Place3";
+        case ContenderResult::DNR:
+            return "DNR";
+        default:
+            return "undefined";
+    }
+}
+
+void CollectPLBetData(UniValue& uValue, const PeerlessBetKey& betKey, const CPeerlessBetDB& uniBet, bool requiredPayoutInfo = false) {
+
+    UniValue uLegs(UniValue::VARR);
+
+    uValue.push_back(Pair("type", "peerless"));
+
+    for (uint32_t i = 0; i < uniBet.legs.size(); i++) {
+        auto &leg = uniBet.legs[i];
+        auto &lockedEvent = uniBet.lockedEvents[i];
+        UniValue uLeg(UniValue::VOBJ);
+        UniValue uLockedEvent(UniValue::VOBJ);
+        uLeg.push_back(Pair("event-id", (uint64_t) leg.nEventId));
+        uLeg.push_back(Pair("outcome", (uint64_t) leg.nOutcome));
+
+        uLockedEvent.push_back(Pair("homeOdds", (uint64_t) lockedEvent.nHomeOdds));
+        uLockedEvent.push_back(Pair("awayOdds", (uint64_t) lockedEvent.nAwayOdds));
+        uLockedEvent.push_back(Pair("drawOdds", (uint64_t) lockedEvent.nDrawOdds));
+        uLockedEvent.push_back(Pair("spreadPoints", (int64_t) lockedEvent.nSpreadPoints));
+        uLockedEvent.push_back(Pair("spreadHomeOdds", (uint64_t) lockedEvent.nSpreadHomeOdds));
+        uLockedEvent.push_back(Pair("spreadAwayOdds", (uint64_t) lockedEvent.nSpreadAwayOdds));
+        uLockedEvent.push_back(Pair("totalPoints", (uint64_t) lockedEvent.nTotalPoints));
+        uLockedEvent.push_back(Pair("totalOverOdds", (uint64_t) lockedEvent.nTotalOverOdds));
+        uLockedEvent.push_back(Pair("totalUnderOdds", (uint64_t) lockedEvent.nTotalUnderOdds));
+
+        // Retrieve the event details
+        CPeerlessExtendedEventDB plEvent;
+        if (bettingsView->events->Read(EventKey{leg.nEventId}, plEvent)) {
+            uLockedEvent.push_back(Pair("starting", plEvent.nStartTime));
+            CMappingDB mapping;
+            if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nHomeTeam}, mapping)) {
+                uLockedEvent.push_back(Pair("home", mapping.sName));
+            }
+            else {
+                uLockedEvent.push_back(Pair("home", "undefined"));
+            }
+            if (bettingsView->mappings->Read(MappingKey{teamMapping, plEvent.nAwayTeam}, mapping)) {
+                uLockedEvent.push_back(Pair("away", mapping.sName));
+            }
+            else {
+                uLockedEvent.push_back(Pair("away", "undefined"));
+            }
+            if (bettingsView->mappings->Read(MappingKey{tournamentMapping, plEvent.nTournament}, mapping)) {
+                uLockedEvent.push_back(Pair("tournament", mapping.sName));
+            }
+            else {
+                uLockedEvent.push_back(Pair("tournament", "undefined"));
+            }
+        }
+        CPeerlessResultDB plResult;
+        uint32_t legOdds = 0;
+        if (bettingsView->results->Read(EventKey{leg.nEventId}, plResult)) {
+            uLockedEvent.push_back(Pair("eventResultType", EventResultTypeToStr((ResultType) plResult.nResultType)));
+            uLockedEvent.push_back(Pair("homeScore", (uint64_t) plResult.nHomeScore));
+            uLockedEvent.push_back(Pair("awayScore", (uint64_t) plResult.nAwayScore));
+            if (lockedEvent.nStartTime > 0 && uniBet.betTime > ((int64_t)lockedEvent.nStartTime - Params().GetConsensus().nBetPlaceTimeoutBlocks)) {
+                uLeg.push_back(Pair("legResultType", "refund - invalid bet"));
+            }
+            else {
+                legOdds = GetBetOdds(leg, lockedEvent, plResult, (int64_t)betKey.blockHeight >= Params().GetConsensus().nWagerrProtocolV3StartHeight).first;
+                std::string legResultTypeStr;
+                if (legOdds == 0) {
+                    legResultTypeStr = std::string("lose");
+                }
+                else if (legOdds == BET_ODDSDIVISOR / 2) {
+                    legResultTypeStr = std::string("half-lose");
+                }
+                else if (legOdds == BET_ODDSDIVISOR) {
+                    legResultTypeStr = std::string("refund");
+                }
+                else if (legOdds < GetBetPotentialOdds(leg, lockedEvent)) {
+                    legResultTypeStr = std::string("half-win");
+                }
+                else {
+                    legResultTypeStr = std::string("win");
+                }
+                uLeg.push_back(Pair("legResultType", legResultTypeStr));
+            }
+        }
+        else {
+            uLockedEvent.push_back(Pair("eventResultType", "event result not found"));
+            uLockedEvent.push_back(Pair("homeScore", "undefined"));
+            uLockedEvent.push_back(Pair("awayScore", "undefined"));
+            uLeg.push_back(Pair("legResultType", "pending"));
+        }
+        uLeg.push_back(Pair("lockedEvent", uLockedEvent));
+        uLegs.push_back(uLeg);
+    }
+    uValue.push_back(Pair("betBlockHeight", (uint64_t) betKey.blockHeight));
+    uValue.push_back(Pair("betTxHash", betKey.outPoint.hash.GetHex()));
+    uValue.push_back(Pair("betTxOut", (uint64_t) betKey.outPoint.n));
+    uValue.push_back(Pair("legs", uLegs));
+    uValue.push_back(Pair("address", EncodeDestination(uniBet.playerAddress)));
+    uValue.push_back(Pair("amount", ValueFromAmount(uniBet.betAmount)));
+    uValue.push_back(Pair("time", (uint64_t) uniBet.betTime));
+    uValue.push_back(Pair("completed", uniBet.IsCompleted() ? "yes" : "no"));
+    uValue.push_back(Pair("betResultType", BetResultTypeToStr(uniBet.resultType)));
+    uValue.push_back(Pair("payout", uniBet.IsCompleted() ? ValueFromAmount(uniBet.payout) : "pending"));
+
+    if (requiredPayoutInfo) {
+        if (uniBet.IsCompleted()) {
+            if (uniBet.payoutHeight > 0) {
+                auto it = bettingsView->payoutsInfo->NewIterator();
+                for (it->Seek(CBettingDB::DbTypeToBytes(PayoutInfoKey{uniBet.payoutHeight, COutPoint{}})); it->Valid(); it->Next()) {
+                    PayoutInfoKey payoutKey;
+                    CPayoutInfoDB payoutInfo;
+                    CBettingDB::BytesToDbType(it->Key(), payoutKey);
+                    CBettingDB::BytesToDbType(it->Value(), payoutInfo);
+                    if (uniBet.payoutHeight != payoutKey.blockHeight) break;
+                    if (payoutInfo.betKey == betKey) {
+                        uValue.push_back(Pair("payoutTxHash", payoutKey.outPoint.hash.GetHex()));
+                        uValue.push_back(Pair("payoutTxOut", (uint64_t) payoutKey.outPoint.n));
+                        break;
+                    }
+                }
+            }
+            else {
+                uValue.push_back(Pair("payoutTxHash", "no"));
+                uValue.push_back(Pair("payoutTxOut", "no"));
+            }
+        }
+        else {
+            uValue.push_back(Pair("payoutTxHash", "pending"));
+            uValue.push_back(Pair("payoutTxOut", "pending"));
+        }
+    }
+}
+
+UniValue GetBets(uint32_t count, uint32_t from, CWallet *_pwalletMain, boost::optional<std::string> accountName, bool includeWatchonly) {
+    UniValue ret(UniValue::VARR);
+
+    bool fAllAccounts = true;
+    if (accountName && *accountName != "*") {
+        fAllAccounts = false;
+    }
+
+    auto it = bettingsView->bets->NewIterator();
+    uint32_t skippedEntities = 0;
+    for(it->SeekToLast(); it->Valid(); it->Prev()) {
+        PeerlessBetKey key;
+        CPeerlessBetDB uniBet;
+        CBettingDB::BytesToDbType(it->Value(), uniBet);
+        CBettingDB::BytesToDbType(it->Key(), key);
+
+        if (_pwalletMain) {
+            CTxDestination dest = uniBet.playerAddress;
+            isminetype scriptType = IsMine(*_pwalletMain, dest);
+            if (scriptType == ISMINE_NO)
+                continue;
+            if (scriptType == ISMINE_WATCH_ONLY && !includeWatchonly)
+                continue;
+            if (!fAllAccounts && accountName && _pwalletMain->mapAddressBook.count(dest))
+                if (_pwalletMain->mapAddressBook[dest].name != *accountName)
+                    continue;
+        }
+
+        UniValue uValue(UniValue::VOBJ);
+
+        CollectPLBetData(uValue, key, uniBet, true);
+
+        if (skippedEntities == from) {
+            ret.push_back(uValue);
+        } else {
+            skippedEntities++;
+        }
+
+        if (count != 0 && ret.size() == count) {
+            break;
+        }
+    }
+    std::vector<UniValue> arrTmp = ret.getValues();
+    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+    ret.setArray();
+    ret.push_backV(arrTmp);
+
+    return ret;
+}
+
+UniValue getallbets(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 2)
+        throw std::runtime_error(
+                "getallbets\n"
+                "\nGet bets info for all wallets\n"
+
+                "\nArguments:\n"
+                "1. count (numeric, optional, default=10) Limit response to last bets number.\n"
+                "2. from (numeric, optional, default=0) The number of bets to skip (from the last)\n"
+                "\nResult:\n"
+                "[\n"
+                "  {\n"
+                "    \"betBlockHeight\": height, (string) The hash of block wich store tx with bet opcode.\n"
+                "    \"betTxHash\": txHash, (string) The hash of transaction wich store bet opcode.\n"
+                "    \"betTxOut\": nOut, (numeric) The out number of transaction wich store bet opcode.\n"
+                "    \"legs\": (array of objects)\n"
+                "      [\n"
+                "        {\n"
+                "          \"event-id\": id, (numeric) The event id.\n"
+                "          \"outcome\": typeId, (numeric) The outcome type id.\n"
+                "          \"legResultType\": typeStr, (string) The string with leg result info.\n"
+                "          \"lockedEvent\": (object) {\n"
+                "            \"homeOdds\": homeOdds, (numeric) The moneyline odds to home team winning.\n"
+                "            \"awayOdds\": awayOdds, (numeric) The moneyline odds to away team winning.\n"
+                "            \"drawOdds\": drawOdds, (numeric) The moneyline odds to draw.\n"
+                "            \"spreadPoints\": spreadPoints, (numeric) The spread points.\n"
+                "            \"spreadHomeOdds\": spreadHomeOdds, (numeric) The spread odds to home team.\n"
+                "            \"spreadAwayOdds\": spreadAwayOdds, (numeric) The spread odds to away team.\n"
+                "            \"totalPoints\": totalPoints, (numeric) The total points.\n"
+                "            \"totalOverOdds\": totalOverOdds, (numeric) The total odds to over.\n"
+                "            \"totalUnderOdds\": totalUnderOdds, (numeric) The total odds to under.\n"
+                "            \"starting\": starting, (numeric) The event start time in ms of Unix Timestamp.\n"
+                "            \"home\": home command, (string) The home team name.\n"
+                "            \"away\": away command, (string) The away team name.\n"
+                "            \"tournament\": tournament, (string) The tournament name.\n"
+                "            \"eventResultType\": type, (standard, event refund, ml refund, spreads refund, totals refund) The result type of finished event.\n"
+                "            \"homeScore\": score, (numeric) The scores number of home team.\n"
+                "            \"awayScore\": score, (numeric) The scores number of away team.\n"
+                "          }\n"
+                "        },\n"
+                "        ...\n"
+                "      ],                           (list) The list of legs.\n"
+                "    \"address\": playerAddress,    (string) The player address.\n"
+                "    \"amount\": x.xxx,             (numeric) The amount bet in WGR.\n"
+                "    \"time\": \"betting time\",    (string) The betting time.\n"
+                "    \"completed\": betIsCompleted, (bool), The bet status in chain.\n"
+                "    \"betResultType\": type,       (lose/win/refund/pending), The info about bet result.\n"
+                "    \"payout\": x.xxx,             (numeric) The bet payout.\n"
+                "    \"payoutTxHash\": txHash,      (string) The hash of transaction wich store bet payout.\n"
+                "    \"payoutTxOut\": nOut,        (numeric) The out number of transaction wich store bet payout.\n"
+                "  },\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n" +
+                HelpExampleCli("getallbets", ""));
+
+    uint32_t count = 10;
+    if (request.params.size() >= 1)
+        count = request.params[0].get_int();
+
+    uint32_t from = 0;
+    if (request.params.size() == 2)
+        from = request.params[1].get_int();
+
+    LOCK(cs_main);
+
+    return GetBets(count, from, NULL, boost::optional<std::string>{}, false);
+}
+
+std::string GetContenderNameById(uint32_t contenderId)
+{
+    CMappingDB mapping;
+    if (!bettingsView->mappings->Read(MappingKey{contenderMapping, contenderId}, mapping)) {
+        return "undefined";
+    }
+    else {
+        return mapping.sName;
+    }
+}
+
+UniValue GetContendersInfo(const std::map<uint32_t, ContenderInfo> mContenders)
+{
+    UniValue uContenders(UniValue::VARR);
+    for (const auto& contender_it : mContenders) {
+        UniValue uContender(UniValue::VOBJ);
+        uContender.push_back(Pair("id", (uint64_t) contender_it.first));
+        uContender.push_back(Pair("name", GetContenderNameById(contender_it.first)));
+        uContender.push_back(Pair("modifier", (uint64_t) contender_it.second.nModifier));
+        uContender.push_back(Pair("input-odds", (uint64_t) contender_it.second.nInputOdds));
+        uContender.push_back(Pair("outright-odds", (uint64_t) contender_it.second.nOutrightOdds));
+        uContender.push_back(Pair("place-odds", (uint64_t) contender_it.second.nPlaceOdds));
+        uContender.push_back(Pair("show-odds", (uint64_t) contender_it.second.nShowOdds));
+        uContenders.push_back(uContender);
+    }
+    return uContenders;
+}
+
+UniValue listfieldevents(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() > 2))
+        throw std::runtime_error(
+            "listfieldevents\n"
+            "\nGet live Wagerr field events.\n"
+            "\nArguments:\n"
+            "1. \"openedOnly\" (bool, optional) Default - false. Gets only events which has no result.\n"
+            "2. \"sportFilter\" (string, optional) Gets only events with input sport name.\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"id\": \"xxx\",         (string) The event ID\n"
+            "    \"name\": \"xxx\",       (string) The name of the event\n"
+            "    \"round\": \"xxx\",      (string) The round of the event\n"
+            "    \"starting\": n,         (numeric) When the event will start\n"
+            "    \"contenders\": [\n"
+            "      {\n"
+            "        \"name\": \"xxxx\",  (string) Conteder name\n"
+            "        \"odds\": n          (numeric) Conteder win Odds\n"
+            "      }\n"
+            "      ,...\n"
+            "    ]\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("listfieldevents", "") +
+            HelpExampleCli("listfieldevents", "true" "horse racing") +
+            HelpExampleRpc("listfieldevents", ""));
+
+    UniValue result{UniValue::VARR};
+
+    std::string sportFilter = "";
+    bool openedOnly = false;
+
+    if (request.params.size() > 0) {
+        openedOnly = request.params[0].get_bool();
+    }
+    if (request.params.size() > 1) {
+        sportFilter = request.params[0].get_str();
+    }
+
+    LOCK(cs_main);
+
+    auto it = bettingsView->fieldEvents->NewIterator();
+    for (it->Seek(std::vector<unsigned char>{}); it->Valid(); it->Next()) {
+        CFieldEventDB fEvent;
+        CMappingDB mapping;
+        CBettingDB::BytesToDbType(it->Value(), fEvent);
+
+        // Only list active events.
+        if ((time_t)fEvent.nStartTime < std::time(0)) {
+            continue;
+        }
+
+        UniValue evt(UniValue::VOBJ);
+
+        if (!bettingsView->mappings->Read(MappingKey{individualSportMapping, fEvent.nSport}, mapping))
+            continue;
+
+        std::string sport = mapping.sName;
+
+        if (!sportFilter.empty() && sportFilter != sport)
+            continue;
+
+        // list only unresulted events
+        if (openedOnly && bettingsView->fieldResults->Exists(ResultKey{fEvent.nEventId}))
+            continue;
+
+        evt.push_back(Pair("event_id", (uint64_t) fEvent.nEventId));
+        evt.push_back(Pair("starting", (uint64_t) fEvent.nStartTime));
+        evt.push_back(Pair("mrg-in", (uint64_t) fEvent.nMarginPercent));
+
+        evt.push_back(Pair("sport", sport));
+
+        if (!bettingsView->mappings->Read(MappingKey{tournamentMapping, fEvent.nTournament}, mapping))
+            continue;
+        evt.push_back(Pair("tournament", mapping.sName));
+
+        if (!bettingsView->mappings->Read(MappingKey{roundMapping, fEvent.nStage}, mapping))
+            continue;
+        evt.push_back(Pair("round", mapping.sName));
+
+        
+        evt.push_back(Pair("contenders", GetContendersInfo(fEvent.contenders)));
+
+        result.push_back(evt);
+    }
+
+    return result;
+}
+
+void CollectFieldBetData(UniValue& uValue, const FieldBetKey& betKey, const CFieldBetDB& fieldBet, bool requiredPayoutInfo = false) {
+
+    UniValue uLegs(UniValue::VARR);
+
+    uValue.push_back(Pair("type", "field"));
+
+    for (uint32_t i = 0; i < fieldBet.legs.size(); i++) {
+        auto &leg = fieldBet.legs[i];
+        auto &lockedEvent = fieldBet.lockedEvents[i];
+        UniValue uLeg(UniValue::VOBJ);
+        UniValue uLockedEvent(UniValue::VOBJ);
+        uLeg.push_back(Pair("event-id", (uint64_t) leg.nEventId));
+        uLeg.push_back(Pair("outcome", (uint64_t) leg.nOutcome));
+
+        uLockedEvent.push_back(Pair("contenders", GetContendersInfo(lockedEvent.contenders)));
+        uLockedEvent.push_back(Pair("starting", lockedEvent.nStartTime));
+        CMappingDB mapping;
+        if (bettingsView->mappings->Read(MappingKey{tournamentMapping, lockedEvent.nTournament}, mapping)) {
+            uLockedEvent.push_back(Pair("tournament", mapping.sName));
+        }
+        else {
+            uLockedEvent.push_back(Pair("tournament", "undefined"));
+        }
+        CFieldResultDB fResult;
+        uint32_t legOdds = 0;
+        if (bettingsView->fieldResults->Read(FieldResultKey{leg.nEventId}, fResult)) {
+            uLockedEvent.push_back(Pair("eventResultType", EventResultTypeToStr((ResultType) fResult.nResultType)));
+            UniValue results(UniValue::VARR);
+            for (auto &contenderResult : fResult.contendersResults) {
+                UniValue result(UniValue::VOBJ);
+                result.push_back(Pair("contenderId", (int64_t) (contenderResult.first)));
+                result.push_back(Pair("name", GetContenderNameById(contenderResult.first)));
+                result.push_back(Pair("result", ContenderResultToString(contenderResult.second)));
+                results.push_back(result);
+            }
+            uLockedEvent.push_back(Pair("contenderResults", results));
+            if (lockedEvent.nStartTime > 0 && fieldBet.betTime > ((int64_t)lockedEvent.nStartTime - Params().GetConsensus().BetPlaceTimeoutBlocks())) {
+                uLeg.push_back(Pair("legResultType", "refund - invalid bet"));
+            }
+            else {
+                legOdds = GetBetOdds(leg, lockedEvent, fResult, (int64_t)betKey.blockHeight >= Params().GetConsensus().WagerrProtocolV4StartHeight()).first;
+                std::string legResultTypeStr;
+                if (legOdds == 0) {
+                    legResultTypeStr = std::string("lose");
+                }
+                else if (legOdds == BET_ODDSDIVISOR) {
+                    legResultTypeStr = std::string("refund");
+                }
+                else {
+                    legResultTypeStr = std::string("win");
+                }
+                uLeg.push_back(Pair("legResultType", legResultTypeStr));
+            }
+        }
+        else {
+            uLockedEvent.push_back(Pair("eventResultType", "event result not found"));
+            uLeg.push_back(Pair("legResultType", "pending"));
+        }
+        uLeg.push_back(Pair("lockedEvent", uLockedEvent));
+        uLegs.push_back(uLeg);
+    }
+
+    uValue.push_back(Pair("betBlockHeight", (uint64_t) betKey.blockHeight));
+    uValue.push_back(Pair("betTxHash", betKey.outPoint.hash.GetHex()));
+    uValue.push_back(Pair("betTxOut", (uint64_t) betKey.outPoint.n));
+    uValue.push_back(Pair("legs", uLegs));
+    uValue.push_back(Pair("address", EncodeDestination(fieldBet.playerAddress)));
+    uValue.push_back(Pair("amount", ValueFromAmount(fieldBet.betAmount)));
+    uValue.push_back(Pair("time", (uint64_t) fieldBet.betTime));
+    uValue.push_back(Pair("completed", fieldBet.IsCompleted() ? "yes" : "no"));
+    uValue.push_back(Pair("betResultType", BetResultTypeToStr(fieldBet.resultType)));
+    uValue.push_back(Pair("payout", fieldBet.IsCompleted() ? ValueFromAmount(fieldBet.payout) : "pending"));
+
+    if (requiredPayoutInfo) {
+        if (fieldBet.IsCompleted()) {
+            if (fieldBet.payoutHeight > 0) {
+                auto it = bettingsView->payoutsInfo->NewIterator();
+                for (it->Seek(CBettingDB::DbTypeToBytes(PayoutInfoKey{fieldBet.payoutHeight, COutPoint{}})); it->Valid(); it->Next()) {
+                    PayoutInfoKey payoutKey;
+                    CPayoutInfoDB payoutInfo;
+                    CBettingDB::BytesToDbType(it->Key(), payoutKey);
+                    CBettingDB::BytesToDbType(it->Value(), payoutInfo);
+                    if (fieldBet.payoutHeight != payoutKey.blockHeight) break;
+                    if (payoutInfo.betKey == betKey) {
+                        uValue.push_back(Pair("payoutTxHash", payoutKey.outPoint.hash.GetHex()));
+                        uValue.push_back(Pair("payoutTxOut", (uint64_t) payoutKey.outPoint.n));
+                        break;
+                    }
+                }
+            }
+            else {
+                uValue.push_back(Pair("payoutTxHash", "no"));
+                uValue.push_back(Pair("payoutTxOut", "no"));
+            }
+        }
+        else {
+            uValue.push_back(Pair("payoutTxHash", "pending"));
+            uValue.push_back(Pair("payoutTxOut", "pending"));
+        }
+    }
+}
+
+void CollectQGBetData(UniValue &uValue, QuickGamesBetKey &key, CQuickGamesBetDB &qgBet, arith_uint256 hash, bool requiredPayoutInfo = false) {
+
+    uValue.push_back(Pair("type", "quickgame"));
+
+    auto &gameView = Params().QuickGamesArr()[qgBet.gameType];
+
+    uValue.push_back(Pair("blockHeight", (uint64_t) key.blockHeight));
+    uValue.push_back(Pair("resultBlockHash", hash.ToString().c_str()));
+    uValue.push_back(Pair("betTxHash", key.outPoint.hash.GetHex()));
+    uValue.push_back(Pair("betTxOut", (uint64_t) key.outPoint.n));
+    uValue.push_back(Pair("address", EncodeDestination(qgBet.playerAddress)));
+    uValue.push_back(Pair("amount", ValueFromAmount(qgBet.betAmount)));
+    uValue.push_back(Pair("time", (uint64_t) qgBet.betTime));
+    uValue.push_back(Pair("gameName", gameView.name));
+    UniValue betInfo{UniValue::VOBJ};
+    for (auto val : gameView.betInfoParser(qgBet.vBetInfo, hash)) {
+        betInfo.push_back(Pair(val.first, val.second));
+    }
+    uValue.push_back(Pair("betInfo", betInfo));
+    uValue.push_back(Pair("completed", qgBet.IsCompleted() ? "yes" : "no"));
+    uValue.push_back(Pair("betResultType", BetResultTypeToStr(qgBet.resultType)));
+    uValue.push_back(Pair("payout", qgBet.IsCompleted() ? ValueFromAmount(qgBet.payout) : "pending"));
+
+    if (requiredPayoutInfo) {
+        if (qgBet.IsCompleted()) {
+            auto it = bettingsView->payoutsInfo->NewIterator();
+            // payoutHeight is next block height after block which contain bet
+            uint32_t payoutHeight = key.blockHeight + 1;
+            for (it->Seek(CBettingDB::DbTypeToBytes(PayoutInfoKey{payoutHeight, COutPoint{}})); it->Valid(); it->Next()) {
+                PayoutInfoKey payoutKey;
+                CPayoutInfoDB payoutInfo;
+                CBettingDB::BytesToDbType(it->Key(), payoutKey);
+                CBettingDB::BytesToDbType(it->Value(), payoutInfo);
+
+                if (payoutHeight != payoutKey.blockHeight)
+                    break;
+
+                if (payoutInfo.betKey == key) {
+                    uValue.push_back(Pair("payoutTxHash", payoutKey.outPoint.hash.GetHex()));
+                    uValue.push_back(Pair("payoutTxOut", (uint64_t) payoutKey.outPoint.n));
+                    break;
+                }
+            }
+        }
+        else {
+            uValue.push_back(Pair("payoutTxHash", "pending"));
+            uValue.push_back(Pair("payoutTxOut", "pending"));
+        }
+    }
+}
+
+UniValue getbetbytxid(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+                "getbetbytxid\n"
+                "\nGet bet info by bet's txid.\n"
+
+                "\nArguments:\n"
+                "1. \"txid\" (string, required) Transaction ID wich has bet opcode in blockchain.\n"
+                "\nResult: (array of objects)\n"
+                "[\n"
+                "  {\n"
+                "    \"betBlockHeight\": height, (string) The hash of block wich store tx with bet opcode.\n"
+                "    \"betTxHash\": txHash, (string) The hash of transaction wich store bet opcode.\n"
+                "    \"betTxOut\": nOut, (numeric) The out number of transaction wich store bet opcode.\n"
+                "    \"legs\": (array of objects)\n"
+                "      [\n"
+                "        {\n"
+                "          \"event-id\": id, (numeric) The event id.\n"
+                "          \"outcome\": typeId, (numeric) The outcome type id.\n"
+                "          \"legResultType\": typeStr, (string) The string with leg result info.\n"
+                "          \"lockedEvent\": (object) {\n"
+                "            \"homeOdds\": homeOdds, (numeric) The moneyline odds to home team winning.\n"
+                "            \"awayOdds\": awayOdds, (numeric) The moneyline odds to away team winning.\n"
+                "            \"drawOdds\": drawOdds, (numeric) The moneyline odds to draw.\n"
+                "            \"spreadPoints\": spreadPoints, (numeric) The spread points.\n"
+                "            \"spreadHomeOdds\": spreadHomeOdds, (numeric) The spread odds to home team.\n"
+                "            \"spreadAwayOdds\": spreadAwayOdds, (numeric) The spread odds to away team.\n"
+                "            \"totalPoints\": totalPoints, (numeric) The total points.\n"
+                "            \"totalOverOdds\": totalOverOdds, (numeric) The total odds to over.\n"
+                "            \"totalUnderOdds\": totalUnderOdds, (numeric) The total odds to under.\n"
+                "            \"starting\": starting, (numeric) The event start time in ms of Unix Timestamp.\n"
+                "            \"home\": home command, (string) The home team name.\n"
+                "            \"away\": away command, (string) The away team name.\n"
+                "            \"tournament\": tournament, (string) The tournament name.\n"
+                "            \"eventResultType\": type, (standard, event refund, ml refund, spreads refund, totals refund) The result type of finished event.\n"
+                "            \"homeScore\": score, (numeric) The scores number of home team.\n"
+                "            \"awayScore\": score, (numeric) The scores number of away team.\n"
+                "          }\n"
+                "        },\n"
+                "        ...\n"
+                "      ],                           (list) The list of legs.\n"
+                "    \"address\": playerAddress,    (string) The player address.\n"
+                "    \"amount\": x.xxx,             (numeric) The amount bet in WGR.\n"
+                "    \"time\": \"betting time\",    (string) The betting time.\n"
+                "    \"completed\": betIsCompleted, (bool), The bet status in chain.\n"
+                "    \"betResultType\": type,       (lose/win/refund/pending), The info about bet result.\n"
+                "    \"payout\": x.xxx,            (numeric) The bet payout.\n"
+                "    \"payoutTxHash\": txHash,      (string) The hash of transaction wich store bet payout.\n"
+                "    \"payoutTxOut\": nOut,        (numeric) The out number of transaction wich store bet payout.\n"
+                "  },\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n" +
+                HelpExampleCli("getbetbytxid", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"));
+
+    uint256 txHash;
+    txHash.SetHex(request.params[0].get_str());
+
+    LOCK(cs_main);
+
+    CTransactionRef tx;
+    uint256 hashBlock;
+    if (!GetTransaction(txHash, tx, Params().GetConsensus(), hashBlock, true)) {
+        throw std::runtime_error("Invalid bet's transaction id");
+    }
+
+    CBlockIndex* blockindex = mapBlockIndex[hashBlock];
+
+    if (!blockindex) {
+        throw std::runtime_error("Invalid block index");
+    }
+
+    UniValue ret{UniValue::VARR};
+
+    {
+        auto it = bettingsView->bets->NewIterator();
+        for (it->Seek(CBettingDB::DbTypeToBytes(PeerlessBetKey{static_cast<uint32_t>(blockindex->nHeight), COutPoint{txHash, 0}})); it->Valid(); it->Next()) {
+            PeerlessBetKey key;
+            CPeerlessBetDB uniBet;
+            CBettingDB::BytesToDbType(it->Value(), uniBet);
+            CBettingDB::BytesToDbType(it->Key(), key);
+
+            if (key.outPoint.hash != txHash) break;
+
+            UniValue uValue(UniValue::VOBJ);
+
+            CollectPLBetData(uValue, key, uniBet, true);
+
+            ret.push_back(uValue);
+        }
+    }
+    {
+        auto it = bettingsView->quickGamesBets->NewIterator();
+        for (it->Seek(CBettingDB::DbTypeToBytes(PeerlessBetKey{static_cast<uint32_t>(blockindex->nHeight), COutPoint{txHash, 0}})); it->Valid(); it->Next()) {
+            QuickGamesBetKey key;
+            CQuickGamesBetDB qgBet;
+            arith_uint256 hash;
+            CBettingDB::BytesToDbType(it->Key(), key);
+            CBettingDB::BytesToDbType(it->Value(), qgBet);
+
+            if (key.outPoint.hash != txHash) break;
+
+            CBlockIndex *blockIndex = chainActive[(int) key.blockHeight];
+            if (blockIndex) {
+                hash = UintToArith256(mapProofOfStake[blockIndex->GetBlockHash()]);
+                if (hash == 0) {
+                    CBlock block;
+                    ReadBlockFromDisk(block, blockIndex, Params().GetConsensus());
+                    if (block.IsProofOfStake()) {
+                        uint256 calculatedHashProofOfStake;
+
+                        if (CheckProofOfStake(block, calculatedHashProofOfStake, blockIndex)) {
+                            hash = UintToArith256(calculatedHashProofOfStake);
+                        } else {
+                            hash = UintToArith256(blockIndex->GetBlockHash());
+                        }
+                    }
+                }
+            } else {
+                hash = arith_uint256();
+            }
+
+            UniValue uValue(UniValue::VOBJ);
+
+            CollectQGBetData(uValue, key, qgBet, hash, true);
+
+            ret.push_back(uValue);
+        }
+    }
+
+    {
+        auto it = bettingsView->fieldBets->NewIterator();
+        for (it->Seek(CBettingDB::DbTypeToBytes(FieldBetKey{static_cast<uint32_t>(blockindex->nHeight), COutPoint{txHash, 0}})); it->Valid(); it->Next()) {
+            FieldBetKey key;
+            CFieldBetDB fBet;
+            CBettingDB::BytesToDbType(it->Value(), fBet);
+            CBettingDB::BytesToDbType(it->Key(), key);
+
+            if (key.outPoint.hash != txHash) break;
+
+            UniValue uValue(UniValue::VOBJ);
+
+            CollectFieldBetData(uValue, key, fBet, true);
+
+            ret.push_back(uValue);
+        }
+    }
+
+    return ret;
+}
+
+UniValue listchaingamesbets(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    // TODO The command-line parameters for this command aren't handled as.
+    // described, either the documentation or the behaviour of this command
+    // should be corrected when time allows.
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+            "listchaingamebets ( \"account\" count from includeWatchonly)\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+            "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"event-id\":\"accountname\",       (string) The ID of the event being bet on.\n"
+            "    \"amount\": x.xxx,                  (numeric) The amount bet in WGR.\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n"
+            "\nList the most recent 10 bets in the systems\n" +
+            HelpExampleCli("listchaingamebets", ""));
+
+    std::string strAccount = "*";
+    if (request.params.size() > 0)
+        strAccount = request.params[0].get_str();
+    int nCount = 10;
+    if (request.params.size() > 1)
+        nCount = request.params[1].get_int();
+    int nFrom = 0;
+    if (request.params.size() > 2)
+        nFrom = request.params[2].get_int();
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (request.params.size() > 3)
+        if (request.params[3].get_bool())
+            filter = filter | ISMINE_WATCH_ONLY;
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    UniValue ret(UniValue::VARR);
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
+
+    // iterate backwards until we have nCount items to return:
+    for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        CWalletTx* const pwtx = (*it).second.first;
+
+        if (pwtx != 0) {
+
+            uint256 txHash = (*pwtx).GetHash();
+
+            for (unsigned int i = 0; i < pwtx->tx->vout.size(); i++) {
+                const CTxOut& txout = pwtx->tx->vout[i];
+
+                auto cgBettingTx = ParseBettingTx(txout);
+
+                if (cgBettingTx == nullptr) continue;
+
+                if (cgBettingTx->GetTxType() == cgBetTxType) {
+                    CChainGamesBetTx* cgBet = (CChainGamesBetTx*) cgBettingTx.get();
+                    UniValue entry(UniValue::VOBJ);
+                    entry.push_back(Pair("tx-id", txHash.ToString().c_str()));
+                    entry.push_back(Pair("event-id", (uint64_t) cgBet->nEventId));
+                    entry.push_back(Pair("amount", ValueFromAmount(txout.nValue)));
+                    ret.push_back(entry);
+                }
+            }
+        }
+
+        if ((int)ret.size() >= (nCount + nFrom)) break;
+    }
+
+    // ret is newest to oldest
+    if (nFrom > (int)ret.size())
+        nFrom = ret.size();
+    if ((nFrom + nCount) > (int)ret.size())
+        nCount = ret.size() - nFrom;
+
+    std::vector<UniValue> arrTmp = ret.getValues();
+
+    std::vector<UniValue>::iterator first = arrTmp.begin();
+    std::advance(first, nFrom);
+    std::vector<UniValue>::iterator last = arrTmp.begin();
+    std::advance(last, nFrom+nCount);
+
+    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
+    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+
+    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+
+    ret.clear();
+    ret.setArray();
+    ret.push_backV(arrTmp);
+
+    return ret;
+}
+
+UniValue getmybets(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+                "getmybets\n"
+                "\nGet bets info for my wallets.\n"
+
+                "\nArguments:\n"
+                "1. account (string, optional) The account name. If not included, it will list all bets for all accounts. If \"\" is set, it will list transactions for the default account\n"
+                "2. count (numeric, optional, default=10) Limit response to last bets number.\n"
+                "3. from (numeric, optional, default=0) The number of bets to skip (from the last)\n"
+                "4. includeWatchonly (bool, optional, default=false) Include bets to watchonly addresses\n"
+                "\nResult:\n"
+                "[\n"
+                "  {\n"
+                "    \"betBlockHeight\": height, (string) The hash of block wich store tx with bet opcode.\n"
+                "    \"betTxHash\": txHash, (string) The hash of transaction wich store bet opcode.\n"
+                "    \"betTxOut\": nOut, (numeric) The out number of transaction wich store bet opcode.\n"
+                "    \"legs\": (array of objects)\n"
+                "      [\n"
+                "        {\n"
+                "          \"event-id\": id, (numeric) The event id.\n"
+                "          \"outcome\": typeId, (numeric) The outcome type id.\n"
+                "          \"legResultType\": typeStr, (string) The string with leg result info.\n"
+                "          \"lockedEvent\": (object) {\n"
+                "            \"homeOdds\": homeOdds, (numeric) The moneyline odds to home team winning.\n"
+                "            \"awayOdds\": awayOdds, (numeric) The moneyline odds to away team winning.\n"
+                "            \"drawOdds\": drawOdds, (numeric) The moneyline odds to draw.\n"
+                "            \"spreadPoints\": spreadPoints, (numeric) The spread points.\n"
+                "            \"spreadHomeOdds\": spreadHomeOdds, (numeric) The spread odds to home team.\n"
+                "            \"spreadAwayOdds\": spreadAwayOdds, (numeric) The spread odds to away team.\n"
+                "            \"totalPoints\": totalPoints, (numeric) The total points.\n"
+                "            \"totalOverOdds\": totalOverOdds, (numeric) The total odds to over.\n"
+                "            \"totalUnderOdds\": totalUnderOdds, (numeric) The total odds to under.\n"
+                "            \"starting\": starting, (numeric) The event start time in ms of Unix Timestamp.\n"
+                "            \"home\": home command, (string) The home team name.\n"
+                "            \"away\": away command, (string) The away team name.\n"
+                "            \"tournament\": tournament, (string) The tournament name.\n"
+                "            \"eventResultType\": type, (standard, event refund, ml refund, spreads refund, totals refund) The result type of finished event.\n"
+                "            \"homeScore\": score, (numeric) The scores number of home team.\n"
+                "            \"awayScore\": score, (numeric) The scores number of away team.\n"
+                "          }\n"
+                "        },\n"
+                "        ...\n"
+                "      ],                           (list) The list of legs.\n"
+                "    \"address\": playerAddress,    (string) The player address.\n"
+                "    \"amount\": x.xxx,             (numeric) The amount bet in WGR.\n"
+                "    \"time\": \"betting time\",    (string) The betting time.\n"
+                "    \"completed\": betIsCompleted, (bool), The bet status in chain.\n"
+                "    \"betResultType\": type,       (lose/win/refund/pending), The info about bet result.\n"
+                "    \"payout\": x.xxx,            (numeric) The bet payout.\n"
+                "    \"payoutTxHash\": txHash,      (string) The hash of transaction wich store bet payout.\n"
+                "    \"payoutTxOut\": nOut,        (numeric) The out number of transaction wich store bet payout.\n"
+                "  },\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n" +
+                HelpExampleCli("getmybets", ""));
+
+
+    boost::optional<std::string> accountName = {};
+    if (request.params.size() >= 1)
+        accountName = request.params[0].get_str();
+
+    uint32_t count = 10;
+    if (request.params.size() >= 2)
+        count = request.params[1].get_int();
+
+    uint32_t from = 0;
+    if (request.params.size() >= 3)
+        from = request.params[2].get_int();
+
+    bool includeWatchonly = false;
+    if (request.params.size() == 4)
+        includeWatchonly = request.params[3].get_bool();
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    return GetBets(count, from, pwallet, accountName, includeWatchonly);
+}
+
+UniValue GetQuickGamesBets(uint32_t count, uint32_t from, CWallet *_pwalletMain, boost::optional<std::string> accountName, bool includeWatchonly) {
+    UniValue ret(UniValue::VARR);
+
+    auto it = bettingsView->quickGamesBets->NewIterator();
+    uint32_t skippedEntities = 0;
+    for(it->SeekToLast(); it->Valid(); it->Prev()) {
+        QuickGamesBetKey key;
+        CQuickGamesBetDB qgBet;
+        arith_uint256 hash;
+        CBettingDB::BytesToDbType(it->Value(), qgBet);
+        CBettingDB::BytesToDbType(it->Key(), key);
+
+        if (_pwalletMain) {
+            CTxDestination dest = qgBet.playerAddress;
+            isminetype scriptType = IsMine(*_pwalletMain, dest);
+            if (scriptType == ISMINE_NO)
+                continue;
+            if (scriptType == ISMINE_WATCH_ONLY && !includeWatchonly)
+                continue;
+            if (accountName && _pwalletMain->mapAddressBook.count(dest))
+                if (_pwalletMain->mapAddressBook[dest].name != *accountName)
+                    continue;
+
+        }
+
+        CBlockIndex *blockIndex = chainActive[(int) key.blockHeight];
+        if (blockIndex) {
+            hash = UintToArith256(mapProofOfStake[blockIndex->GetBlockHash()]);
+            if (hash == 0) {
+                CBlock block;
+                ReadBlockFromDisk(block, blockIndex, Params().GetConsensus());
+                if (block.IsProofOfStake()) {
+                    uint256 calculatedHashProofOfStake;
+
+                    if (CheckProofOfStake(block, calculatedHashProofOfStake, blockIndex)) {
+                        hash = UintToArith256(calculatedHashProofOfStake);
+                    } else {
+                        hash = UintToArith256(blockIndex->GetBlockHash());
+                    }
+                }
+            }
+        } else {
+            hash = arith_uint256();
+        }
+
+        UniValue bet{UniValue::VOBJ};
+
+        CollectQGBetData(bet, key, qgBet, hash, true);
+
+        if (skippedEntities == from) {
+            ret.push_back(bet);
+        } else {
+            skippedEntities++;
+        }
+
+        if (count != 0 && ret.size() == count) {
+            break;
+        }
+    }
+
+    return ret;
+}
+
+UniValue getallqgbets(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 2)
+        throw std::runtime_error(
+                "getallqgbets\n"
+                "\nGet quick games bets info for all wallets\n"
+
+                "\nArguments:\n"
+                "1. count (numeric, optional, default=10) Limit response to last bets number.\n"
+                "2. from (numeric, optional, default=0) The number of bets to skip (from the last)\n"
+                "\nResult:\n"
+                "[\n"
+                "  {\n"
+                "    \"blockHeight\": height, (numeric) The block height where bet was placed.\n"
+                "    \"resultBlockHash\": posHash, (string) The block hash where bet was placed. Also using for calc win number.\n"
+                "    \"betTxHash\": hash, (string) The transaction hash where bet was placed.\n"
+                "    \"betTxOut\": outPoint, (numeric) The transaction outpoint where bet was placed.\n"
+                "    \"address\": playerAddress, (string) The player address.\n"
+                "    \"amount\": x.xxx, (numeric) The amount bet in WGR.\n"
+                "    \"time\": betTime, (string) The time of bet.\n"
+                "    \"gameName\": name, (string) The game name on which bet has been placed.\n"
+                "    \"betInfo\": info, (object) The bet info which collect specific infos about currect game params."
+                "    \"completed\": yes/no, (string).\n"
+                "    \"betResultType\": lose/win/refund/pending, (string).\n"
+                "    \"payout\": x.xxx/pending, (numeric/string) The winning value.\n"
+                "  },\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n" +
+                HelpExampleCli("getallqgbets", "15"));
+
+    uint32_t count = 10;
+    if (request.params.size()  >= 1)
+        count = request.params[0].get_int();
+
+    uint32_t from = 0;
+    if (request.params.size()  == 2)
+        from = request.params[1].get_int();
+
+    LOCK(cs_main);
+
+    return GetQuickGamesBets(count, from, NULL, boost::optional<std::string>{}, false);
+}
+
+
+UniValue getmyqgbets(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 2)
+        throw std::runtime_error(
+                "getmyqgbets\n"
+                "\nGet quick games bets info for my wallets.\n"
+
+                                "\nArguments:\n"
+                "1. account (string, optional) The account name. If not included, it will list all bets for all accounts. If \"\" is set, it will list transactions for the default account\n"
+                "2. count (numeric, optional, default=10) Limit response to last bets number.\n"
+                "3. from (numeric, optional, default=0) The number of bets to skip (from the last)\n"
+                "4. includeWatchonly (bool, optional, default=false) Include bets to watchonly addresses\n"
+                "\nResult:\n"
+                "[\n"
+                "  {\n"
+                "    \"blockHeight\": height, (numeric) The block height where bet was placed.\n"
+                "    \"resultBlockHash\": posHash, (string) The block hash where bet was placed. Also using for calc win number.\n"
+                "    \"betTxHash\": hash, (string) The transaction hash where bet was placed.\n"
+                "    \"betTxOut\": outPoint, (numeric) The transaction outpoint where bet was placed.\n"
+                "    \"address\": playerAddress, (string) The player address.\n"
+                "    \"amount\": x.xxx, (numeric) The amount bet in WGR.\n"
+                "    \"time\": betTime, (string) The time of bet.\n"
+                "    \"gameName\": name, (string) The game name on which bet has been placed.\n"
+                "    \"betInfo\": info, (object) The bet info which collect specific infos about currect game params."
+                "    \"completed\": yes/no, (string).\n"
+                "    \"betResultType\": lose/win/refund/pending, (string).\n"
+                "    \"payout\": x.xxx/pending, (numeric/string) The winning value.\n"
+                "  },\n"
+                "  ...\n"
+                "]\n"
+
+                "\nExamples:\n" +
+                HelpExampleCli("getmyqgbets", "15"));
+
+    boost::optional<std::string> accountName = {};
+    if (request.params.size() >= 1)
+        accountName = request.params[0].get_str();
+
+    uint32_t count = 10;
+    if (request.params.size()  >= 2)
+        count = request.params[1].get_int();
+
+    uint32_t from = 0;
+    if (request.params.size() >= 3)
+        from = request.params[2].get_int();
+
+    bool includeWatchonly = false;
+    if (request.params.size() == 4)
+        includeWatchonly = request.params[3].get_bool();
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    return GetQuickGamesBets(count, from, pwallet, accountName, includeWatchonly);
+}
+
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
@@ -4365,6 +6479,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
     { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","addlocked","include_watchonly"} },
+    { "wallet",             "getextendedbalance",               &getbalance,                    {} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
@@ -4384,6 +6499,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","addlocked","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           {"blockhash","target_confirmations","include_watchonly","include_removed"} },
     { "wallet",             "listtransactions",         &listtransactions,         {"account|label|dummy","count","skip","include_watchonly"} },
+    { "wallet",             "listtransactionrecords",   &listtransactionrecords,   {} },
     { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwallets",              &listwallets,              {} },
     { "wallet",             "loadwallet",               &loadwallet,               {"filename"} },
@@ -4391,8 +6507,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_cj","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_cj","conf_target","estimate_mode"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
-    { "wallet",             "setcoinjoinrounds",     &setcoinjoinrounds,     {"rounds"} },
-    { "wallet",             "setcoinjoinamount",     &setcoinjoinamount,     {"amount"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },
@@ -4430,6 +6544,24 @@ static const CRPCCommand commands[] =
     { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     {} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     {"filename", "index"} },
+
+    { "wallet",             "getstakingstatus",         &getstakingstatus,         {} },
+    { "wallet",             "setstakesplitthreshold",   &setstakesplitthreshold,   {"value"} },
+    { "wallet",             "autocombinedust",          &autocombinedust,          {"enable", "threshold"} },
+
+    { "wallet",             "placebet",                 &placebet,              {} },
+    { "wallet",             "placeparlaybet",           &placeparlaybet,        {} },
+    { "wallet",             "placefieldbet",            &placefieldbet,         {} },
+    { "wallet",             "placefieldparlaybet",      &placefieldparlaybet,   {} },
+
+    { "betting",            "listbets",                 &listbets,              {} },
+    { "betting",            "listchaingamesbets",       &listchaingamesbets,    {} },
+    { "betting",            "listfieldevents",          &listfieldevents,       {} },
+    { "betting",            "getallbets",               &getallbets,            {} },
+    { "betting",            "getbet",                   &getbet,                {} },
+    { "betting",            "getmybets",                &getmybets,             {} },
+    { "betting",            "getmyqgbets",              &getmyqgbets,           {} },
+    { "betting",            "getallqgbets",             &getallqgbets,          {} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

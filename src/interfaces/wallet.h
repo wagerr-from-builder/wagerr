@@ -41,7 +41,7 @@ using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
 
 namespace CoinJoin {
-//! Interface for the wallet constrained src/coinjoin part of a dash node (dashd process).
+//! Interface for the wallet constrained src/coinjoin part of a wagerr node (wagerrd process).
 class Client
 {
 public:
@@ -346,11 +346,13 @@ struct WalletTx
     std::vector<CTxDestination> txout_address;
     std::vector<isminetype> txout_address_is_mine;
     CAmount credit;
+    CAmount immature_credit;
     CAmount debit;
     CAmount change;
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
+    bool is_coinstake;
     bool is_denominate;
 };
 
@@ -367,6 +369,7 @@ struct WalletTxStatus
     bool is_trusted;
     bool is_abandoned;
     bool is_coinbase;
+    bool is_coinstake;
     bool is_in_main_chain;
     bool is_chainlocked;
     bool is_islocked;

@@ -12,10 +12,10 @@
 #include <script/sign.h>
 #include <util.h>
 #include <utilstrencodings.h>
-#include <test/test_dash.h>
+#include <test/test_wagerr.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
-#include <script/dashconsensus.h>
+#include <script/wagerrconsensus.h>
 #endif
 
 #include <fstream>
@@ -93,6 +93,8 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_INVALID_NUMBER_RANGE, "INVALID_NUMBER_RANGE"},
     {SCRIPT_ERR_DIV_BY_ZERO, "DIV_BY_ZERO"},
     {SCRIPT_ERR_MOD_BY_ZERO, "MOD_BY_ZERO"},
+    {SCRIPT_ERR_NUMBER_OVERFLOW, "NUMBER_OVERFLOW"},
+    {SCRIPT_ERR_NUMBER_BAD_ENCODING, "NUMBER_BAD_ENCODING"},
 };
 
 const char *FormatScriptError(ScriptError_t err)
@@ -173,9 +175,9 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, co
 #if defined(HAVE_CONSENSUS_LIB)
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
-    int libconsensus_flags = flags & dashconsensus_SCRIPT_FLAGS_VERIFY_ALL;
+    int libconsensus_flags = flags & wagerrconsensus_SCRIPT_FLAGS_VERIFY_ALL;
     if (libconsensus_flags == flags) {
-        BOOST_CHECK_MESSAGE(dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expect,message);
+        BOOST_CHECK_MESSAGE(wagerrconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expect,message);
     }
 #endif
 }

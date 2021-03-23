@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2019 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -237,6 +239,28 @@ public:
     void SetHex(const std::string& str);
     std::string ToString() const;
 
+    const unsigned char* begin() const
+    {
+        return (unsigned char*)&pn[0];
+    }
+
+    const unsigned char* end() const
+    {
+        return (unsigned char*)&pn[WIDTH];
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s.write((char*)pn, sizeof(pn));
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s.read((char*)pn, sizeof(pn));
+    }
+
     unsigned int size() const
     {
         return sizeof(pn);
@@ -247,6 +271,18 @@ public:
      * value is zero.
      */
     unsigned int bits() const;
+
+    // Unsafe
+    uint64_t Get64(int n = 0) const
+    {
+        return pn[2 * n] | (uint64_t)pn[2 * n + 1] << 32;
+    }
+
+    // Unsafe
+    uint32_t Get32(int n = 0) const
+    {
+        return pn[2 * n];
+    }
 
     uint64_t GetLow64() const
     {

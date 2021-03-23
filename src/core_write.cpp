@@ -1,10 +1,12 @@
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
 
 #include <consensus/consensus.h>
+#include <consensus/tokengroups.h>
 #include <consensus/validation.h>
 #include <key_io.h>
 #include <primitives/transaction.h>
@@ -12,10 +14,10 @@
 #include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
+#include <tokens/tokengroupdescription.h>
 #include <univalue.h>
 #include <util.h>
 #include <utilmoneystr.h>
-#include <utilstrencodings.h>
 
 #include <spentindex.h>
 
@@ -280,6 +282,27 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
             UniValue obj;
             qcTx.ToJson(obj);
             entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_GROUP_CREATION_REGULAR) {
+        CTokenGroupDescriptionRegular tgDesc;
+        if (GetTxPayload(tx, tgDesc)) {
+            UniValue obj;
+            tgDesc.ToJson(obj);
+            entry.pushKV("tgDesc", obj);
+        }
+    } else if (tx.nType == TRANSACTION_GROUP_CREATION_MGT) {
+        CTokenGroupDescriptionMGT tgDesc;
+        if (GetTxPayload(tx, tgDesc)) {
+            UniValue obj;
+            tgDesc.ToJson(obj);
+            entry.pushKV("tgDesc", obj);
+        }
+    } else if (tx.nType == TRANSACTION_GROUP_CREATION_NFT) {
+        CTokenGroupDescriptionNFT tgDesc;
+        if (GetTxPayload(tx, tgDesc)) {
+            UniValue obj;
+            tgDesc.ToJson(obj);
+            entry.pushKV("tgDesc", obj);
         }
     }
 

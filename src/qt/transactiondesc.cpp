@@ -8,7 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiutil.h>
 #include <qt/paymentserver.h>
-#include <qt/transactionrecord.h>
+#include <transactionrecord.h>
 
 #include <consensus/consensus.h>
 #include <key_io.h>
@@ -85,7 +85,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // From
     //
-    if (wtx.is_coinbase)
+    if (wtx.is_coinbase || wtx.is_coinstake)
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
     }
@@ -138,7 +138,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Amount
     //
-    if (wtx.is_coinbase && nCredit == 0)
+    if ((wtx.is_coinbase || wtx.is_coinstake) && nCredit == 0)
     {
         //
         // Coinbase
@@ -257,11 +257,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.value_map.count("comment") && !wtx.value_map["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["comment"], true) + "<br>";
 
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + QString::fromStdString(rec->getTxHash()) + "<br>";
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
 
-    // Message from normal dash:URI (dash:XyZ...?message=example)
+    // Message from normal wagerr:URI (wagerr:XyZ...?message=example)
     for (const std::pair<std::string, std::string>& r : orderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
@@ -281,9 +281,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
         }
     }
 
-    if (wtx.is_coinbase)
+    if (wtx.is_coinbase || wtx.is_coinstake)
     {
-        quint32 numBlocksToMaturity = COINBASE_MATURITY +  1;
+        quint32 numBlocksToMaturity = Params().GetConsensus().COINBASE_MATURITY(status.block_height) +  1;
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     }
 

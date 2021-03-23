@@ -3,11 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_dash
-bin_PROGRAMS += test/test_dash
-noinst_PROGRAMS += test/test_dash_fuzzy
+TESTS += test/test_wagerr
+bin_PROGRAMS += test/test_wagerr
+noinst_PROGRAMS += test/test_wagerr_fuzzy
 TEST_SRCDIR = test
-TEST_BINARY=test/test_dash$(EXEEXT)
+TEST_BINARY=test/test_wagerr$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/blockfilters.json \
@@ -26,7 +26,7 @@ RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-# test_dash binary #
+# test_wagerr binary #
 BITCOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
@@ -55,12 +55,10 @@ BITCOIN_TESTS =\
   test/cuckoocache_tests.cpp \
   test/denialofservice_tests.cpp \
   test/dip0020opcodes_tests.cpp \
-  test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/getarg_tests.cpp \
   test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
-  test/key_io_tests.cpp \
   test/key_tests.cpp \
   test/lcg.h \
   test/limitedmap_tests.cpp \
@@ -69,7 +67,6 @@ BITCOIN_TESTS =\
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
-  test/miner_tests.cpp \
   test/multisig_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
@@ -84,10 +81,10 @@ BITCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
+  test/script_tests.cpp \
   test/script_p2sh_tests.cpp \
   test/script_p2pk_tests.cpp \
   test/script_p2pkh_tests.cpp \
-  test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
@@ -96,69 +93,66 @@ BITCOIN_TESTS =\
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
   test/subsidy_tests.cpp \
-  test/test_dash.cpp \
-  test/test_dash.h \
-  test/test_dash_main.cpp \
+  test/test_wagerr.cpp \
+  test/test_wagerr.h \
+  test/test_wagerr_main.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
-  test/txvalidation_tests.cpp \
-  test/txvalidationcache_tests.cpp \
   test/versionbits_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
-  wallet/test/coinjoin_tests.cpp \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
-  wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp
 endif
 
-test_test_dash_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_dash_LDADD =
+test_test_wagerr_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_wagerr_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_wagerr_LDADD =
 if ENABLE_WALLET
-test_test_dash_LDADD += $(LIBBITCOIN_WALLET)
+test_test_wagerr_LDADD += $(LIBBITCOIN_WALLET)
 endif
-test_test_dash_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
+test_test_wagerr_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBBITCOIN_ZEROCOIN) \
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BACKTRACE_LIB) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_dash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_wagerr_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_dash_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
-test_test_dash_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+test_test_wagerr_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+test_test_wagerr_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
-test_test_dash_LDADD += $(ZMQ_LIBS)
+test_test_wagerr_LDADD += $(ZMQ_LIBS)
 endif
 #
 
-# test_dash_fuzzy binary #
-test_test_dash_fuzzy_SOURCES = test/test_dash_fuzzy.cpp
-test_test_dash_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_test_dash_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_dash_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# test_wagerr_fuzzy binary #
+test_test_wagerr_fuzzy_SOURCES = test/test_wagerr_fuzzy.cpp
+test_test_wagerr_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_test_wagerr_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_wagerr_fuzzy_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-test_test_dash_fuzzy_LDADD = \
+test_test_wagerr_fuzzy_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_ZEROCOIN) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_CRYPTO_SSE41) \
   $(LIBBITCOIN_CRYPTO_AVX2) \
   $(LIBBITCOIN_CRYPTO_SHANI) \
   $(LIBSECP256K1)
 
-test_test_dash_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BACKTRACE_LIB)
+test_test_wagerr_fuzzy_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BACKTRACE_LIB)
 #
 
-nodist_test_test_dash_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_wagerr_SOURCES = $(GENERATED_TEST_FILES)
 
 $(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
 
@@ -166,13 +160,13 @@ CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_BITCOIN_TEST)
 
-dash_test: $(TEST_BINARY)
+wagerr_test: $(TEST_BINARY)
 
-dash_test_check: $(TEST_BINARY) FORCE
+wagerr_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-dash_test_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_dash_OBJECTS) $(TEST_BINARY)
+wagerr_test_clean : FORCE
+	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_wagerr_OBJECTS) $(TEST_BINARY)
 
 check-local:
 	@echo "Running test/util/bitcoin-util-test.py..."

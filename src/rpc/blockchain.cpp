@@ -1,26 +1,34 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2019-2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/blockchain.h>
 
 #include <amount.h>
+#include <base58.h>
+#include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
 #include <coins.h>
 #include <node/coinstats.h>
 #include <core_io.h>
+#include <consensus/tokengroups.h>
 #include <consensus/validation.h>
+#include <dstencode.h>
 #include <validation.h>
 // #include <rpc/index/txindex.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
+#include <script/tokengroup.h>
 #include <streams.h>
 #include <sync.h>
+#include <tokens/tokengroupmanager.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <util.h>
@@ -35,6 +43,7 @@
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_instantsend.h>
 
+#include <assert.h>
 #include <stdint.h>
 
 #include <univalue.h>
@@ -113,6 +122,9 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
 
+    result.pushKV("modifier", strprintf("%016x", blockindex->nStakeModifier));
+    result.pushKV("modifierV2", blockindex->nStakeModifierV2.GetHex());
+
     result.pushKV("chainlock", llmq::chainLocksHandler->HasChainLock(blockindex->nHeight, blockindex->GetBlockHash()));
 
     return result;
@@ -165,12 +177,17 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
+    result.pushKV("nMint", (uint64_t)blockindex->nMint);
+    result.pushKV("nMoneySupply", (uint64_t)blockindex->nMoneySupply);
 
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     CBlockIndex *pnext = chainActive.Next(blockindex);
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+
+    result.pushKV("modifier", strprintf("%016x", blockindex->nStakeModifier));
+    result.pushKV("modifierV2", blockindex->nStakeModifierV2.GetHex());
 
     result.pushKV("chainlock", chainLock);
 
@@ -1207,8 +1224,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of dash addresses\n"
-            "        \"address\"     (string) dash address\n"
+            "     \"addresses\" : [          (array of string) array of wagerr addresses\n"
+            "        \"address\"     (string) wagerr address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1261,6 +1278,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
+    ret.pushKV("coinstake", (bool)coin.fCoinStake);
 
     return ret;
 }
@@ -1289,6 +1307,9 @@ UniValue verifychain(const JSONRPCRequest& request)
         nCheckLevel = request.params[0].get_int();
     if (!request.params[1].isNull())
         nCheckDepth = request.params[1].get_int();
+
+    // Zerocoin and betting do not fully support caching
+    nCheckLevel = nCheckLevel == 3 ? 4 : nCheckLevel;
 
     return CVerifyDB().VerifyDB(Params(), pcoinsTip.get(), nCheckLevel, nCheckDepth);
 }
@@ -1433,6 +1454,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), chainActive.Tip()));
     obj.pushKV("initialblockdownload",  IsInitialBlockDownload());
     obj.pushKV("chainwork",             chainActive.Tip()->nChainWork.GetHex());
+    obj.pushKV("moneysupply",           chainActive.Tip()->nMoneySupply);
     obj.pushKV("size_on_disk",          CalculateCurrentUsage());
     obj.pushKV("pruned",                fPruneMode);
     if (fPruneMode) {
@@ -1456,11 +1478,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
-    // sorted by activation block
-    softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
+    for (int pos = Consensus::MAX_VERSION_BITS_DEPLOYMENTS; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
         BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     }
     obj.pushKV("softforks",             softforks);
@@ -1868,15 +1886,15 @@ static inline bool SetHasKeys(const std::set<T>& set, const Tk& key, const Args&
     return (set.count(key) != 0) || SetHasKeys(set, args...);
 }
 
-// outpoint (needed for the utxo index) + nHeight + fCoinBase
-static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t) + sizeof(bool);
+// outpoint (needed for the utxo index) + nHeight + fCoinBase + fCoinStake
+static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t) + sizeof(bool) + sizeof(bool);
 
 static UniValue getblockstats(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 4) {
         throw std::runtime_error(
             "getblockstats hash_or_height ( stats )\n"
-            "\nCompute per block statistics for a given window. All amounts are in duffs.\n"
+            "\nCompute per block statistics for a given window. All amounts are in sats.\n"
             "It won't work for some heights with pruning.\n"
             "It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.\n"
             "\nArguments:\n"
@@ -1890,20 +1908,20 @@ static UniValue getblockstats(const JSONRPCRequest& request)
             "\nResult:\n"
             "{                           (json object)\n"
             "  \"avgfee\": xxxxx,          (numeric) Average fee in the block\n"
-            "  \"avgfeerate\": xxxxx,      (numeric) Average feerate (in duffs per byte)\n"
+            "  \"avgfeerate\": xxxxx,      (numeric) Average feerate (in sats per byte)\n"
             "  \"avgtxsize\": xxxxx,       (numeric) Average transaction size\n"
             "  \"blockhash\": xxxxx,       (string) The block hash (to check for potential reorgs)\n"
             "  \"height\": xxxxx,          (numeric) The height of the block\n"
             "  \"ins\": xxxxx,             (numeric) The number of inputs (excluding coinbase)\n"
             "  \"maxfee\": xxxxx,          (numeric) Maximum fee in the block\n"
-            "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in duffs per byte)\n"
+            "  \"maxfeerate\": xxxxx,      (numeric) Maximum feerate (in sats per byte)\n"
             "  \"maxtxsize\": xxxxx,       (numeric) Maximum transaction size\n"
             "  \"medianfee\": xxxxx,       (numeric) Truncated median fee in the block\n"
-            "  \"medianfeerate\": xxxxx,   (numeric) Truncated median feerate (in duffs per byte)\n"
+            "  \"medianfeerate\": xxxxx,   (numeric) Truncated median feerate (in sats per byte)\n"
             "  \"mediantime\": xxxxx,      (numeric) The block median time past\n"
             "  \"mediantxsize\": xxxxx,    (numeric) Truncated median transaction size\n"
             "  \"minfee\": xxxxx,          (numeric) Minimum fee in the block\n"
-            "  \"minfeerate\": xxxxx,      (numeric) Minimum feerate (in duffs per byte)\n"
+            "  \"minfeerate\": xxxxx,      (numeric) Minimum feerate (in sats per byte)\n"
             "  \"mintxsize\": xxxxx,       (numeric) Minimum transaction size\n"
             "  \"outs\": xxxxx,            (numeric) The number of outputs\n"
             "  \"subsidy\": xxxxx,         (numeric) The block subsidy\n"
@@ -2073,7 +2091,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
     ret_all.pushKV("minfeerate", (minfeerate == MAX_MONEY) ? 0 : minfeerate);
     ret_all.pushKV("mintxsize", mintxsize == MaxBlockSize() ? 0 : mintxsize);
     ret_all.pushKV("outs", outputs);
-    ret_all.pushKV("subsidy", pindex->pprev ? GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus()) : 50 * COIN);
+    ret_all.pushKV("subsidy", pindex->pprev ? GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus(), block.IsProofOfStake(), false) : 0 * COIN);
     ret_all.pushKV("time", pindex->GetBlockTime());
     ret_all.pushKV("total_out", total_out);
     ret_all.pushKV("total_size", total_size);
@@ -2221,6 +2239,443 @@ UniValue savemempool(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+//! Search for a given set of pubkey scripts
+bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const std::set<CScript>& needles, std::map<COutPoint, Coin>& out_results) {
+    scan_progress = 0;
+    count = 0;
+    while (cursor->Valid()) {
+        COutPoint key;
+        Coin coin;
+        if (!cursor->GetKey(key) || !cursor->GetValue(coin)) return false;
+        if (++count % 8192 == 0) {
+            boost::this_thread::interruption_point();
+            if (should_abort) {
+                // allow to abort the scan via the abort reference
+                return false;
+            }
+        }
+        if (count % 256 == 0) {
+            // update progress reference every 256 item
+            uint32_t high = 0x100 * *key.hash.begin() + *(key.hash.begin() + 1);
+            scan_progress = (int)(high * 100.0 / 65536.0 + 0.5);
+        }
+        if (needles.count(coin.out.scriptPubKey)) {
+            out_results.emplace(key, coin);
+        }
+        cursor->Next();
+    }
+    scan_progress = 100;
+    return true;
+}
+
+/** RAII object to prevent concurrency issue when scanning the txout set */
+static std::mutex g_utxosetscan;
+static std::atomic<int> g_scan_progress;
+static std::atomic<bool> g_scan_in_progress;
+static std::atomic<bool> g_should_abort_scan;
+class CoinsViewScanReserver
+{
+private:
+    bool m_could_reserve;
+public:
+    explicit CoinsViewScanReserver() : m_could_reserve(false) {}
+
+    bool reserve() {
+        assert (!m_could_reserve);
+        std::lock_guard<std::mutex> lock(g_utxosetscan);
+        if (g_scan_in_progress) {
+            return false;
+        }
+        g_scan_in_progress = true;
+        m_could_reserve = true;
+        return true;
+    }
+
+    ~CoinsViewScanReserver() {
+        if (m_could_reserve) {
+            std::lock_guard<std::mutex> lock(g_utxosetscan);
+            g_scan_in_progress = false;
+        }
+    }
+};
+
+static const char *g_default_scantxoutset_script_types[] = { "P2PKH", "P2SH_P2WPKH", "P2WPKH" };
+
+enum class OutputScriptType {
+    UNKNOWN,
+    P2PK,
+    P2PKH,
+    P2SH_P2WPKH,
+    P2WPKH
+};
+
+static inline OutputScriptType GetOutputScriptTypeFromString(const std::string& outputtype)
+{
+    if (outputtype == "P2PK") return OutputScriptType::P2PK;
+    else if (outputtype == "P2PKH") return OutputScriptType::P2PKH;
+    else return OutputScriptType::UNKNOWN;
+}
+
+CTxDestination GetDestinationForKey(const CPubKey& key, OutputScriptType type)
+{
+    switch (type) {
+    case OutputScriptType::P2PKH: return key.GetID();
+    default: assert(false);
+    }
+}
+
+UniValue scantxoutset(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "scantxoutset <action> ( <scanobjects> )\n"
+            "\nScans the unspent transaction output set for possible entries that matches common scripts of given public keys.\n"
+            "Using addresses as scanobjects will _not_ detect unspent P2PK txouts\n"
+            "\nArguments:\n"
+            "1. \"action\"                       (string, required) The action to execute\n"
+            "                                      \"start\" for starting a scan\n"
+            "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
+            "                                      \"status\" for progress report (in %) of the current scan\n"
+            "2. \"scanobjects\"                  (array, optional) Array of scan objects (only one object type per scan object allowed)\n"
+            "      [\n"
+            "        { \"address\" : \"<address>\" },       (string, optional) Bitcoin address\n"
+            "        { \"script\"  : \"<scriptPubKey>\" },  (string, optional) HEX encoded script (scriptPubKey)\n"
+            "        { \"pubkey\"  :                      (object, optional) Public key\n"
+            "          {\n"
+            "            \"pubkey\" : \"<pubkey\">,         (string, required) HEX encoded public key\n"
+            "            \"script_types\" : [ ... ],      (array, optional) Array of script-types to derive from the pubkey (possible values: \"P2PK\", \"P2PKH\", \"P2SH-P2WPKH\", \"P2WPKH\")\n"
+            "          }\n"
+            "        },\n"
+            "      ]\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"unspents\": [\n"
+            "    {\n"
+            "    \"txid\" : \"transactionid\",     (string) The transaction id\n"
+            "    \"vout\": n,                    (numeric) the vout value\n"
+            "    \"scriptPubKey\" : \"script\",    (string) the script key\n"
+            "    \"amount\" : x.xxx,             (numeric) The total amount in " + CURRENCY_UNIT + " of the unspent output\n"
+            "    \"height\" : n,                 (numeric) Height of the unspent transaction output\n"
+            "   }\n"
+            "   ,...], \n"
+            " \"total_amount\" : x.xxx,          (numeric) The total amount of all found unspent outputs in " + CURRENCY_UNIT + "\n"
+            "]\n"
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VARR});
+
+    UniValue result(UniValue::VOBJ);
+    if (request.params[0].get_str() == "status") {
+        CoinsViewScanReserver reserver;
+        if (reserver.reserve()) {
+            // no scan in progress
+            return NullUniValue;
+        }
+        result.pushKV("progress", g_scan_progress);
+        return result;
+    } else if (request.params[0].get_str() == "abort") {
+        CoinsViewScanReserver reserver;
+        if (reserver.reserve()) {
+            // reserve was possible which means no scan was running
+            return false;
+        }
+        // set the abort flag
+        g_should_abort_scan = true;
+        return true;
+    } else if (request.params[0].get_str() == "start") {
+        CoinsViewScanReserver reserver;
+        if (!reserver.reserve()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
+        }
+        std::set<CScript> needles;
+        CAmount total_in = 0;
+
+        // loop through the scan objects
+        for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
+            if (!scanobject.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scan object");
+            }
+            UniValue address_uni = find_value(scanobject, "address");
+            UniValue pubkey_uni  = find_value(scanobject, "pubkey");
+            UniValue script_uni  = find_value(scanobject, "script");
+
+            // make sure only one object type is present
+            if (1 != !address_uni.isNull() + !pubkey_uni.isNull() + !script_uni.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Only one object type is allowed per scan object");
+            } else if (!address_uni.isNull() && !address_uni.isStr()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"address\" must contain a single string as value");
+            } else if (!pubkey_uni.isNull() && !pubkey_uni.isObject()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"pubkey\" must contain an object as value");
+            } else if (!script_uni.isNull() && !script_uni.isStr()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scanobject \"script\" must contain a single string as value");
+            } else if (address_uni.isStr()) {
+                // type: address
+                // decode destination and derive the scriptPubKey
+                // add the script to the scan containers
+                CTxDestination dest = DecodeDestination(address_uni.get_str());
+                if (!IsValidDestination(dest)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+                }
+                CScript script = GetScriptForDestination(dest);
+                assert(!script.empty());
+                needles.insert(script);
+            } else if (pubkey_uni.isObject()) {
+                // type: pubkey
+                // derive script(s) according to the script_type parameter
+                UniValue script_types_uni = find_value(pubkey_uni, "script_types");
+                UniValue pubkeydata_uni = find_value(pubkey_uni, "pubkey");
+
+                // check the script types and use the default if not provided
+                if (!script_types_uni.isNull() && !script_types_uni.isArray()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "script_types must be an array");
+                } else if (script_types_uni.isNull()) {
+                    // use the default script types
+                    script_types_uni = UniValue(UniValue::VARR);
+                    for (const char *t : g_default_scantxoutset_script_types) {
+                        script_types_uni.push_back(t);
+                    }
+                }
+
+                // check the acctual pubkey
+                if (!pubkeydata_uni.isStr() || !IsHex(pubkeydata_uni.get_str())) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Public key must be hex encoded");
+                }
+                CPubKey pubkey(ParseHexV(pubkeydata_uni, "pubkey"));
+                if (!pubkey.IsFullyValid()) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid public key");
+                }
+
+                // loop through the script types and derive the script
+                for (const UniValue& script_type_uni : script_types_uni.get_array().getValues()) {
+                    OutputScriptType script_type = GetOutputScriptTypeFromString(script_type_uni.get_str());
+                    if (script_type == OutputScriptType::UNKNOWN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid script type");
+                    CScript script;
+                    if (script_type == OutputScriptType::P2PK) {
+                        // support legacy P2PK scripts
+                        script << ToByteVector(pubkey) << OP_CHECKSIG;
+                    } else {
+                        script = GetScriptForDestination(GetDestinationForKey(pubkey, script_type));
+                    }
+                    assert(!script.empty());
+                    needles.insert(script);
+                }
+            } else if (script_uni.isStr()) {
+                // type: script
+                // check and add the script to the scan containers (needles array)
+                CScript script(ParseHexV(script_uni, "script"));
+                // TODO: check script: max length, has OP, is unspenable etc.
+                needles.insert(script);
+            }
+        }
+
+        // Scan the unspent transaction output set for inputs
+        UniValue unspents(UniValue::VARR);
+        std::vector<CTxOut> input_txos;
+        std::map<COutPoint, Coin> coins;
+        g_should_abort_scan = false;
+        g_scan_progress = 0;
+        int64_t count = 0;
+        std::unique_ptr<CCoinsViewCursor> pcursor;
+        {
+            LOCK(cs_main);
+            FlushStateToDisk();
+            pcursor = std::unique_ptr<CCoinsViewCursor>(pcoinsdbview->Cursor());
+            assert(pcursor);
+        }
+        bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins);
+        result.pushKV("success", res);
+        result.pushKV("searched_items", count);
+
+        for (const auto& it : coins) {
+            const COutPoint& outpoint = it.first;
+            const Coin& coin = it.second;
+            const CTxOut& txo = coin.out;
+            input_txos.push_back(txo);
+            total_in += txo.nValue;
+
+            UniValue unspent(UniValue::VOBJ);
+            unspent.pushKV("txid", outpoint.hash.GetHex());
+            unspent.pushKV("vout", (int32_t)outpoint.n);
+            unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
+            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("height", (int32_t)coin.nHeight);
+
+            unspents.push_back(unspent);
+        }
+        result.pushKV("unspents", unspents);
+        result.pushKV("total_amount", ValueFromAmount(total_in));
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
+    }
+    return result;
+}
+
+//! Search for a given set of pubkey scripts
+bool FindTokenGroupID(std::atomic<int>& scan_progress, const std::atomic<bool>& should_abort, int64_t& count, CCoinsViewCursor* cursor, const CTokenGroupID& needle, std::map<COutPoint, Coin>& out_results) {
+    scan_progress = 0;
+    count = 0;
+    while (cursor->Valid()) {
+        COutPoint key;
+        Coin coin;
+        if (!cursor->GetKey(key) || !cursor->GetValue(coin)) return false;
+        if (++count % 8192 == 0) {
+            boost::this_thread::interruption_point();
+            if (should_abort) {
+                // allow to abort the scan via the abort reference
+                return false;
+            }
+        }
+        if (count % 256 == 0) {
+            // update progress reference every 256 item
+            uint32_t high = 0x100 * *key.hash.begin() + *(key.hash.begin() + 1);
+            scan_progress = (int)(high * 100.0 / 65536.0 + 0.5);
+        }
+        CTokenGroupInfo tokenGrp(coin.out.scriptPubKey);
+        if (tokenGrp.associatedGroup != NoGroup && // must be sitting in any group address
+                tokenGrp.associatedGroup == needle &&
+                coin.nHeight >= Params().GetConsensus().ATPStartHeight) {
+            out_results.emplace(key, coin);
+        }
+        cursor->Next();
+    }
+    scan_progress = 100;
+    return true;
+}
+
+UniValue scantokens(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "scantokens <action> ( <tokengroupid> )\n"
+
+            "\nScans the unspent transaction output set for possible entries that belong to a specified token group.\n"
+            "\nArguments:\n"
+            "1. \"action\"                     (string, required) The action to execute\n"
+            "                                      \"start\" for starting a scan\n"
+            "                                      \"abort\" for aborting the current scan (returns true when abort was successful)\n"
+            "                                      \"status\" for progress report (in %) of the current scan\n"
+            "2. \"tokenGroupID\"               (string, optional) Token group identifier\n"
+            "\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"unspents\": [\n"
+            "    {\n"
+            "    \"txid\" : \"transactionid\",   (string) The transaction id\n"
+            "    \"vout\" : n,                 (numeric) the vout value\n"
+            "    \"address\" : \"address\",      (string) the address that received the tokens\n"
+            "    \"scriptPubKey\" : \"script\",  (string) the script key\n"
+            "    \"amount\" : x.xxx,           (numeric) The total amount in BYZ of the unspent output\n"
+            "    \"amountSat\" : x.xxx,        (numeric) The total amount in BYZ of the unspent output\n"
+            "    \"tokenAmount\" : xxx,       (numeric) The total token amount of the unspent output\n"
+            "    \"tokenAmountSat\" : xxx,    (numeric) The total token amount of the unspent output\n"
+            "    \"height\" : n,               (numeric) Height of the unspent transaction output\n"
+            "   }\n"
+            "   ,...], \n"
+            " \"total_tokenAmountSat\" : xxx,          (numeric) The total token amount of all found unspent outputs\n"
+            "]\n"
+        );
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
+
+    UniValue result(UniValue::VOBJ);
+    if (request.params[0].get_str() == "status") {
+        CoinsViewScanReserver reserver;
+        if (reserver.reserve()) {
+            // no scan in progress
+            return NullUniValue;
+        }
+        result.pushKV("progress", g_scan_progress);
+        return result;
+    } else if (request.params[0].get_str() == "abort") {
+        CoinsViewScanReserver reserver;
+        if (reserver.reserve()) {
+            // reserve was possible which means no scan was running
+            return false;
+        }
+        // set the abort flag
+        g_should_abort_scan = true;
+        return true;
+    } else if (request.params[0].get_str() == "start") {
+        CoinsViewScanReserver reserver;
+        if (!reserver.reserve()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
+        }
+        std::set<CScript> needles;
+        CAmount total_in = 0;
+        GroupAuthorityFlags total_authorities = GroupAuthorityFlags::NONE;
+
+        if (!request.params[1].isStr()){
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "No token group ID specified");
+        }
+
+        CTokenGroupID needle = GetTokenGroup(request.params[1].get_str());
+        if (!needle.isUserGroup() && !needle.isSubgroup())
+        {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid group specified");
+        }
+
+        // Scan the unspent transaction output set for inputs
+        UniValue unspents(UniValue::VARR);
+        std::vector<CTxOut> input_txos;
+        std::map<COutPoint, Coin> coins;
+        g_should_abort_scan = false;
+        g_scan_progress = 0;
+        int64_t count = 0;
+        std::unique_ptr<CCoinsViewCursor> pcursor;
+        {
+            LOCK(cs_main);
+            FlushStateToDisk();
+            pcursor = std::unique_ptr<CCoinsViewCursor>(pcoinsdbview->Cursor());
+            assert(pcursor);
+        }
+        bool res = FindTokenGroupID(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needle, coins);
+        result.pushKV("success", res);
+        result.pushKV("searched_items", count);
+
+        for (const auto& it : coins) {
+            const COutPoint& outpoint = it.first;
+            const Coin& coin = it.second;
+            const CTxOut& txo = coin.out;
+            const CTokenGroupInfo& tokenGroupInfo = CTokenGroupInfo(txo.scriptPubKey);
+            CTxDestination dest;
+            ExtractDestination(txo.scriptPubKey, dest);
+
+            input_txos.push_back(txo);
+            total_in += tokenGroupInfo.getAmount();
+            total_authorities |= tokenGroupInfo.controllingGroupFlags();
+
+            UniValue unspent(UniValue::VOBJ);
+            unspent.pushKV("txid", outpoint.hash.GetHex());
+            unspent.pushKV("vout", (int32_t)outpoint.n);
+            if (IsValidDestination(dest)) {
+                unspent.push_back(Pair("address", EncodeDestination(dest)));
+            }
+            unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey.begin(), txo.scriptPubKey.end()));
+            unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("amountSat", txo.nValue);
+            if (tokenGroupInfo.isAuthority()){
+                unspent.pushKV("tokenType", "authority");
+                unspent.pushKV("tokenAuthorities", EncodeGroupAuthority(tokenGroupInfo.controllingGroupFlags()));
+            } else {
+                unspent.pushKV("tokenType", "amount");
+                unspent.pushKV("tokenAmount", tokenGroupManager.get()->TokenValueFromAmount(tokenGroupInfo.quantity, needle));
+                unspent.pushKV("tokenAmountSat", tokenGroupInfo.quantity);
+            }
+
+            unspent.pushKV("height", (int32_t)coin.nHeight);
+
+            unspents.push_back(unspent);
+        }
+        result.pushKV("unspents", unspents);
+        result.pushKV("total_tokenValue", tokenGroupManager.get()->TokenValueFromAmount(total_in, needle));
+        result.pushKV("total_tokenValueSat", ValueFromAmount(total_in));
+        result.pushKV("total_tokenAuthorities", EncodeGroupAuthority(total_authorities));
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
+    }
+    return result;
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
@@ -2251,6 +2706,9 @@ static const CRPCCommand commands[] =
     { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
 
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
+    { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },
+
+    { "tokens",             "scantokens",             &scantokens,             {"action", "tokengroupid"} },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        {"blockhash"} },

@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2019 The PIVX Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/wagerr-config.h>
 #endif
 
 #include <net.h>
@@ -19,6 +20,7 @@
 #include <primitives/transaction.h>
 #include <netbase.h>
 #include <scheduler.h>
+#include <spork.h>
 #include <ui_interface.h>
 #include <utilstrencodings.h>
 #include <validation.h>
@@ -808,7 +810,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Dash users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (Wagerr users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dMinPing  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
@@ -2116,7 +2118,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Dash Core " + FormatFullVersion();
+        std::string strDesc = "WAGERR Core " + FormatFullVersion();
 
         do {
 #ifndef UPNPDISCOVER_SUCCESS
@@ -2335,6 +2337,32 @@ int CConnman::GetExtraOutboundCount()
         }
     }
     return std::max(nOutbound - nMaxOutbound, 0);
+}
+
+void CConnman::CheckOffsetDisconnectedPeers(const CNetAddr& ip)
+{
+    int nConnections = 0;
+    {
+        LOCK(cs_vNodes);
+        for (CNode* pnode : vNodes) {
+            if (pnode->fSuccessfullyConnected)
+                nConnections++;
+            if (nConnections == 2)
+                return;
+        }
+    }
+
+    // Not enough connections. Insert peer.
+    static std::set<CNetAddr> setOffsetDisconnectedPeers;
+    setOffsetDisconnectedPeers.insert(ip);
+    if (setOffsetDisconnectedPeers.size() >= 16) {
+        // clear the set
+        setOffsetDisconnectedPeers.clear();
+        // Trigger the warning
+        std::string strMessage = _("Warning: Peers are being disconnected due time differences. Please check that your computer's date and time are correct! If your clock is wrong BYTZ Core will not work properly.");
+        LogPrintf("*** %s\n", strMessage);
+        uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
+    }
 }
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
@@ -3691,6 +3719,10 @@ void CConnman::RelayTransaction(const CTransaction& tx)
     RelayInv(inv);
 }
 
+void CConnman::RelayInv(CInv &inv) {
+    RelayInv(inv, GetMinPeerVersion());
+}
+
 void CConnman::RelayInv(CInv &inv, const int minProtoVersion) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
@@ -3727,6 +3759,13 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
         }
         pnode->PushInventory(inv);
     }
+}
+
+int CConnman::GetMinPeerVersion() {
+    if (sporkManager.IsSporkActive(SPORK_8_NEW_PROTOCOL_ENFORCEMENT))
+            return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
+
+    return MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT;
 }
 
 void CConnman::RecordBytesRecv(uint64_t bytes)

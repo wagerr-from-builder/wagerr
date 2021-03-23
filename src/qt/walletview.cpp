@@ -14,7 +14,7 @@
 #include <qt/receivecoinsdialog.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/signverifymessagedialog.h>
-#include <qt/transactionrecord.h>
+#include <transactionrecord.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
@@ -357,6 +357,11 @@ void WalletView::unlockWallet(bool fForMixingOnly)
         dlg.setModel(walletModel);
         dlg.exec();
     }
+}
+
+void WalletView::unlockWalletForStaking()
+{
+    unlockWallet(true);
 }
 
 void WalletView::lockWallet()

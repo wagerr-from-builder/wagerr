@@ -6,7 +6,7 @@
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/guiutil.h>
 
-#include <key_io.h>
+#include <dstencode.h>
 
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -94,7 +94,7 @@ BitcoinAddressCheckValidator::BitcoinAddressCheckValidator(QObject *parent) :
 QValidator::State BitcoinAddressCheckValidator::validate(QString &input, int &pos) const
 {
     Q_UNUSED(pos);
-    // Validate the passed Dash address
+    // Validate the passed Wagerr address
     if (IsValidDestinationString(input.toStdString())) {
         return QValidator::Acceptable;
     }

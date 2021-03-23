@@ -55,7 +55,7 @@ class BlockchainTest(BitcoinTestFramework):
 
     def run_test(self):
         # Have to prepare the chain manually here.
-        # txindex=1 by default in Dash which is incompatible with pruning.
+        # txindex=1 by default in Wagerr which is incompatible with pruning.
         self.set_genesis_mocktime()
         for i in range(200):
             self.bump_mocktime(156)
@@ -176,7 +176,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res['total_amount'], Decimal('98214.28571450'))
+        assert_equal(res['total_amount'], Decimal('948890000.00000000'))
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)

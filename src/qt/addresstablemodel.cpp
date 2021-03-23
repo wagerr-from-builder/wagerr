@@ -8,8 +8,8 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <dstencode.h>
 #include <interfaces/node.h>
-#include <key_io.h>
 
 #include <QFont>
 #include <QDebug>
@@ -331,7 +331,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 void AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Dash core
+    // Update address book model from Wagerr core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 

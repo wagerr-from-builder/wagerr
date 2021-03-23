@@ -1,12 +1,21 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The PPCoin developers
+// Copyright (c) 2013-2014 The NovaCoin Developers
+// Copyright (c) 2014-2018 The BlackCoin Developers
+// Copyright (c) 2015-2019 The PIVX developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020-2021 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <miner.h>
 
 #include <amount.h>
+#include "betting/bet.h"
+#include "betting/bet_v2.h"
+#include "betting/bet_db.h"
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -15,18 +24,29 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <hash.h>
+#include <init.h>
+#include <keystore.h>
 #include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
+#include <pos/kernel.h>
+#include <pos/rewards.h>
+#include <pos/stakeinput.h>
 #include <pow.h>
 #include <primitives/transaction.h>
+#include <script/sign.h>
 #include <script/standard.h>
 #include <timedata.h>
 #include <util.h>
 #include <utilmoneystr.h>
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
+#include <validation.h>
 #include <validationinterface.h>
+
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
 
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
@@ -51,7 +71,12 @@ uint64_t nLastBlockSize = 0;
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
-    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nNewTime;
+    if (consensusParams.IsTimeProtocolV2(pindexPrev->nHeight + 1)) {
+        nNewTime = GetTimeSlot(GetAdjustedTime());
+    } else {
+        nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    }
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;
@@ -107,8 +132,39 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+bool BlockAssembler::SplitCoinstakeVouts(std::shared_ptr<CMutableTransaction> coinstakeTx, CBlockReward& blockReward, const CAmount nSplitValue) {
+#ifdef ENABLE_WALLET
+    // Calculate if we need to split the output
+    if (coinstakeTx->vout.size() != 2)
+        return false;
+    CAmount nValue = coinstakeTx->vout[1].nValue;
+    if (nValue / 2 > nSplitValue) {
+        blockReward.fSplitCoinstake = true;
+        coinstakeTx->vout[1].nValue = ((nValue) / 2 / CENT) * CENT;
+        coinstakeTx->vout.emplace_back(CTxOut(nValue - coinstakeTx->vout[1].nValue, coinstakeTx->vout[1].scriptPubKey));
+    } else {
+        return false;
+    }
+#endif
+    return true;
+}
+
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn,
+                                    std::shared_ptr<CMutableTransaction> pCoinstakeTx, std::shared_ptr<CStakeInput> coinstakeInput, uint64_t nTxNewTime)
 {
+    CAmount nSplitValue = MAX_MONEY;
+    CBasicKeyStore tempKeystore;
+#ifdef ENABLE_WALLET
+    std::vector<std::shared_ptr<CWallet>> wallets = GetWallets();
+    const CKeyStore& keystore = wallets.size() < 1 ? tempKeystore : *wallets[0];
+    if (HasWallets()) {
+        nSplitValue = (CAmount)(wallets[0]->GetStakeSplitThreshold() * COIN);
+    }
+#else
+    const CKeyStore& keystore = tempKeystore;
+#endif
+
+    bool fPos = (pCoinstakeTx != nullptr);
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -123,6 +179,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblock->vtx.emplace_back();
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+    if (fPos) {
+        pblock->vtx.emplace_back(MakeTransactionRef(*pCoinstakeTx));
+        pblocktemplate->vTxFees.push_back(-1); // updated at end
+        pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+    }
 
     LOCK2(cs_main, mempool.cs);
 
@@ -133,13 +194,19 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
     bool fDIP0008Active_context = nHeight >= chainparams.GetConsensus().DIP0008Height;
 
-    pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), chainparams.BIP9CheckMasternodesUpgraded());
+    pblock->nVersion = nHeight >= chainparams.GetConsensus().V17DeploymentHeight ?
+        ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), fPos, chainparams.BIP9CheckMasternodesUpgraded())
+        : VERSIONBITS_LAST_OLD_BLOCK_VERSION;
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
-    pblock->nTime = GetAdjustedTime();
+    if (fPos) {
+        pblock->nTime = nTxNewTime;
+    } else {
+        pblock->nTime = GetAdjustedTime();
+    }
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
     nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
@@ -174,13 +241,92 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
-    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    if (!fPos)
+        coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
-    // NOTE: unlike in bitcoin, we need to pass PREVIOUS block height here
-    CAmount blockReward = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
+    CBlockReward blockReward(nHeight, nFees, fPos, Params().GetConsensus());
+    CCbTx cbTx;
 
-    // Compute regular coinbase transaction.
-    coinbaseTx.vout[0].nValue = blockReward;
+    // Update coinbase transaction with additional info about masternode and governance payments,
+    // get some info back to pass to getblocktemplate
+    CAmount nMasternodePaymentAmount = 0;
+    if (fPos) {
+        // Calculate the bet payouts.
+        std::multimap<CPayoutInfoDB, CBetOut> mExpectedPayouts;
+        std::vector<CTxOut> vExpectedTxOuts;
+
+        CAmount nBetPayout = 0;
+
+        CCoinsViewCache view(pcoinsTip.get());
+        CBettingsView bettingsViewCache(bettingsView.get());
+        nBetPayout += GetBettingPayouts(bettingsViewCache, nHeight, mExpectedPayouts);
+
+        if (nHeight >= Params().GetConsensus().WagerrProtocolV3StartHeight()) {
+            for (auto payout : mExpectedPayouts) {
+                vExpectedTxOuts.emplace_back(payout.second.nValue, payout.second.scriptPubKey);
+            }
+        } else {
+            /*
+                In V3, payouts are ordered by 1) blockheight, 2) outpoint (tx hash, output nr), 3) payout type.
+                Before V3, payouts were ordered by 1) bet type (first betting then chain games), 2) blockheight, 3) tx index nr
+            */
+            std::vector<LegacyPayout> vExpectedLegacyPayouts;
+            for (auto payout : mExpectedPayouts) {
+
+                int nHeight = payout.first.betKey.blockHeight;
+
+                CBlock block;
+                int vtxNr = -1;
+                if (payout.first.payoutType != PayoutType::bettingReward && ReadBlockFromDisk(block, chainActive[nHeight], Params().GetConsensus())) {
+                    for (size_t i = 0; i < block.vtx.size(); i++) {
+                        const CTransactionRef& tx = block.vtx[i];
+                        if (tx->GetHash() == payout.first.betKey.outPoint.hash) {
+                            vtxNr = i;
+                            break;
+                        }
+                    }
+                } else {
+                    LogPrintf("%s: failed locate bet\n", __func__);
+                }
+                vExpectedLegacyPayouts.emplace_back((uint16_t)payout.first.payoutType, payout.first.betKey.blockHeight, vtxNr, payout.second);
+            }
+            std::sort(vExpectedLegacyPayouts.begin(), vExpectedLegacyPayouts.end());
+            for (auto payout : vExpectedLegacyPayouts) {
+                vExpectedTxOuts.emplace_back(payout.txOut.nValue, payout.txOut.scriptPubKey);
+            }
+        }
+
+        FillBlockPayments(*pCoinstakeTx, nHeight, blockReward, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+        // Unpaid masternode rewards default to the staking node
+        for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+            nMasternodePaymentAmount += txout.nValue;
+        }
+        coinbaseTx.vout[0].nValue = 0;
+        pCoinstakeTx->vout[1].nValue += blockReward.GetCoinstakeReward().amount;
+        bool fSplit = SplitCoinstakeVouts(pCoinstakeTx, blockReward, nSplitValue);
+        pCoinstakeTx->vout.insert(pCoinstakeTx->vout.end(), pblocktemplate->voutMasternodePayments.begin(), pblocktemplate->voutMasternodePayments.end());
+
+        // Sign for Wagerr
+        int nIn = 0;
+        for (CTxIn txIn : pCoinstakeTx->vin) {
+            CScript coinstakeInScript;
+            coinstakeInput->GetScriptPubKeyKernel(coinstakeInScript);
+            CTransactionRef coinstakeTxFrom;
+            coinstakeInput->GetTxFrom(coinstakeTxFrom);
+            if (!SignSignature(keystore, *coinstakeTxFrom, *pCoinstakeTx, nIn++, SIGHASH_ALL))
+                throw std::runtime_error(strprintf("CreateCoinStake : failed to sign coinstake"));
+        }
+    } else {
+        FillBlockPayments(coinbaseTx, nHeight, blockReward, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
+        // Unpaid masternode rewards default to the miner
+        CAmount nMasternodePaymentAmount = 0;
+        for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+            nMasternodePaymentAmount += txout.nValue;
+        }
+        coinbaseTx.vout[0].nValue = blockReward.GetCoinbaseReward().amount;
+        coinbaseTx.vout.insert(coinbaseTx.vout.end(), pblocktemplate->voutMasternodePayments.begin(), pblocktemplate->voutMasternodePayments.end());
+    }
+
 
     if (!fDIP0003Active_context) {
         coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
@@ -190,8 +336,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         coinbaseTx.nVersion = 3;
         coinbaseTx.nType = TRANSACTION_COINBASE;
 
-        CCbTx cbTx;
-
         if (fDIP0008Active_context) {
             cbTx.nVersion = 2;
         } else {
@@ -199,6 +343,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         }
 
         cbTx.nHeight = nHeight;
+        CalcCbTxCoinstakeFlags(cbTx.coinstakeFlags, blockReward);
 
         CValidationState state;
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
@@ -213,20 +358,33 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         SetTxPayload(coinbaseTx, cbTx);
     }
 
-    // Update coinbase transaction with additional info about masternode and governance payments,
-    // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblocktemplate->voutMasternodePayments, pblocktemplate->voutSuperblockPayments);
-
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
-
+    if (fPos) {
+        pblock->vtx[1] = MakeTransactionRef(*pCoinstakeTx);
+        pblocktemplate->vTxFees[0] = 0;
+        pblocktemplate->vTxFees[1] = -nFees;
+    } else {
+        pblocktemplate->vTxFees[0] = -nFees;
+    }
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-    UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
+    if (!fPos)
+        UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
+    if (nHeight < chainparams.GetConsensus().V17DeploymentHeight)
+        pblock->nAccumulatorCheckpoint =  pindexPrev ? pindexPrev->nAccumulatorCheckpoint : uint256();
     pblocktemplate->nPrevBits = pindexPrev->nBits;
     pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(*pblock->vtx[0]);
+    if (fPos)
+        pblocktemplate->vTxSigOps[1] = GetLegacySigOpCount(*pblock->vtx[1]);
+
+    if (fPos) {
+        unsigned int nExtraNonce = 0;
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+        LogPrintf("CPUMiner : proof-of-stake block found %s \n", pblock->GetHash().ToString().c_str());
+    }
 
     CValidationState state;
     if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {

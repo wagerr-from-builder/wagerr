@@ -77,6 +77,13 @@ namespace BCLog {
         NETCONN     = ((uint64_t)1 << 43),
         //End Dash
 
+        //Start Wagerr
+        BETTING     = ((uint64_t)1 << 60),
+        ZEROCOIN    = ((uint64_t)1 << 61),
+        STAKING     = ((uint64_t)1 << 62),
+        TOKEN       = ((uint64_t)1 << 63),
+        //End Wagerr
+
         NET_NETCONN = NET | NETCONN, // use this to have something logged in NET and NETCONN as well
 
         ALL         = ~(uint64_t)0,

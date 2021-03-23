@@ -1,4 +1,5 @@
 // Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +49,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     std::vector<unsigned char> data;
     uint160 hash;
     if (DecodeBase58Check(str, data)) {
-        // base58-encoded Dash addresses.
+        // base58-encoded Wagerr addresses.
         // Public-key-hash-addresses have version 76 (or 140 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
         const std::vector<unsigned char>& pubkey_prefix = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
@@ -146,22 +147,12 @@ std::string EncodeExtKey(const CExtKey& key)
     return ret;
 }
 
-std::string EncodeDestination(const CTxDestination& dest)
+std::string EncodeLegacyAddr(const CTxDestination& dest, const CChainParams& params)
 {
-    return boost::apply_visitor(DestinationEncoder(Params()), dest);
+    return boost::apply_visitor(DestinationEncoder(params), dest);
 }
 
-CTxDestination DecodeDestination(const std::string& str)
+CTxDestination DecodeLegacyAddr(const std::string& str, const CChainParams& params)
 {
-    return DecodeDestination(str, Params());
-}
-
-bool IsValidDestinationString(const std::string& str, const CChainParams& params)
-{
-    return IsValidDestination(DecodeDestination(str, params));
-}
-
-bool IsValidDestinationString(const std::string& str)
-{
-    return IsValidDestinationString(str, Params());
+    return DecodeDestination(str, params);
 }

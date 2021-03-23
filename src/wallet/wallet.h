@@ -1,6 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2015-2017 The Bitcoin Unlimited developers
+// Copyright (c) 2019-2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +11,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <amount.h>
+#include <consensus/tokengroups.h>
 #include <policy/feerate.h>
 #include <saltedhasher.h>
 #include <streams.h>
@@ -55,13 +59,13 @@ static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 //! -fallbackfee default
-static const CAmount DEFAULT_FALLBACK_FEE = 1000;
+static const CAmount DEFAULT_FALLBACK_FEE = 10000;
 //! -m_discard_rate default
-static const CAmount DEFAULT_DISCARD_FEE = 10000;
+static const CAmount DEFAULT_DISCARD_FEE = 100000;
 //! -mintxfee default
-static const CAmount DEFAULT_TRANSACTION_MINFEE = 1000;
+static const CAmount DEFAULT_TRANSACTION_MINFEE = 10000;
 //! minimum recommended increment for BIP 125 replacement txs
-static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5000;
+static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 15000;
 //! Default for -spendzeroconfchange
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 //! Default for -walletrejectlongchains
@@ -81,6 +85,7 @@ class CCoinControl;
 class CKey;
 class COutput;
 class CReserveKey;
+class CReward;
 class CScript;
 class CTxMemPool;
 class CBlockPolicyEstimator;
@@ -196,6 +201,23 @@ struct COutputEntry
     int vout;
 };
 
+struct CGroupedOutputEntry : public COutputEntry
+{
+    CTokenGroupID grp;
+    CAmount grpAmount;
+    CGroupedOutputEntry(const CTokenGroupID &grp,
+        CAmount grpAmount,
+        const CTxDestination &dest,
+        CAmount amt,
+        int outidx)
+        : grp(grp), grpAmount(grpAmount)
+    {
+        destination = dest;
+        amount = amt;
+        vout = outidx;
+    }
+};
+
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx
 {
@@ -270,6 +292,8 @@ public:
 
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
+    bool IsCoinStake() const { return tx->IsCoinStake(); }
+    bool IsGenerated() const { return tx->IsGenerated(); }
 };
 
 //Get the marginal bytes of spending the specified output
@@ -486,8 +510,27 @@ public:
         return CalculateMaximumSignedInputSize(tx->vout[out], pwallet);
     }
 
+    CAmount GetUnlockedCredit(bool fUseCache=true, const isminefilter& filter = ISMINE_SPENDABLE) const;
+    CAmount GetLockedCredit(bool fUseCache=true, const isminefilter& filter = ISMINE_SPENDABLE) const;
+    CAmount GetLockedWatchOnlyCredit(const bool& fUseCache=true) const;
+
     void GetAmounts(std::list<COutputEntry>& listReceived,
                     std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+
+    // Get all transaction amounts, including group information
+    void GetAmounts(std::list<CGroupedOutputEntry> &listReceived,
+        std::list<CGroupedOutputEntry> &listSent,
+        CAmount &nFee,
+        std::string &strSentAccount,
+        const isminefilter &filter) const;
+
+    // Get transactions for the passed group
+    void GetGroupAmounts(std::list<CGroupedOutputEntry> &listReceived,
+        std::list<CGroupedOutputEntry> &listSent,
+        CAmount &nFee,
+        std::string &strSentAccount,
+        const isminefilter &filter,
+        std::function<bool(const CTokenGroupInfo&)> func) const;
 
     bool IsFromMe(const isminefilter& filter) const
     {
@@ -567,6 +610,10 @@ public:
     int Priority() const;
 
     std::string ToString() const;
+    COutPoint GetOutPoint() const { return COutPoint(tx->GetHash(), i); }
+    /** returns the value of this output in satoshis */
+    CAmount GetValue() const { return tx->tx->vout[i].nValue; }
+    CScript GetScriptPubKey() const { return tx->tx->vout[i].scriptPubKey; }
 };
 
 
@@ -825,6 +872,11 @@ private:
      */
     void InitCoinJoinSalt();
 
+    // Staking and POS
+    uint64_t nStakeSplitThreshold = 2000;
+    CAmount nCombineThreshold = 500;
+    bool fCombineEnable = false;
+
 public:
     /*
      * Main wallet lock.
@@ -898,7 +950,14 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe=true, const CCoinControl *coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const uint64_t nMaximumCount = 0, const int nMinDepth = 0, const int nMaxDepth = 9999999, const bool fIncludeGrouped = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /**
+     * populate vCoins with vector of available COutputs, filtered by the passed lambda function.
+       Returns the number of matches.
+     */
+    unsigned int FilterCoins(std::vector<COutput> &vCoins,
+        std::function<bool(const CWalletTx *, const CTxOut *)>, int nMinDepth = 0) const;
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
@@ -1046,6 +1105,10 @@ public:
     CAmount GetImmatureWatchOnlyBalance() const;
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account, const bool fAddLocked) const;
 
+    CAmount GetUnlockedBalance() const;
+    CAmount GetLockedBalance() const;
+    CAmount GetLockedWatchOnlyBalance() const;
+
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false, bool fSkipUnconfirmed = true) const;
     CAmount GetAnonymizedBalance(const CCoinControl* coinControl = nullptr) const;
     float GetAverageAnonymizedRounds() const;
@@ -1140,6 +1203,9 @@ public:
     const std::string& GetLabelName(const CScript& scriptPubKey) const;
 
     void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
+    bool GetScriptForPowMining(std::shared_ptr<CReserveScript> &script, const std::shared_ptr<CReserveKey> &reservedKey);
+    bool GetScriptForHybridMining(std::shared_ptr<CReserveScript> &script, const std::shared_ptr<CReserveKey> &reservedKey, const CReward &reward);
+    bool GetKeyForMining(std::shared_ptr<CReserveKey> &reservedKey, CPubKey &pubkey);
 
     unsigned int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
@@ -1221,6 +1287,16 @@ public:
     bool AutoBackupWallet(const fs::path& wallet_path, std::string& strBackupWarningRet, std::string& strBackupErrorRet);
 
     bool BackupWallet(const std::string& strDest);
+
+    /**
+     * Staking and POS
+     */
+    bool SetStakeSplitThreshold(uint64_t newThreshold);
+    void LoadStakeSplitThreshold(uint64_t newThreshold);
+    uint64_t GetStakeSplitThreshold();
+    bool SetAutoCombineSettings(bool fEnable, CAmount nCombineThreshold);
+    void LoadAutoCombineSettings(bool fEnableIn, CAmount nCombineThresholdIn);
+    void GetAutoCombineSettings(bool& fEnableRet, CAmount& nCombineThresholdRet) const;
 
     /**
      * HD Wallet Functions

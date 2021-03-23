@@ -383,16 +383,16 @@ void BitcoinGUI::stopConnectingAnimation()
 
 void BitcoinGUI::createActions()
 {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
-    sendCoinsMenuAction->setStatusTip(tr("Send coins to a Dash address"));
+    sendCoinsMenuAction = new QAction(tr("Send"), this);
+    sendCoinsMenuAction->setStatusTip(tr("Send coins to a Wagerr address"));
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    coinJoinCoinsMenuAction = new QAction("&CoinJoin", this);
-    coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Dash address").arg("CoinJoin"));
+    coinJoinCoinsMenuAction = new QAction("CoinJoin", this);
+    coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Wagerr address").arg("CoinJoin"));
     coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
 
-    receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
-    receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
+    receiveCoinsMenuAction = new QAction(tr("Receive"), this);
+    receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and wagerr: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -409,7 +409,7 @@ void BitcoinGUI::createActions()
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about Dash Core"));
+    aboutAction->setStatusTip(tr("Show information about WAGERR Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(tr("About &Qt"), this);
@@ -430,11 +430,13 @@ void BitcoinGUI::createActions()
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     unlockWalletAction = new QAction(tr("&Unlock Wallet..."), this);
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
+    unlockWalletForStakingAction = new QAction(tr("Unlock Wallet for &Staking..."), this);
+    unlockWalletForStakingAction->setToolTip(tr("Unlock the wallet for staking only"));
     lockWalletAction = new QAction(tr("&Lock Wallet"), this);
     signMessageAction = new QAction(tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Dash addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Wagerr addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Dash addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Wagerr addresses"));
 
     openInfoAction = new QAction(tr("&Information"), this);
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
@@ -465,11 +467,11 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a dash: URI or payment request"));
+    openAction->setStatusTip(tr("Open a wagerr: URI or payment request"));
 
     showHelpMessageAction = new QAction(tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Dash command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Wagerr command-line options").arg(tr(PACKAGE_NAME)));
 
     showCoinJoinHelpAction = new QAction(tr("%1 &information").arg("CoinJoin"), this);
     showCoinJoinHelpAction->setMenuRole(QAction::NoRole);
@@ -507,6 +509,7 @@ void BitcoinGUI::createActions()
         connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
         connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
         connect(unlockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(unlockWallet()));
+        connect(unlockWalletForStakingAction, SIGNAL(triggered()), walletFrame, SLOT(unlockWalletForStaking()));
         connect(lockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(lockWallet()));
         connect(signMessageAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
@@ -556,6 +559,7 @@ void BitcoinGUI::createMenuBar()
         settings->addAction(encryptWalletAction);
         settings->addAction(changePassphraseAction);
         settings->addAction(unlockWalletAction);
+        settings->addAction(unlockWalletForStakingAction);
         settings->addAction(lockWalletAction);
         settings->addSeparator();
     }
@@ -591,40 +595,52 @@ void BitcoinGUI::createToolBars()
         appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
         toolbar->setMovable(false); // remove unused icon in upper left corner
 
         tabGroup = new QButtonGroup(this);
 
         overviewButton = new QToolButton(this);
-        overviewButton->setText(tr("&Overview"));
+        overviewButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
+        overviewButton->setText(tr("Overview"));
+        overviewButton->setIcon(QIcon(":/icons/overview"));
         overviewButton->setStatusTip(tr("Show general overview of wallet"));
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
+        sendCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         sendCoinsButton->setText(sendCoinsMenuAction->text());
+        sendCoinsButton->setIcon(QIcon(":/icons/send"));
         sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
         receiveCoinsButton = new QToolButton(this);
+        receiveCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         receiveCoinsButton->setText(receiveCoinsMenuAction->text());
+        receiveCoinsButton->setIcon(QIcon(":/icons/receive"));
         receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
         tabGroup->addButton(receiveCoinsButton);
 
         historyButton = new QToolButton(this);
-        historyButton->setText(tr("&Transactions"));
+        historyButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
+        historyButton->setText(tr("Transactions"));
+        historyButton->setIcon(QIcon(":/icons/history"));
         historyButton->setStatusTip(tr("Browse transaction history"));
         tabGroup->addButton(historyButton);
 
         coinJoinCoinsButton = new QToolButton(this);
+        coinJoinCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
+        coinJoinCoinsButton->setIcon(QIcon(":/icons/coinjoin"));
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
         QSettings settings;
         if (settings.value("fShowMasternodesTab").toBool()) {
             masternodeButton = new QToolButton(this);
-            masternodeButton->setText(tr("&Masternodes"));
+            masternodeButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
+            masternodeButton->setText(tr("Masternodes"));
+            masternodeButton->setIcon(QIcon(":/icons/masternodes"));
             masternodeButton->setStatusTip(tr("Browse masternodes"));
             tabGroup->addButton(masternodeButton);
             connect(masternodeButton, SIGNAL(clicked()), this, SLOT(gotoMasternodePage()));
@@ -1127,7 +1143,7 @@ void BitcoinGUI::updateNetworkState()
     fNetworkActivePrev = fNetworkActive;
 
     if (fNetworkActive) {
-        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
+        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Wagerr network", "", count));
     } else {
         labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
         icon = "connect_4";
@@ -1216,7 +1232,7 @@ void BitcoinGUI::updateWidth()
         ++nButtonsVisible;
     }
     // Add 30 per button as padding and use minimum 980 which is the minimum required to show all tab's contents
-    // Use nButtonsVisible + 1 <- for the dash logo
+    // Use nButtonsVisible + 1 <- for the wagerr logo
     int nWidth = std::max<int>(980, (nWidthWidestButton + 30) * (nButtonsVisible + 1));
     setMinimumWidth(nWidth);
     resize(nWidth, height());
@@ -1398,7 +1414,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Dash Core"); // default title
+    QString strTitle = tr("WAGERR Core"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1424,7 +1440,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Dash Core - "
+    // Append title to "WAGERR Core - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -1677,6 +1693,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>unencrypted</b>"));
         changePassphraseAction->setEnabled(false);
         unlockWalletAction->setVisible(false);
+        unlockWalletForStakingAction->setVisible(false);
         lockWalletAction->setVisible(false);
         encryptWalletAction->setEnabled(true);
         break;
@@ -1686,15 +1703,17 @@ void BitcoinGUI::setEncryptionStatus(int status)
         labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         changePassphraseAction->setEnabled(true);
         unlockWalletAction->setVisible(false);
+        unlockWalletForStakingAction->setVisible(false);
         lockWalletAction->setVisible(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     case WalletModel::UnlockedForMixingOnly:
         labelWalletEncryptionIcon->show();
         labelWalletEncryptionIcon->setPixmap(GUIUtil::getIcon("lock_open", GUIUtil::ThemedColor::ORANGE).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b> for mixing only"));
+        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b> for staking and mixing only"));
         changePassphraseAction->setEnabled(true);
         unlockWalletAction->setVisible(true);
+        unlockWalletForStakingAction->setVisible(true);
         lockWalletAction->setVisible(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
@@ -1704,6 +1723,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
         changePassphraseAction->setEnabled(true);
         unlockWalletAction->setVisible(true);
+        unlockWalletForStakingAction->setVisible(true);
         lockWalletAction->setVisible(false);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;

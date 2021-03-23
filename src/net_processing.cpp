@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2019 The PIVX Core developers
+// Copyright (c) 2020 The ION Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,7 +58,7 @@
 #include <statsd_client.h>
 
 #if defined(NDEBUG)
-# error "Dash Core cannot be compiled without assertions."
+# error "WAGERR Core cannot be compiled without assertions."
 #endif
 
 /** Maximum number of in-flight objects from a peer */
@@ -129,7 +131,7 @@ static const unsigned int AVG_ADDRESS_BROADCAST_INTERVAL = 30;
 static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
 /** Maximum number of inventory items to send per transmission.
  *  Limits the impact of low-fee transaction floods.
- *  We have 4 times smaller block times in Dash, so we need to push 4 times more invs per 1MB. */
+ *  We have 4 times smaller block times in Wagerr, so we need to push 4 times more invs per 1MB. */
 static constexpr unsigned int INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK = 4 * 7 * INVENTORY_BROADCAST_INTERVAL;
 
 // Internal stuff
@@ -1357,7 +1359,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return LookupBlockIndex(inv.hash) != nullptr;
 
     /*
-        Dash Related Inventory Messages
+        Wagerr Related Inventory Messages
 
         --
 
@@ -2178,12 +2180,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return false;
         }
 
-        if (nVersion < MIN_PEER_PROTO_VERSION) {
+        if (nVersion < connman->GetMinPeerVersion()) {
             // disconnect from peers older than this proto version
             LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom->GetId(), nVersion);
             if (enable_bip61) {
                 connman->PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE,
-                                   strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION)));
+                                   strprintf("Version must be %d or greater", connman->GetMinPeerVersion())));
             }
             pfrom->fDisconnect = true;
             return false;
@@ -2319,6 +2321,18 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         int64_t nTimeOffset = nTime - GetTime();
         pfrom->nTimeOffset = nTimeOffset;
+        const int nTimeSlotLength = Params().GetConsensus().nTimeSlotLength;
+        if (abs64(nTimeOffset) > 2 * nTimeSlotLength) {
+            if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+                LogPrintf("timeOffset (%d seconds) too large. Disconnecting node %s\n",
+                        nTimeOffset, pfrom->addr.ToString().c_str());
+                pfrom->fDisconnect = true;
+                connman->CheckOffsetDisconnectedPeers(pfrom->addr);
+            } else {
+                LogPrintf("timeOffset (%d seconds) too large. Node %s\n",
+                        nTimeOffset, pfrom->addr.ToString().c_str());
+            }
+        }
         AddTimeData(pfrom->addr, nTimeOffset);
 
         // Feeler connections exist only to verify if address is online.
@@ -2533,6 +2547,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
+                if (IsInitialBlockDownload() && fAlreadyHave && pfrom->nVersion < GETHEADERS_VERSION) {
+                    CNodeState *state = State(pfrom->GetId());
+                    if (state && state->fSyncStarted && state->nStallingSince == 0) {
+                        state->nStallingSince = GetTimeMicros();
+                        LogPrint(BCLog::NET, "Stall update peer=%s\n", state->name);
+                    }
+                }
+
                 if (fAlreadyHave || fImporting || fReindex || mapBlocksInFlight.count(inv.hash)) {
                     continue;
                 }
@@ -2541,7 +2563,16 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 if (!state) {
                     continue;
                 }
+                // Get the block when we receive an unknown INV while connected to a legacy node during sync or if it is the only connected node
+                if (pfrom->nVersion < GETHEADERS_VERSION && (state->fSyncStarted || (state->fPreferredDownload && nPreferredDownload == 1))) {
+                    LOCK(cs_main);
+                    std::vector<CInv> vInv(1);
+                    vInv[0] = CInv(MSG_BLOCK, inv.hash);
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETDATA, vInv));
 
+                    state->nStallingSince = GetTimeMicros();
+                    LogPrint(BCLog::NET, "Stall started peer=%s\n", state->name);
+                }
                 // Download if this is a nice peer, or we have no nice peers and this one might do.
                 bool fFetch = state->fPreferredDownload || (nPreferredDownload == 0 && !pfrom->fOneShot);
                 // Only actively request headers from a single peer, unless we're close to end of initial download.
@@ -3309,6 +3340,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 
         bool forceProcessing = false;
+
+        // In legacy mode, when the block does not connect, request the missing blocks and bail
+        if (pfrom->nVersion < GETHEADERS_VERSION) {
+            LOCK(cs_main);
+            if (mapBlockIndex.find(pblock->hashPrevBlock) == mapBlockIndex.end()) {
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETBLOCKS, chainActive.GetLocator(pindexBestHeader), pblock->GetHash()));
+                return true;
+            } else {
+                State(pfrom->GetId())->nStallingSince = 0;
+            }
+            forceProcessing = true;
+        }
+
         const uint256 hash(pblock->GetHash());
         {
             LOCK(cs_main);
@@ -4429,7 +4473,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             state.m_object_download.m_check_expiry_timer = current_time + GetObjectExpiryInterval(MSG_TX)/2 + GetRandMicros(GetObjectExpiryInterval(MSG_TX));
         }
 
-        // DASH this code also handles non-TXs (Dash specific messages)
+        // WAGERR this code also handles non-TXs (Wagerr specific messages)
         auto& object_process_time = state.m_object_download.m_object_process_time;
         while (!object_process_time.empty() && object_process_time.begin()->first <= current_time && state.m_object_download.m_object_in_flight.size() < MAX_PEER_OBJECT_IN_FLIGHT) {
             const CInv inv = object_process_time.begin()->second;

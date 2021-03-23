@@ -14,8 +14,8 @@
 #include <qt/optionsmodel.h>
 #include <qt/sendcoinsentry.h>
 
+#include <dstencode.h>
 #include <interfaces/node.h>
-#include <key_io.h>
 #include <wallet/coincontrol.h>
 #include <ui_interface.h>
 #include <txmempool.h>
@@ -876,7 +876,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!IsValidDestination(dest)) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Dash address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Wagerr address"));
         }
         else // Valid address
         {

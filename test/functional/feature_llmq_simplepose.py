@@ -5,7 +5,7 @@
 
 import time
 
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import WagerrTestFramework
 from test_framework.util import *
 
 '''
@@ -15,10 +15,10 @@ Checks simple PoSe system based on LLMQ commitments
 
 '''
 
-class LLMQSimplePoSeTest(DashTestFramework):
+class LLMQSimplePoSeTest(WagerrTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_wagerr_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_wagerr_llmq_test_params(5, 3)
 
     def run_test(self):
 
@@ -80,7 +80,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def force_old_mn_proto(self, mn):
         self.stop_node(mn.node.index)
-        self.start_masternode(mn, ["-pushversion=70216"])
+        self.start_masternode(mn, ["-pushversion=70915"])
         connect_nodes(mn.node, 0)
         self.reset_probe_timeouts()
         return False
@@ -143,7 +143,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe
-        self.bump_mocktime(50 * 60 + 1)
+        self.bump_mocktime(62 * 60 + 1)
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
 

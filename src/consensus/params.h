@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_PARAMS_H
 #define BITCOIN_CONSENSUS_PARAMS_H
 
+#include <amount.h>
 #include <uint256.h>
 #include <map>
 #include <string>
@@ -15,13 +16,6 @@ namespace Consensus {
 enum DeploymentPos
 {
     DEPLOYMENT_TESTDUMMY,
-    DEPLOYMENT_CSV, // Deployment of BIP68, BIP112, and BIP113.
-    DEPLOYMENT_DIP0001, // Deployment of DIP0001 and lower transaction fees.
-    DEPLOYMENT_BIP147, // Deployment of BIP147 (NULLDUMMY)
-    DEPLOYMENT_DIP0003, // Deployment of DIP0002 and DIP0003 (txv3 and deterministic MN lists)
-    DEPLOYMENT_DIP0008, // Deployment of ChainLock enforcement
-    DEPLOYMENT_REALLOC, // Deployment of Block Reward Reallocation
-    DEPLOYMENT_DIP0020, // Deployment of DIP0020, DIP0021 and LMQ_100_67 quorums
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -50,10 +44,10 @@ enum LLMQType : uint8_t
 {
     LLMQ_NONE = 0xff,
 
-    LLMQ_50_60 = 1, // 50 members, 30 (60%) threshold, one per hour
-    LLMQ_400_60 = 2, // 400 members, 240 (60%) threshold, one every 12 hours
-    LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
-    LLMQ_100_67 = 4, // 100 members, 67 (67%) threshold, one per hour
+    LLMQ_20_60 = 1, // 50 members, 30 (60%) threshold, one per hour
+    LLMQ_40_60 = 2, // 400 members, 240 (60%) threshold, one every 12 hours
+    LLMQ_40_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
+    LLMQ_20_70 = 4, // 100 members, 67 (67%) threshold, one per hour
 
     // for testing only
     LLMQ_TEST = 100, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
@@ -66,7 +60,7 @@ enum LLMQType : uint8_t
 };
 
 // Configures a LLMQ and its DKG
-// See https://github.com/dashpay/dips/blob/master/dip-0006.md for more details
+// See https://github.com/wagerr/dips/blob/master/dip-0006.md for more details
 struct LLMQParams {
     LLMQType type;
 
@@ -150,6 +144,8 @@ struct Params {
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
+    /** Deployment of v17 Hard Fork */
+    int V17DeploymentHeight;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
@@ -157,15 +153,20 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    /** Block height at which BIP68, BIP112, and BIP113 become active */
+    int CSVHeight;
+    /** Block height at which BIP147 becomes active */
+    int BIP147Height;
     /** Block height at which DIP0001 becomes active */
     int DIP0001Height;
     /** Block height at which DIP0003 becomes active */
     int DIP0003Height;
     /** Block height at which DIP0003 becomes enforced */
-    int DIP0003EnforcementHeight;
+//    int DIP0003EnforcementHeight;
     uint256 DIP0003EnforcementHash;
     /** Block height at which DIP0008 becomes active */
     int DIP0008Height;
+
     /**
      * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -182,11 +183,66 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
-    int nPowKGWHeight;
-    int nPowDGWHeight;
-    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
+    uint16_t nMaturityV1;
+    uint16_t nMaturityV2;
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    /** Wagerr specific deployment heights */
+    int nWagerrProtocolV1StartHeight;
+    int nWagerrProtocolV2StartHeight;
+    int nWagerrProtocolV3StartHeight;
+    int nWagerrProtocolV4StartHeight;
+    int nQuickGamesEndHeight;
+    int nMaturityV2StartHeight;
+    int nKeysRotateHeight;
+    int nPosStartHeight;
+    int nBlockStakeModifierV1A;
+    int nBlockStakeModifierV2;
+    int nBlockTimeProtocolV2;
+    int ATPStartHeight;
+
+    /** Proof of stake parameters */
+    uint256 posLimit;
+    uint256 posLimit_V2;
+    int64_t nPosTargetSpacing;
+    int64_t nPosTargetTimespan;
+    int64_t nPosTargetTimespan_V2;
+    int32_t nStakeMinDepth;
+    int32_t nStakeMinAge;
+
+    /** Time Protocol V2 **/
+    int nTimeSlotLength;
+
+    /** ATP parameters */
+    std::string WagerrAddrPrefix;
+    std::string strTokenManagementKey;
+    int nOpGroupNewRequiredConfirmations;
+
+    /** Zerocoin - retired functionality */
+    int64_t nZerocoinStartHeight;
+    int64_t nZerocoinStartTime;
+    int64_t nBlockZerocoinV2;
+    int64_t nPublicZCSpends;
+    std::string zerocoinModulus;
+    int64_t nFakeSerialBlockheightEnd;
+    CAmount nSupplyBeforeFakeSerial;
+    int32_t nZerocoinRequiredStakeDepth;
+    int nMintRequiredConfirmations;
+    int nRequiredAccumulation;
+
+    /** Betting */
+    int nBetBlocksIndexTimespanV2;
+    int nBetBlocksIndexTimespanV3;
+    uint64_t nOMNORewardPermille;
+    uint64_t nDevRewardPermille;
+    uint64_t nBetBlockPayoutAmount;
+    int64_t nMinBetPayoutRange;
+    int64_t nMaxBetPayoutRange;
+    int64_t nMaxParlayBetPayoutRange;
+    int nBetPlaceTimeoutBlocks;
+    uint32_t nMaxParlayLegs;
 
     /** these parameters are only used on devnet and can be configured from the outside */
     int nMinimumDifficultyBlocks{0};
@@ -197,6 +253,29 @@ struct Params {
     LLMQType llmqTypeChainLocks;
     LLMQType llmqTypeInstantSend{LLMQ_NONE};
     LLMQType llmqTypePlatform{LLMQ_NONE};
+
+    bool IsStakeModifierV2(const int64_t nHeight) const { return nHeight >= nBlockStakeModifierV2; }
+    bool IsTimeProtocolV2(const int64_t nHeight) const { return nHeight >= nBlockTimeProtocolV2; }
+    int COINBASE_MATURITY(const int contextHeight) const {
+        return contextHeight < nMaturityV2StartHeight ? nMaturityV1 : nMaturityV2;
+    }
+    int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+
+    int BetBlocksIndexTimespanV2() const { return nBetBlocksIndexTimespanV2; }
+    int BetBlocksIndexTimespanV3() const { return nBetBlocksIndexTimespanV3; }
+    uint64_t OMNORewardPermille() const { return nOMNORewardPermille; }
+    uint64_t DevRewardPermille() const { return nDevRewardPermille; }
+    int BetBlockPayoutAmount() const { return nBetBlockPayoutAmount; } // Currently not used
+    int64_t MaxBetPayoutRange() const { return nMaxBetPayoutRange; }
+    int64_t MinBetPayoutRange() const { return nMinBetPayoutRange; }
+    int64_t MaxParlayBetPayoutRange() const { return nMaxBetPayoutRange; }
+    int BetPlaceTimeoutBlocks() const { return nBetPlaceTimeoutBlocks; }
+    uint32_t MaxParlayLegs() const { return nMaxParlayLegs; }
+    int WagerrProtocolV1StartHeight() const { return nWagerrProtocolV1StartHeight; }
+    int WagerrProtocolV2StartHeight() const { return nWagerrProtocolV2StartHeight; }
+    int WagerrProtocolV3StartHeight() const { return nWagerrProtocolV3StartHeight; }
+    int WagerrProtocolV4StartHeight() const { return nWagerrProtocolV4StartHeight; }
+    int QuickGamesEndHeight() const { return nQuickGamesEndHeight; }
 };
 } // namespace Consensus
 

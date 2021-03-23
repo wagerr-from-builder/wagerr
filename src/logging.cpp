@@ -141,6 +141,13 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::SPORK, "spork"},
     {BCLog::NETCONN, "netconn"},
     //End Dash
+
+    //Start Wagerr
+    {BCLog::BETTING, "betting"},
+    {BCLog::ZEROCOIN, "zerocoin"},
+    {BCLog::STAKING, "staking"},
+    {BCLog::TOKEN, "token"},
+    //End Wagerr
 };
 
 bool GetLogCategory(uint64_t *f, const std::string *str)
@@ -150,7 +157,7 @@ bool GetLogCategory(uint64_t *f, const std::string *str)
             *f = BCLog::ALL;
             return true;
         }
-        if (*str == "dash") {
+        if (*str == "wagerr") {
             *f = BCLog::CHAINLOCKS
                  | BCLog::GOBJECT
                  | BCLog::INSTANTSEND

@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +10,11 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <consensus/tokengroups.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
+#include <tokens/tokengroupmanager.h>
 #include <validation.h>
 
 template <typename ProTx>
@@ -135,7 +138,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
-        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 1000 * COIN) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 25000 * COIN) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -155,7 +158,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         if (ptx.collateralOutpoint.n >= tx.vout.size()) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
         }
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != 1000 * COIN) {
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 25000 * COIN) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -208,6 +211,16 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-sig");
         }
     }
+
+    // needs to have 1 GVT.credit as input
+    CAmount nCredit;
+    CAmount nDebit;
+    CTokenGroupID gvtCreditID(tokenGroupManager->GetGVTID(), "credit");
+    if (!GetTokenBalance(tx, gvtCreditID, state, view, nCredit, nDebit)) {
+        return false;
+    }
+    if (nCredit - nDebit != 1)
+        return state.DoS(100, false, REJECT_INVALID, "bad-protx-credit");
 
     return true;
 }
@@ -352,7 +365,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     return true;
 }
 
-bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -383,9 +396,33 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
             // pass the state returned by the function above
             return false;
         }
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
-            // pass the state returned by the function above
-            return false;
+
+        if (ptx.nReason == CProUpRevTx::REASON_EXPIRED) {
+            CAmount nCredit;
+            CAmount nDebit;
+            if (!tokenGroupManager->ManagementTokensCreated()) {
+                return state.DoS(40, false, REJECT_INVALID, "bad-protx-revoke-token-too-early");
+            }
+            CTokenGroupID gvtRevokeID(tokenGroupManager->GetGVTID(), "revoke");
+            if (!GetTokenBalance(tx, gvtRevokeID, state, view, nCredit, nDebit)) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-protx-revoke-token-missing");
+            }
+            if (nCredit - nDebit != 1) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-protx-revoke-token");
+            }
+            CTokenGroupCreation mgtCreation;
+            if (!tokenGroupManager->GetTokenGroupCreation(tokenGroupManager->GetMGTID(), mgtCreation)) {
+                return state.DoS(100, false, REJECT_INVALID, "bad-protx-revoke-bls-key");
+            }
+            const CTokenGroupDescriptionMGT *mgtDesc = boost::get<CTokenGroupDescriptionMGT>(mgtCreation.pTokenGroupDescription.get());
+
+            if (!CheckHashSig(ptx, mgtDesc->blsPubKey, state)) {
+                // pass the state returned by the function above
+                return false;
+            }
+        } else if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state)) {
+                // pass the state returned by the function above
+                return false;
         }
     }
 

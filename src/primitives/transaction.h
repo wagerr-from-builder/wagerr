@@ -20,6 +20,9 @@ enum {
     TRANSACTION_PROVIDER_UPDATE_REVOKE = 4,
     TRANSACTION_COINBASE = 5,
     TRANSACTION_QUORUM_COMMITMENT = 6,
+    TRANSACTION_GROUP_CREATION_REGULAR = 7,
+    TRANSACTION_GROUP_CREATION_MGT = 8,
+    TRANSACTION_GROUP_CREATION_NFT = 9,
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -118,6 +121,9 @@ public:
         READWRITE(nSequence);
     }
 
+    bool IsZerocoinSpend() const;
+    bool IsZerocoinPublicSpend() const;
+
     friend bool operator==(const CTxIn& a, const CTxIn& b)
     {
         return (a.prevout   == b.prevout &&
@@ -173,6 +179,19 @@ public:
         return (nValue == -1);
     }
 
+    void SetEmpty()
+    {
+        nValue = 0;
+        scriptPubKey.clear();
+    }
+
+    bool IsEmpty() const
+    {
+        return (nValue == 0 && scriptPubKey.empty());
+    }
+
+    bool IsZerocoinMint() const;
+
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
@@ -182,6 +201,11 @@ public:
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
     {
         return !(a == b);
+    }
+
+    friend bool operator<(const CTxOut& a, const CTxOut& b)
+    {
+        return (a.nValue < b.nValue || (a.nValue == b.nValue && a.scriptPubKey < b.scriptPubKey));
     }
 
     std::string ToString() const;
@@ -196,7 +220,7 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_VERSION=1;
 
     // Changing the default transaction version requires a two step process: first
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
@@ -256,6 +280,9 @@ public:
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
+
+    CAmount AddVoutValues(CAmount& nValueOut, CAmount& nValueBurned) const;
+    CAmount GetValueBurned() const;
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
@@ -266,10 +293,27 @@ public:
      */
     unsigned int GetTotalSize() const;
 
+
+    CAmount GetZerocoinSpent() const;
+
+    bool HasZerocoinSpendInputs() const;
+    bool HasZerocoinPublicSpendInputs() const;
+
+    bool HasZerocoinMintOutputs() const;
+
+    bool ContainsZerocoins() const
+    {
+        return HasZerocoinSpendInputs() || HasZerocoinPublicSpendInputs() || HasZerocoinMintOutputs();
+    }
+
     bool IsCoinBase() const
     {
-        return (vin.size() == 1 && vin[0].prevout.IsNull());
+        return (vin.size() == 1 && vin[0].prevout.IsNull() && !ContainsZerocoins());
     }
+
+    bool IsCoinStake() const;
+
+    bool IsGenerated() const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

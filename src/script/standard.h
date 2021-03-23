@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,9 +30,9 @@ public:
 
 /**
  * Default setting for nMaxDatacarrierBytes. 80 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
+ * +5 for the OpRetGroupId, +178 for GroupDescData.
  */
-static const unsigned int MAX_OP_RETURN_RELAY = 83;
+static const unsigned int MAX_OP_RETURN_RELAY = 184;
 
 /**
  * A data carrying output is an unspendable output containing data. The script
@@ -62,6 +63,8 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_NULL_DATA, //!< unspendable OP_RETURN script that carries data
+    TX_GRP_PUBKEYHASH,
+    TX_GRP_SCRIPTHASH
 };
 
 class CNoDestination {
@@ -113,6 +116,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * addressRet is populated with a single value and nRequiredRet is set to 1.
  * Returns true if successful.
  */
+bool ExtractDestinationAndType(const CScript& scriptPubKey, CTxDestination &addressRet, txnouttype &whichType);
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 
 /**

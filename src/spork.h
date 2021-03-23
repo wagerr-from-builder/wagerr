@@ -23,9 +23,12 @@ class CSporkManager;
 enum SporkId : int32_t {
     SPORK_2_INSTANTSEND_ENABLED                            = 10001,
     SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
+    SPORK_4_DIP0003_ENFORCED                               = 10004,
+    SPORK_8_NEW_PROTOCOL_ENFORCEMENT                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
+    SPORK_20_BETTING_MAINTENANCE_MODE                      = 10019,
     SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
     SPORK_23_QUORUM_POSE                                   = 10022,
 
@@ -106,11 +109,11 @@ public:
     }
 
     /**
-     * GetHash returns the double-sha256 hash of the serialized spork message.
+     * GetHash returns the quark hash of the serialized spork message.
      */
     uint256 GetHash() const;
 
-    /**
+   /**
      * GetSignatureHash returns the hash of the serialized spork message
      * without the signature included. The intent of this method is to get the
      * hash to be signed.
@@ -193,7 +196,7 @@ public:
         }
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be setted with cmdline or options, should
-        // not reuse pubkeys from previous dashd run
+        // not reuse pubkeys from previous wagerrd run
         LOCK(cs);
         READWRITE(mapSporksByHash);
         READWRITE(mapSporksActive);

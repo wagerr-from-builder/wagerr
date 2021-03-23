@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2021 The Dash Core developers
+# Copyright (c) 2018-2021 The Wagerr Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import WagerrTestFramework
 from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
 
 '''
@@ -17,11 +18,11 @@ Mempool inconsistencies are simulated via disconnecting/reconnecting node 3
 and by having a higher relay fee on nodes 4 and 5.
 '''
 
-class LLMQ_IS_RetroactiveSigning(DashTestFramework):
+class LLMQ_IS_RetroactiveSigning(WagerrTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_wagerr_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
+        self.set_wagerr_llmq_test_params(5, 3)
 
     def run_test(self):
         self.activate_dip8()
@@ -85,18 +86,19 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # and this should be enough to complete an IS lock
         self.wait_for_instantlock(txid, self.nodes[0])
 
-        self.log.info("testing retroactive signing with unknown TX")
-        isolate_node(self.nodes[3])
-        rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
-        rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
-        txid = self.nodes[3].sendrawtransaction(rawtx)
+        # generatetoaddress does not work in POS
+        #self.log.info("testing retroactive signing with unknown TX")
+        #isolate_node(self.nodes[3])
+        #rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
+        #rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
+        #rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        #txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make node 3 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        block = self.nodes[3].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
-        reconnect_isolated_node(self.nodes[3], 0)
-        self.wait_for_chainlocked_block_all_nodes(block)
-        self.nodes[0].setmocktime(self.mocktime)
+        #self.bump_mocktime(10 * 60 + 1)
+        #block = self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())[0]
+        #reconnect_isolated_node(self.nodes[3], 0)
+        #self.wait_for_chainlocked_block_all_nodes(block)
+        #self.nodes[0].setmocktime(self.mocktime)
 
         self.log.info("testing retroactive signing with partially known TX")
         isolate_node(self.nodes[3])

@@ -6,7 +6,7 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/wagerr-config.h>
 #endif
 
 #include <amount.h>
@@ -129,6 +129,7 @@ private:
     QAction *backupWalletAction;
     QAction *changePassphraseAction;
     QAction *unlockWalletAction;
+    QAction *unlockWalletForStakingAction;
     QAction *lockWalletAction;
     QAction *aboutQtAction;
     QAction *openInfoAction;
@@ -308,7 +309,7 @@ private Q_SLOTS:
     void showPeers();
     void showRepair();
 
-    /** Open external (default) editor with dash.conf */
+    /** Open external (default) editor with wagerr.conf */
     void showConfEditor();
     /** Show folder with wallet backups in default file browser */
     void showBackups();

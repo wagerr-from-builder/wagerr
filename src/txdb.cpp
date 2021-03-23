@@ -1,5 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +15,7 @@
 #include <util.h>
 #include <ui_interface.h>
 #include <init.h>
+#include <zwgr/accumulators.h>
 
 #include <stdint.h>
 
@@ -152,6 +155,11 @@ size_t CCoinsViewDB::EstimateSize() const
 }
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.IsArgSet("-blocksdir") ? GetDataDir() / "blocks" / "index" : GetBlocksDir() / "index", nCacheSize, fMemory, fWipe), mapHasTxIndexCache(10000, 20000) {
+}
+
+bool CBlockTreeDB::WriteBlockIndex(const CDiskBlockIndex& blockindex)
+{
+    return Write(std::make_pair('b', blockindex.GetBlockHash()), blockindex);
 }
 
 bool CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
@@ -420,6 +428,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
+    uint256 nPreviousCheckpoint;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
@@ -440,8 +449,22 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
+                pindexNew->nMint          = diskindex.nMint;
+                pindexNew->nMoneySupply   = diskindex.nMoneySupply;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
+                // POS
+                pindexNew->nFlags         = diskindex.nFlags;
+                if (pindexNew->nHeight < Params().GetConsensus().nBlockStakeModifierV2) {
+                    pindexNew->nStakeModifier = diskindex.nStakeModifier;
+                } else {
+                    pindexNew->nStakeModifierV2 = diskindex.nStakeModifierV2;
+                }
+                // Zerocoin
+                pindexNew->nAccumulatorCheckpoint = diskindex.nAccumulatorCheckpoint;
+                pindexNew->mapZerocoinSupply = diskindex.mapZerocoinSupply;
+                pindexNew->vMintDenominationsInBlock = diskindex.vMintDenominationsInBlock;
+
+                if (!IsProofOfStakeHeight(pindexNew->nHeight, consensusParams) && pindexNew->IsProofOfWork() && !CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams))
                     return error("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
 
                 pcursor->Next();
@@ -464,6 +487,7 @@ class CCoins
 public:
     //! whether transaction is a coinbase
     bool fCoinBase;
+    bool fCoinStake;
 
     //! unspent transaction outputs; spent outputs are .IsNull(); spent outputs at the end of the array are dropped
     std::vector<CTxOut> vout;
@@ -472,7 +496,7 @@ public:
     int nHeight;
 
     //! empty constructor
-    CCoins() : fCoinBase(false), vout(0), nHeight(0) { }
+    CCoins() : fCoinBase(false), fCoinStake(false), vout(0), nHeight(0) { }
 
     template<typename Stream>
     void Unserialize(Stream &s) {
@@ -482,6 +506,7 @@ public:
         ::Unserialize(s, VARINT(nVersionDummy));
         // header code
         ::Unserialize(s, VARINT(nCode));
+        fCoinStake = (nCode >> 1) & 1;
         fCoinBase = nCode & 1;
         std::vector<bool> vAvail(2, false);
         vAvail[0] = (nCode & 2) != 0;
@@ -554,7 +579,7 @@ bool CCoinsViewDB::Upgrade() {
             COutPoint outpoint(key.second, 0);
             for (size_t i = 0; i < old_coins.vout.size(); ++i) {
                 if (!old_coins.vout[i].IsNull() && !old_coins.vout[i].scriptPubKey.IsUnspendable()) {
-                    Coin newcoin(std::move(old_coins.vout[i]), old_coins.nHeight, old_coins.fCoinBase);
+                    Coin newcoin(std::move(old_coins.vout[i]), old_coins.nHeight, old_coins.fCoinBase, old_coins.fCoinStake);
                     outpoint.n = i;
                     CoinEntry entry(&outpoint);
                     batch.Write(entry, newcoin);

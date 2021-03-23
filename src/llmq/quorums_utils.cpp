@@ -72,7 +72,7 @@ static bool EvalSpork(Consensus::LLMQType llmqType, int64_t spork_value)
     if (spork_value == 0) {
         return true;
     }
-    if (spork_value == 1 && llmqType != Consensus::LLMQ_100_67 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork_value == 1 && llmqType != Consensus::LLMQ_20_70 && llmqType != Consensus::LLMQ_40_60 && llmqType != Consensus::LLMQ_40_85) {
         return true;
     }
     return false;
@@ -302,15 +302,15 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
     LOCK(cs_llmq_vbc);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    bool f_dip0020_Active = VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_DIP0020, llmq_versionbitscache) == ThresholdState::ACTIVE;
+    bool f_dip0020_Active = pindex->nHeight >= consensusParams.V17DeploymentHeight;
 
     switch (llmqType)
     {
-        case Consensus::LLMQ_50_60:
-        case Consensus::LLMQ_400_60:
-        case Consensus::LLMQ_400_85:
+        case Consensus::LLMQ_20_60:
+        case Consensus::LLMQ_40_60:
+        case Consensus::LLMQ_40_85:
             break;
-        case Consensus::LLMQ_100_67:
+        case Consensus::LLMQ_20_70:
         case Consensus::LLMQ_TEST_V17:
             if (!f_dip0020_Active) {
                 return false;

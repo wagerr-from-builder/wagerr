@@ -10,6 +10,8 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#define BLOCKHEADER_INITIAL_VERSION 1
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -27,6 +29,7 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    uint256 nAccumulatorCheckpoint;
 
     CBlockHeader()
     {
@@ -43,6 +46,9 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        //zerocoin active, header changes to include accumulator checksum
+        if (nVersion > 3 && nVersion < 7)
+            READWRITE(nAccumulatorCheckpoint);
     }
 
     void SetNull()
@@ -53,6 +59,7 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nAccumulatorCheckpoint.SetNull();
     }
 
     bool IsNull() const
@@ -75,6 +82,9 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
 
+    // ppcoin: block signature - signed by one of the coin base txout[N]'s owner
+    std::vector<unsigned char> vchBlockSig;
+
     // memory only
     mutable bool fChecked;
 
@@ -95,12 +105,15 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITEAS(CBlockHeader, *this);
         READWRITE(vtx);
+        if(vtx.size() > 1 && vtx[1]->IsCoinStake())
+            READWRITE(vchBlockSig);
     }
 
     void SetNull()
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        vchBlockSig.clear();
         fChecked = false;
     }
 
@@ -113,7 +126,18 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.nAccumulatorCheckpoint = nAccumulatorCheckpoint;
         return block;
+    }
+
+    bool IsProofOfStake() const
+    {
+        return (vtx.size() > 1 && vtx[1]->IsCoinStake());
+    }
+
+    bool IsProofOfWork() const
+    {
+        return !IsProofOfStake();
     }
 
     std::string ToString() const;

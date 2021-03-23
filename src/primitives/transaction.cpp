@@ -54,6 +54,11 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     scriptPubKey = scriptPubKeyIn;
 }
 
+bool CTxOut::IsZerocoinMint() const
+{
+    return scriptPubKey.IsZerocoinMint();
+}
+
 std::string CTxOut::ToString() const
 {
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
@@ -106,6 +111,47 @@ CAmount CTransaction::GetValueOut() const
     return nValueOut;
 }
 
+CAmount CTransaction::AddVoutValues(CAmount& nValueOut, CAmount& nValueBurned) const
+{
+    for (std::vector<CTxOut>::const_iterator it(vout.begin()); it != vout.end(); ++it)
+    {
+        // Wagerr: previously MoneyRange() was called here. This has been replaced with negative check and boundary wrap check.
+        if (it->nValue < 0)
+            throw std::runtime_error("CTransaction::AddVoutValues() : value out of range : less than 0");
+
+        if ((nValueOut + it->nValue) < nValueOut)
+            throw std::runtime_error("CTransaction::AddVoutValues() : value out of range : wraps the int64_t boundary");
+
+        if (it->scriptPubKey.IsUnspendable())
+        {
+            if ((nValueBurned + it->nValue) < nValueBurned)
+                throw std::runtime_error("CTransaction::AddVoutValues() : value out of range : wraps the int64_t boundary");
+            nValueBurned += it->nValue;
+        }
+        nValueOut += it->nValue;
+    }
+    return nValueOut;
+}
+
+CAmount CTransaction::GetValueBurned() const
+{
+    CAmount nValueBurned = 0;
+    for (std::vector<CTxOut>::const_iterator it(vout.begin()); it != vout.end(); ++it)
+    {
+        if (it->scriptPubKey.IsUnspendable()){
+            // Wagerr: previously MoneyRange() was called here. This has been replaced with negative check and boundary wrap check.
+            if (it->nValue < 0)
+                throw std::runtime_error("CTransaction::GetValueBurned() : value out of range : less than 0");
+
+            if ((nValueBurned + it->nValue) < nValueBurned)
+                throw std::runtime_error("CTransaction::GetValueBurned() : value out of range : wraps the int64_t boundary");
+
+            nValueBurned += it->nValue;
+        }
+    }
+    return nValueBurned;
+}
+
 unsigned int CTransaction::GetTotalSize() const
 {
     return ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
@@ -127,4 +173,73 @@ std::string CTransaction::ToString() const
     for (const auto& tx_out : vout)
         str += "    " + tx_out.ToString() + "\n";
     return str;
+}
+
+CAmount CTransaction::GetZerocoinSpent() const
+{
+    CAmount nValueOut = 0;
+    for (const CTxIn& txin : vin) {
+        if(!txin.IsZerocoinSpend())
+            continue;
+
+        nValueOut += txin.nSequence * COIN;
+    }
+
+    return nValueOut;
+}
+
+bool CTransaction::HasZerocoinSpendInputs() const
+{
+    for (const CTxIn& txin: vin) {
+        if (txin.IsZerocoinSpend() || txin.IsZerocoinPublicSpend())
+            return true;
+    }
+    return false;
+}
+
+bool CTransaction::HasZerocoinMintOutputs() const
+{
+    for(const CTxOut& txout : vout) {
+        if (txout.IsZerocoinMint())
+            return true;
+    }
+    return false;
+}
+
+bool CTransaction::HasZerocoinPublicSpendInputs() const
+{
+    // The wallet only allows publicSpend inputs in the same tx and not a combination between regular and zerocoin
+    for(const CTxIn& txin : vin) {
+        if (txin.IsZerocoinPublicSpend())
+            return true;
+    }
+    return false;
+}
+
+bool CTransaction::IsCoinStake() const
+{
+    if (vin.empty())
+        return false;
+
+    // ppcoin: the coin stake transaction is marked with the first output empty
+    bool fAllowNull = vin[0].IsZerocoinSpend();
+    if (vin[0].prevout.IsNull() && !fAllowNull)
+        return false;
+
+    return (vout.size() >= 2 && vout[0].IsEmpty());
+}
+
+bool CTransaction::IsGenerated() const
+{
+    return IsCoinBase() || IsCoinStake();
+}
+
+bool CTxIn::IsZerocoinSpend() const
+{
+    return prevout.hash == uint256() && scriptSig.IsZerocoinSpend();
+}
+
+bool CTxIn::IsZerocoinPublicSpend() const
+{
+    return scriptSig.IsZerocoinPublicSpend();
 }

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2020-2021 The Dash Core developers
+# Copyright (c) 2021 The Wagerr Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import WagerrTestFramework
 from test_framework.util import assert_raises_rpc_error, bytes_to_hex_str, satoshi_round, wait_until
 
 '''
@@ -14,11 +15,11 @@ Test verifyislock rpc
 
 '''
 
-class RPCVerifyISLockTest(DashTestFramework):
+class RPCVerifyISLockTest(WagerrTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_wagerr_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
+        self.set_wagerr_llmq_test_params(5, 3)
 
     def get_request_id(self, tx_hex):
         tx = FromHex(CTransaction(), tx_hex)
@@ -90,7 +91,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)
         assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
         # Send the tx and verify the ISLOCK for a now known transaction
-        assert rawtx_txid == node.sendrawtransaction(rawtx)
+        #assert rawtx_txid == node.sendrawtransaction(rawtx)
         assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
 
 

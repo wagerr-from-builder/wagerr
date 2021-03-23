@@ -1,4 +1,5 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +17,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
+#include <tokens/tokengroupmanager.h>
 #endif//ENABLE_WALLET
 
 #include <netbase.h>
@@ -38,7 +40,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
 {
     static const std::map<std::string, std::string> mapParamHelp = {
         {"collateralAddress",
-            "%d. \"collateralAddress\"        (string, required) The dash address to send the collateral to.\n"
+            "%d. \"collateralAddress\"        (string, required) The wagerr address to send the collateral to.\n"
         },
         {"collateralHash",
             "%d. \"collateralHash\"           (string, required) The collateral transaction hash.\n"
@@ -83,15 +85,15 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              between 0.00 and 100.00.\n"
         },
         {"ownerAddress",
-            "%d. \"ownerAddress\"             (string, required) The dash address to use for payee updates and proposal voting.\n"
+            "%d. \"ownerAddress\"             (string, required) The wagerr address to use for payee updates and proposal voting.\n"
             "                              The corresponding private key does not have to be known by your wallet.\n"
             "                              The address must be unused and must differ from the collateralAddress.\n"
         },
         {"payoutAddress_register",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The wagerr address to use for masternode reward payments.\n"
         },
         {"payoutAddress_update",
-            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The wagerr address to use for masternode reward payments.\n"
             "                              If set to an empty string, the currently active payout address is reused.\n"
         },
         {"proTxHash",
@@ -152,8 +154,48 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 
 #ifdef ENABLE_WALLET
 
+bool GetGVTCredits(CWallet* pwallet, std::vector<COutput>& coins) {
+
+    // Get grpID for GVT.credit
+    CTokenGroupID grpID(tokenGroupManager.get()->GetGVTID(), "credit");
+
+    // Find GVT.credit coins
+    coins.clear();
+
+    pwallet->FilterCoins(coins, [grpID](const CWalletTx *tx, const CTxOut *out) {
+        CTokenGroupInfo tg(out->scriptPubKey);
+        // must be a grouped output sitting in group address
+        return ((grpID == tg.associatedGroup) && !tg.isAuthority() && tg.getAmount() == 1);
+    });
+
+    if (coins.size() == 0) {
+        return false;
+    }
+    return true;
+}
+
+bool GetGVTRevoke(CWallet* pwallet, std::vector<COutput>& coins) {
+
+    // Get grpID for GVT.revoke
+    CTokenGroupID grpID(tokenGroupManager.get()->GetGVTID(), "revoke");
+
+    // Find GVT.revoke coins
+    coins.clear();
+
+    pwallet->FilterCoins(coins, [grpID](const CWalletTx *tx, const CTxOut *out) {
+        CTokenGroupInfo tg(out->scriptPubKey);
+        // must be a grouped output sitting in group address
+        return ((grpID == tg.associatedGroup) && !tg.isAuthority() && tg.getAmount() == 1);
+    });
+
+    if (coins.size() == 0) {
+        return false;
+    }
+    return true;
+}
+
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
+static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest, const std::vector<COutput>& tokens = std::vector<COutput>())
 {
     assert(pwallet != nullptr);
 
@@ -212,12 +254,25 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, newTx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    std::vector<CTxIn> gvtCreditsTxIn;
+    int creditSize = 0;
+    bool fSpendCredit = (tokens.size() > 0);
+    for (const auto& token : tokens) {
+        gvtCreditsTxIn.emplace_back(token.GetOutPoint(), CScript(), CTxIn::SEQUENCE_FINAL - 1);
+        creditSize += token.nInputBytes;
+    }
+
+    if (!pwallet->CreateTransaction(vecSend, newTx, reservekey, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size() + creditSize)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
     tx.vin = newTx->vin;
     tx.vout = newTx->vout;
+
+    for (const auto& gvtCreditTxIn : gvtCreditsTxIn) {
+        // add creditIn to tx.vin
+        tx.vin.push_back(gvtCreditTxIn);
+    }
 
     if (dummyTxOutAdded && tx.vout.size() > 1) {
         // CreateTransaction added a change output, so we don't need the dummy txout anymore.
@@ -300,7 +355,7 @@ void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
-            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
+            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Wagerr\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "masternode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
@@ -426,7 +481,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 1000 * COIN;
+    CAmount collateralAmount = 25000 * COIN;
 
     CMutableTransaction tx;
     tx.nVersion = 3;
@@ -502,10 +557,16 @@ UniValue protx_register(const JSONRPCRequest& request)
     if (!request.params[paramIdx + 6].isNull()) {
         fundDest = DecodeDestination(request.params[paramIdx + 6].get_str());
         if (!IsValidDestination(fundDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[paramIdx + 6].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + request.params[paramIdx + 6].get_str());
     }
 
-    FundSpecialTx(pwallet, tx, ptx, fundDest);
+    std::vector<COutput> tokens;
+    if (!GetGVTCredits(pwallet, tokens)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No Governance Validator Node credit (GVT.credit) found");
+    }
+    tokens.erase(tokens.begin() + 1, tokens.end());
+
+    FundSpecialTx(pwallet, tx, ptx, fundDest, tokens);
     UpdateSpecialTxInputsHash(tx, ptx);
 
     bool fSubmit{true};
@@ -674,7 +735,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (!request.params[5].isNull()) {
         feeSource = DecodeDestination(request.params[5].get_str());
         if (!IsValidDestination(feeSource))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + request.params[5].get_str());
     } else {
         if (ptx.scriptOperatorPayout != CScript()) {
             // use operator reward address as default source for fees
@@ -772,7 +833,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     if (!request.params[5].isNull()) {
         feeSourceDest = DecodeDestination(request.params[5].get_str());
         if (!IsValidDestination(feeSourceDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + request.params[5].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
@@ -827,6 +888,9 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
+        if (nReason == CProUpRevTx::REASON_EXPIRED) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("use revoke_prepare/revoke_authorize for reason %d", nReason));
+        }
         ptx.nReason = (uint16_t)nReason;
     }
 
@@ -846,7 +910,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     if (!request.params[4].isNull()) {
         CTxDestination feeSourceDest = DecodeDestination(request.params[4].get_str());
         if (!IsValidDestination(feeSourceDest))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + request.params[4].get_str());
         FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
@@ -867,6 +931,184 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     return SignAndSendSpecialTx(tx);
 }
+
+void protx_revoke_prepare_help(CWallet* const pwallet)
+{
+    throw std::runtime_error(
+            "protx revoke_prepare \"proTxHash\" ( reason \"feeSourceAddress\")\n"
+            "\nCreates an unsigned ProUpRevTx. When signed and send, this will revoke the operator key of the masternode and\n"
+            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
+            "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
+            "to the masternode owner.\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+            "\nArguments:\n"
+            + GetHelpString(1, "proTxHash")
+            + GetHelpString(2, "reason")
+            + GetHelpString(3, "feeSourceAddress") +
+            "\nResult:\n"
+            "\"transaction\"              (string) The serialized unsigned transaction in hex format."
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "revoke_prepare \"0123456701234567012345670123456701234567012345670123456701234567\" 1 \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\"")
+    );
+}
+
+UniValue protx_revoke_prepare(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (request.fHelp || (request.params.size() < 2 || request.params.size() > 4)) {
+        protx_revoke_prepare_help(pwallet);
+    }
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    CProUpRevTx ptx;
+    ptx.nVersion = CProUpRevTx::CURRENT_VERSION;
+    ptx.proTxHash = ParseHashV(request.params[1], "proTxHash");
+
+    if (!request.params[2].isNull()) {
+        int32_t nReason = ParseInt32V(request.params[2], "reason");
+        if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
+        }
+        ptx.nReason = (uint16_t)nReason;
+    }
+    std::vector<COutput> tokens;
+    if (ptx.nReason == CProUpRevTx::REASON_EXPIRED) {
+        if (!GetGVTRevoke(pwallet, tokens)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "No Governance Validator Node credit (GVT.credit) found");
+        }
+        tokens.erase(tokens.begin() + 1, tokens.end());
+    }
+
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
+    }
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_REVOKE;
+
+    if (!request.params[3].isNull()) {
+        CTxDestination feeSourceDest = DecodeDestination(request.params[3].get_str());
+        if (!IsValidDestination(feeSourceDest))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Wagerr address: ") + request.params[3].get_str());
+        FundSpecialTx(pwallet, tx, ptx, feeSourceDest, tokens);
+    } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
+        // Using funds from previousely specified operator payout address
+        CTxDestination txDest;
+        ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
+        FundSpecialTx(pwallet, tx, ptx, txDest, tokens);
+    } else if (dmn->pdmnState->scriptPayout != CScript()) {
+        // Using funds from previousely specified masternode payout address
+        CTxDestination txDest;
+        ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
+        FundSpecialTx(pwallet, tx, ptx, txDest, tokens);
+    } else {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No payout or fee source addresses found, can't revoke");
+    }
+
+    SetTxPayload(tx, ptx);
+
+    return EncodeHexTx(tx);
+}
+
+void protx_revoke_authorize_help(CWallet* const pwallet)
+{
+    throw std::runtime_error(
+            "protx revoke_authorize \"transaction\" \"operatorKey\"\n"
+            "\nCreates an unsigned ProUpRevTx. When signed and send, this will revoke the operator key of the masternode and\n"
+            "put it into the PoSe-banned state. It will also set the service field of the masternode\n"
+            "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
+            "to the masternode owner.\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+            "\nArguments:\n"
+            + GetHelpString(1, "transaction")
+            + GetHelpString(2, "operatorKey") +
+            "\nResult:\n"
+            "\"transaction\"              (string) The serialized unsigned authorized transaction in hex format."
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "revoke_prepare \"0123456701234567012345670123456701234567012345670123456701234567\" 1 \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\"")
+    );
+}
+
+UniValue protx_revoke_authorize(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (request.fHelp || (request.params.size() < 3 || request.params.size() > 3)) {
+        protx_revoke_authorize_help(pwallet);
+    }
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    CMutableTransaction tx;
+    if (!DecodeHexTx(tx, request.params[1].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+
+    if (tx.vExtraPayload.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("no SpecialTX found"));
+    }
+
+    if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("no ProUpRevTx found"));
+    }
+
+    CProUpRevTx proTx;
+    if (!GetTxPayload(tx, proTx)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("incorrect ProUpRevTx found"));
+    }
+
+    CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
+
+    if (proTx.nReason == CProUpRevTx::REASON_EXPIRED) {
+        if (!tokenGroupManager->ManagementTokensCreated()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "management tokens not created");
+        }
+        // the private key must match the public key of the GVT token
+        CTokenGroupID gvtCreditID(tokenGroupManager->GetGVTID(), "revoke");
+        CValidationState state;
+        CCoinsViewCache &view = *pcoinsTip;
+        CAmount nCredit;
+        CAmount nDebit;
+        if (!GetTokenBalance(tx, gvtCreditID, state, view, nCredit, nDebit)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, FormatStateMessage(state));
+        }
+        if (nCredit - nDebit != 1) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unable to find GVT.revoke");
+        }
+        CTokenGroupCreation mgtCreation;
+        if (!tokenGroupManager->GetTokenGroupCreation(tokenGroupManager->GetMGTID(), mgtCreation)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unable to find MGT creation");
+        }
+        const CTokenGroupDescriptionMGT *mgtDesc = boost::get<CTokenGroupDescriptionMGT>(mgtCreation.pTokenGroupDescription.get());
+
+        if (keyOperator.GetPublicKey() != mgtDesc->blsPubKey) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered GVT bls public key"));
+        }
+    } else {
+        // the bls private key must match the operator bls public key of the MN
+        auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
+        if (!dmn) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", proTx.proTxHash.ToString()));
+        }
+
+        if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("the operator key does not belong to the registered public key"));
+        }
+    }
+
+    SignSpecialTxPayloadByHash(tx, proTx, keyOperator);
+    SetTxPayload(tx, proTx);
+
+    return EncodeHexTx(tx);
+}
+
 #endif//ENABLE_WALLET
 
 void protx_list_help()
@@ -1174,6 +1416,12 @@ UniValue protx(const JSONRPCRequest& request)
     } else if (command == "update_registrar") {
         return protx_update_registrar(request);
     } else if (command == "revoke") {
+        return protx_revoke(request);
+    } else if (command == "revoke_prepare") {
+        return protx_revoke_prepare(request);
+    } else if (command == "revoke_authorize") {
+        return protx_revoke_authorize(request);
+    } else if (command == "revoke_submit") {
         return protx_revoke(request);
     } else
 #endif

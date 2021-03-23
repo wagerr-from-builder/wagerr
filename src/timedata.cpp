@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/wagerr-config.h>
 #endif
 
 #include <timedata.h>
@@ -35,11 +35,6 @@ int64_t GetTimeOffset()
 int64_t GetAdjustedTime()
 {
     return GetTime() + GetTimeOffset();
-}
-
-static int64_t abs64(int64_t n)
-{
-    return (n >= 0 ? n : -n);
 }
 
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200

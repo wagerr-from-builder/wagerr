@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <init.h>
 #include <netbase.h>
+#include <pos/rewards.h>
 #include <validation.h>
 #include <util.h>
 #include <utilmoneystr.h>
@@ -52,13 +53,13 @@ void masternode_list_help()
             "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
             "  lastpaidblock  - Print the last block height a node was paid on the network\n"
             "  lastpaidtime   - Print the last time a node was paid on the network\n"
-            "  owneraddress   - Print the masternode owner Dash address\n"
-            "  payee          - Print the masternode payout Dash address (can be additionally filtered,\n"
+            "  owneraddress   - Print the masternode owner Wagerr address\n"
+            "  payee          - Print the masternode payout Wagerr address (can be additionally filtered,\n"
             "                   partial match)\n"
             "  pubKeyOperator - Print the masternode operator public key\n"
             "  status         - Print masternode status: ENABLED / POSE_BANNED\n"
             "                   (can be additionally filtered, partial match)\n"
-            "  votingaddress  - Print the masternode voting Dash address\n"
+            "  votingaddress  - Print the masternode voting Wagerr address\n"
         );
 }
 
@@ -440,7 +441,7 @@ UniValue masternode_payments(const JSONRPCRequest& request)
 
         std::vector<CTxOut> voutMasternodePayments, voutDummy;
         CMutableTransaction dummyTx;
-        CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus());
+        CBlockReward blockReward(pindex->nHeight, nBlockFees, block.IsProofOfStake(), Params().GetConsensus());
         FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutMasternodePayments, voutDummy);
 
         UniValue blockObj(UniValue::VOBJ);
@@ -699,8 +700,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
-    { "dash",               "masternode",             &masternode,             {} },
-    { "dash",               "masternodelist",         &masternodelist,         {} },
+    { "wagerr",               "masternode",             &masternode,             {} },
+    { "wagerr",               "masternodelist",         &masternodelist,         {} },
 };
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)

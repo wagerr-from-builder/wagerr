@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +9,7 @@
 
 #include <crypto/common.h>
 #include <prevector.h>
+#include <script/script_error.h>
 #include <serialize.h>
 
 #include <assert.h>
@@ -178,7 +180,8 @@ enum opcodetype
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,
     OP_NOP6 = 0xb5,
-    OP_NOP7 = 0xb6,
+    OP_GROUP = 0xb6,
+    OP_NOP7 = OP_GROUP,
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
@@ -186,8 +189,13 @@ enum opcodetype
     // More crypto
     OP_CHECKDATASIG = 0xba,
     OP_CHECKDATASIGVERIFY = 0xbb,
+    // zerocoin
+    OP_ZEROCOINMINT = 0xc1,
+    OP_ZEROCOINSPEND = 0xc2,
+    OP_ZEROCOINPUBLICSPEND = 0xc3,
 
     // template matching params
+    OP_GRP_DATA = 0xf9,
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
     OP_PUBKEYHASH = 0xfd,
@@ -204,7 +212,8 @@ const char* GetOpName(opcodetype opcode);
 class scriptnum_error : public std::runtime_error
 {
 public:
-    explicit scriptnum_error(const std::string& str) : std::runtime_error(str) {}
+    ScriptError errNum;
+    explicit scriptnum_error(ScriptError errnum, const std::string &str) : std::runtime_error(str), errNum(errnum) {}
 };
 
 class CScriptNum
@@ -230,10 +239,10 @@ public:
                         const size_t nMaxNumSize = nDefaultMaxNumSize)
     {
         if (vch.size() > nMaxNumSize) {
-            throw scriptnum_error("script number overflow");
+            throw scriptnum_error(SCRIPT_ERR_NUMBER_OVERFLOW, "script number overflow");
         }
         if (fRequireMinimal && !IsMinimallyEncoded(vch, nMaxNumSize)) {
-            throw scriptnum_error("non-minimally encoded script number");
+            throw scriptnum_error(SCRIPT_ERR_NUMBER_BAD_ENCODING, "non-minimally encoded script number");
         }
         m_value = set_vch(vch);
     }
@@ -540,7 +549,13 @@ public:
 
     bool IsPayToPublicKeyHash() const;
 
-    bool IsPayToScriptHash() const;
+    // if this is a p2sh then the script hash is filled into the passed param if its not null
+    bool IsPayToScriptHash(std::vector<unsigned char> *hashBytes = nullptr) const;
+
+    bool StartsWithOpcode(const opcodetype opcode) const;
+    bool IsZerocoinMint() const;
+    bool IsZerocoinSpend() const;
+    bool IsZerocoinPublicSpend() const;
 
     /** Used for obsolete pay-to-pubkey addresses indexing. */
     bool IsPayToPublicKey() const;

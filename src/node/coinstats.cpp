@@ -24,14 +24,17 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
 {
     assert(!outputs.empty());
     ss << hash;
-    ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase ? 1u : 0u);
+    ss << VARINT(outputs.begin()->second.nHeight * 4 + outputs.begin()->second.fCoinStake ? 2u : 0u + outputs.begin()->second.fCoinBase ? 1u : 0u);
     stats.nTransactions++;
     for (const auto& output : outputs) {
         ss << VARINT(output.first + 1);
         ss << output.second.out.scriptPubKey;
         ss << VARINT(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
+        const CScript& script = output.second.out.scriptPubKey;
+        if (script.size() > 0 && script.size() < MAX_SCRIPT_SIZE && *script.begin() != OP_RETURN && *script.begin() != OP_ZEROCOINMINT) {
+            stats.nTotalAmount += output.second.out.nValue;
+        }
         stats.nBogoSize += 32 /* txid */ + 4 /* vout index */ + 4 /* height + coinbase */ + 8 /* amount */ +
                            2 /* scriptPubKey len */ + output.second.out.scriptPubKey.size() /* scriptPubKey */;
     }

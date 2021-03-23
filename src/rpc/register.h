@@ -29,6 +29,10 @@ void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
 void RegisterEvoRPCCommands(CRPCTable &tableRPC);
 /** Register Quorums RPC commands */
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
+/** Register Tokens RPC commands */
+void RegisterTokensRPCCommands(CRPCTable &tableRPC);
+/** Register Betting RPC commands */
+void RegisterBettingRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -42,6 +46,8 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterGovernanceRPCCommands(t);
     RegisterEvoRPCCommands(t);
     RegisterQuorumsRPCCommands(t);
+    RegisterTokensRPCCommands(t);
+    RegisterBettingRPCCommands(t);
 }
 
 #endif // BITCOIN_RPC_REGISTER_H

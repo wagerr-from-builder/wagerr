@@ -12,7 +12,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/wagerr-config.h>
 #endif
 
 #include <attributes.h>
@@ -42,14 +42,14 @@
 
 // Uncomment the following line to enable debugging messages
 // or enable on a per file basis prior to inclusion of util.h
-//#define ENABLE_DASH_DEBUG
-#ifdef ENABLE_DASH_DEBUG
+//#define ENABLE_WAGERR_DEBUG
+#ifdef ENABLE_WAGERR_DEBUG
 #define DBG( x ) x
 #else
 #define DBG( x )
 #endif
 
-//Dash only features
+//Wagerr only features
 
 extern bool fMasternodeMode;
 extern bool fDisableGovernance;
@@ -299,6 +299,14 @@ public:
 extern ArgsManager gArgs;
 
 /**
+ * Convert string into true/false
+ *
+ * @param strValue String to parse as a boolean
+ * @return true or false
+ */
+bool InterpretBool(const std::string &strValue);
+
+/**
  * Format a string to be used as group of options in help messages
  *
  * @param message Group name (e.g. "RPC server options:")
@@ -334,7 +342,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName);
  */
 template <typename Callable> void TraceThread(const std::string name,  Callable func)
 {
-    std::string s = "dash-" + name;
+    std::string s = "wagerr-" + name;
     RenameThread(s.c_str());
     try
     {

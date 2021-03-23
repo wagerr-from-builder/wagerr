@@ -106,6 +106,8 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet(bool fAnonymizeOnly=false);
+    /** Ask for passphrase to unlock wallet temporarily for staking only */
+    void unlockWalletForStaking();
     /** Lock wallet */
     void lockWallet();
 
@@ -124,7 +126,7 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
 
-    /** Update selected DASH amount from transactionview */
+    /** Update selected WAGERR amount from transactionview */
     void trxAmount(QString amount);
 Q_SIGNALS:
     /** Signal that we want to show the main window */

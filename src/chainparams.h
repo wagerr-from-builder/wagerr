@@ -6,8 +6,11 @@
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
+#include <betting/oracles.h>
+#include <betting/quickgames/qgview.h>
 #include <chainparamsbase.h>
 #include <consensus/params.h>
+#include <libzerocoin/Params.h>
 #include <primitives/block.h>
 #include <protocol.h>
 
@@ -39,7 +42,7 @@ struct ChainTxData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Dash system. There are three: the main network on which people trade goods
+ * Wagerr system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -70,6 +73,9 @@ public:
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
+    /** Betting undo data is used to check blocks during init      **/
+    /** Hence, the max undo depth is also the max for -checkblocks **/
+    uint64_t MaxBettingUndoDepth() const { return nMaxBettingUndoDepth; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** Allow multiple addresses to be selected from the same network group (e.g. 192.168.x.x) */
@@ -102,6 +108,16 @@ public:
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     bool BIP9CheckMasternodesUpgraded() const { return fBIP9CheckMasternodesUpgraded; }
+    libzerocoin::ZerocoinParams* Zerocoin_Params(bool useModulusV1) const;
+
+    /** Betting on blockchain **/
+    std::vector<COracle> Oracles() const { return vOracles; }
+    const std::vector<CQuickGamesView>& QuickGamesArr() const { return quickGamesArr; }
+
+    /** temp worarounds **/
+    int SkipBetValidationStart() const { return nSkipBetValidationStart; }
+    int SkipBetValidationEnd() const { return nSkipBetValidationEnd; }
+
 protected:
     CChainParams() {}
 
@@ -109,6 +125,7 @@ protected:
     CMessageHeader::MessageStartChars pchMessageStart;
     int nDefaultPort;
     uint64_t nPruneAfterHeight;
+    uint64_t nMaxBettingUndoDepth;
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     int nExtCoinType;
@@ -131,6 +148,14 @@ protected:
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckMasternodesUpgraded;
+
+    std::vector<COracle> vOracles;
+
+    std::vector<CQuickGamesView> quickGamesArr;
+
+    // workarounds
+    int nSkipBetValidationEnd;
+    int nSkipBetValidationStart;
 };
 
 /**

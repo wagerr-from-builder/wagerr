@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/dash-config.h>
+#include <config/wagerr-config.h>
 #endif
 
 #include <qt/splashscreen.h>
@@ -40,13 +40,13 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     // Geometries of splashscreen
     int width = 380;
-    int height = 460;
-    int logoWidth = 270;
-    int logoHeight = 270;
+    int height = 457;
+    int logoWidth = 380;
+    int logoHeight = 457;
 
     // set reference point, paddings
     int paddingTop = 10;
-    int titleVersionVSpace = 25;
+    int titleVersionVSpace = 280;
 
     float fontFactor            = 1.0;
     float scale = qApp->devicePixelRatio();
@@ -62,17 +62,6 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QPixmap pixmapLogo = networkStyle->getSplashImage();
     pixmapLogo.setDevicePixelRatio(scale);
 
-    // Adjust logo color based on the current theme
-    QImage imgLogo = pixmapLogo.toImage().convertToFormat(QImage::Format_ARGB32);
-    QColor logoColor = GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BLUE);
-    for (int x = 0; x < imgLogo.width(); ++x) {
-        for (int y = 0; y < imgLogo.height(); ++y) {
-            const QRgb rgb = imgLogo.pixel(x, y);
-            imgLogo.setPixel(x, y, qRgba(logoColor.red(), logoColor.green(), logoColor.blue(), qAlpha(rgb)));
-        }
-    }
-    pixmapLogo.convertFromImage(imgLogo);
-
     pixmap = QPixmap(width * scale, height * scale);
     pixmap.setDevicePixelRatio(scale);
     pixmap.fill(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BORDER_WIDGET));
@@ -82,8 +71,8 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     QRect rect = QRect(1, 1, width - 2, height - 2);
     pixPaint.fillRect(rect, GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BACKGROUND_WIDGET));
 
-    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2) + 20, pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    pixPaint.setPen(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT));
+    pixPaint.drawPixmap((width / 2) - (logoWidth / 2), (height / 2) - (logoHeight / 2), pixmapLogo.scaled(logoWidth * scale, logoHeight * scale, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    pixPaint.setPen(QColor(255, 255, 255));
 
     // check font size and drawing with
     fontBold.setPointSize(50 * fontFactor);
@@ -94,16 +83,10 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
         fontFactor = 0.75;
     }
 
-    fontBold.setPointSize(50 * fontFactor);
-    pixPaint.setFont(fontBold);
-    fm = pixPaint.fontMetrics();
-    titleTextWidth  = fm.width(titleText);
-    int titleTextHeight = fm.height();
-    pixPaint.drawText((width / 2) - (titleTextWidth / 2), titleTextHeight + paddingTop, titleText);
-
     fontNormal.setPointSize(16 * fontFactor);
     pixPaint.setFont(fontNormal);
     fm = pixPaint.fontMetrics();
+    int titleTextHeight = fm.height();
     int versionTextWidth = fm.width(versionText);
     pixPaint.drawText((width / 2) - (versionTextWidth / 2), titleTextHeight + paddingTop + titleVersionVSpace, versionText);
 

@@ -12,7 +12,7 @@
 #include <qt/qrdialog.h>
 #include <qt/transactiondescdialog.h>
 #include <qt/transactionfilterproxy.h>
-#include <qt/transactionrecord.h>
+#include <transactionrecord.h>
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
@@ -90,6 +90,8 @@ TransactionView::TransactionView(QWidget* parent) :
     typeWidget->addItem(tr("%1 Collateral Payment").arg("CoinJoin"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
+    typeWidget->addItem(tr("Minted"), TransactionFilterProxy::TYPE(TransactionRecord::StakeMint));
+    typeWidget->addItem(tr("Masternode Reward"), TransactionFilterProxy::TYPE(TransactionRecord::MNReward));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
     typeWidget->setCurrentIndex(settings.value("transactionType").toInt());
 
@@ -542,7 +544,7 @@ void TransactionView::showAddressQRCode()
     QRDialog* dialog = new QRDialog(this);
 
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->setInfo(tr("QR code"), "dash:"+strAddress, "", strAddress);
+    dialog->setInfo(tr("QR code"), "wagerr:"+strAddress, "", strAddress);
     dialog->show();
 }
 

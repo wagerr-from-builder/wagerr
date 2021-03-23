@@ -1,6 +1,8 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +19,9 @@
 #include <miner.h>
 #include <net.h>
 #include <policy/fees.h>
+#include <pos/rewards.h>
+#include <pos/stakeinput.h>
+#include <pos/staking-manager.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
@@ -169,7 +174,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
             "\nMine blocks immediately to a specified address (before the RPC call returns)\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
-            "2. address      (string, required) The address to send the newly generated Dash to.\n"
+            "2. address      (string, required) The address to send the newly generated Wagerr to.\n"
             "3. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
             "\nResult:\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -248,7 +253,7 @@ UniValue prioritisetransaction(const JSONRPCRequest& request)
             "Accepts the transaction into mined blocks at a higher (or lower) priority\n"
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id.\n"
-            "2. fee_delta      (numeric, required) The fee value (in duffs) to add (or subtract, if negative).\n"
+            "2. fee_delta      (numeric, required) The fee value (in sats) to add (or subtract, if negative).\n"
             "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
@@ -343,7 +348,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "             n                          (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
             "             ,...\n"
             "         ],\n"
-            "         \"fee\": n,                    (numeric) difference in value between transaction inputs and outputs (in duffs); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
+            "         \"fee\": n,                    (numeric) difference in value between transaction inputs and outputs (in sats); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
             "         \"sigops\" : n,                (numeric) total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any\n"
             "      }\n"
             "      ,...\n"
@@ -351,8 +356,16 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"coinbaseaux\" : {                 (json object) data that should be included in the coinbase's scriptSig content\n"
             "      \"flags\" : \"xx\"                  (string) key name is to be ignored, and value included in scriptSig\n"
             "  },\n"
-            "  \"coinbasevalue\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in duffs)\n"
+            "  \"coinbasevalue\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in sats)\n"
             "  \"coinbasetxn\" : { ... },          (json object) information for coinbase transaction\n"
+            "  \"minerrewards\" : [                (array) contents of a single transaction to the miner\n"
+            "      {\n"
+            "         \"amount\": n,                 (numeric) amount \n"
+            "         \"tokenid\" : \"xxxx\",          (string) transaction data encoded in hexadecimal (byte-for-byte)\n"
+            "         \"tokenamount\": n,            (numeric) difference in value between transaction inputs and outputs (in sats); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one\n"
+            "      }\n"
+            "      ,...\n"
+            "  ],\n"
             "  \"target\" : \"xxxx\",                (string) The hash target\n"
             "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"mutable\" : [                     (array of string) list of ways the block template may be changed \n"
@@ -394,6 +407,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
          );
 
     LOCK(cs_main);
+
+    if (chainActive.Tip()->nHeight + 1 >= Params().GetConsensus().nPosStartHeight && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unable to call getblocktemplate in the Proof-of-Stake phase");
+    }
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -464,16 +481,16 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dash Core is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "WAGERR Core is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "WAGERR Core is downloading blocks...");
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (AreSuperblocksEnabled()
         && !masternodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(chainActive.Height() + 1))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is syncing with network...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "WAGERR Core is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -539,10 +556,23 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         nStart = GetTime();
 
         // Create new block
-        CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
-        if (!pblocktemplate)
-            throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+        bool fPosPhase = IsProofOfStakeHeight(pindexPrevNew->nHeight + 1, Params().GetConsensus());
+        // If nHeight > POS start, wallet should be enabled.
+
+        int64_t nCoinStakeTime;
+        if (fPosPhase) {
+            std::shared_ptr<CMutableTransaction> coinstakeTxPtr = std::shared_ptr<CMutableTransaction>(new CMutableTransaction);
+            std::shared_ptr<CStakeInput> coinstakeInputPtr = std::shared_ptr<CStakeInput>(new CStake);
+            if (stakingManager->CreateCoinStake(chainActive.Tip(), coinstakeTxPtr, coinstakeInputPtr, nCoinStakeTime)) {
+                // Coinstake found. Extract signing key from coinstake
+                pblocktemplate = BlockAssembler(Params()).CreateNewBlock(CScript(), coinstakeTxPtr, coinstakeInputPtr, nCoinStakeTime);
+            };
+        } else {
+            CScript scriptDummy = CScript() << OP_TRUE;
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
+            if (!pblocktemplate)
+                throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+        }
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
@@ -660,6 +690,19 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->GetValueOut());
+    CBlockReward blockReward(chainActive.Height() + 1,  0, false, Params().GetConsensus());
+    UniValue minerRewardObj(UniValue::VARR);
+    CReward minerReward = blockReward.GetCoinbaseReward();
+    for (const auto& minerTokenReward : minerReward.tokenAmounts) {
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("amount", 1));
+        obj.push_back(Pair("tokenid", HexStr(minerTokenReward.first.bytes())));
+        obj.push_back(Pair("tokenamount", minerTokenReward.second));
+        minerRewardObj.push_back(obj);
+    }
+
+    result.push_back(Pair("minerrewards", minerRewardObj));
+
     result.pushKV("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);

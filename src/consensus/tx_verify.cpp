@@ -1,12 +1,16 @@
 // Copyright (c) 2017-2017 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/tx_verify.h>
 
+#include <chainparams.h>
 #include <consensus/consensus.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <tokens/groups.h>
 #include <consensus/validation.h>
 
 // TODO remove the following dependencies
@@ -120,7 +124,8 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
 {
-    if (tx.IsCoinBase())
+    if (tx.IsCoinBase() || tx.HasZerocoinSpendInputs())
+        // a tx containing a zc spend can have only zc inputs
         return 0;
 
     unsigned int nSigOps = 0;
@@ -149,7 +154,7 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, const bool fZerocoinActive)
 {
     bool allowEmptyTxInOut = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
@@ -164,8 +169,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     // Size limits
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
-    if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
+    // Different size for NFT
+    if (tx.nType == TRANSACTION_GROUP_CREATION_NFT) {
+        if (tx.vExtraPayload.size() > MAX_TX_EXTRA_NFT_PAYLOAD)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-nft-payload-oversize");
+    } else {
+        if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-payload-oversize");
+    }
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
@@ -184,8 +195,13 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     std::set<COutPoint> vInOutPoints;
     for (const auto& txin : tx.vin)
     {
-        if (!vInOutPoints.insert(txin.prevout).second)
+        if (vInOutPoints.count(txin.prevout))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+
+        //duplicate zcspend serials are checked in CheckZerocoinSpend()
+        if (!txin.IsZerocoinSpend()) {
+            vInOutPoints.insert(txin.prevout);
+        }
     }
 
     if (tx.IsCoinBase())
@@ -195,20 +211,20 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
             // With the introduction of CbTx, coinbase scripts are not required anymore to hold a valid block height
             minCbSize = 1;
         }
-        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 100)
+        if (tx.vin[0].scriptSig.size() < minCbSize || tx.vin[0].scriptSig.size() > 150)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
     {
         for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull())
+            if (txin.prevout.IsNull() && (fZerocoinActive && !txin.IsZerocoinSpend()))
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
 
     return true;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& params)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -222,10 +238,24 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
+        // If prev is coinstake, check that it's matured
+        if (coin.IsCoinStake() && nSpendHeight - coin.nHeight < params.COINBASE_MATURITY(nSpendHeight)) {
+            return state.Invalid(false,
+                REJECT_INVALID, "bad-txns-premature-spend-of-coinstake",
+                strprintf("tried to spend coinstake at depth %d", nSpendHeight - coin.nHeight));
+        }
+
         // If prev is coinbase, check that it's matured
-        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < params.COINBASE_MATURITY(nSpendHeight)) {
             return state.Invalid(false,
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
+                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+        }
+
+        // If prev is group authority, check that it's matured
+        if (IsOutputGroupedAuthority(coin.out) && nSpendHeight - coin.nHeight < params.nOpGroupNewRequiredConfirmations) {
+            return state.Invalid(false,
+                REJECT_INVALID, "bad-txns-premature-spend-of-token-authority",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
 
@@ -236,18 +266,24 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         }
     }
 
-    const CAmount value_out = tx.GetValueOut();
-    if (nValueIn < value_out) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
-    }
+    if (tx.IsCoinStake()) {
+        txfee = 0;
+        return true;
+    } else {
+        CAmount txfee_aux;
+        const CAmount value_out = tx.GetValueOut();
+        if (nValueIn < value_out) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+                strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
+        }
 
-    // Tally transaction fees
-    const CAmount txfee_aux = nValueIn - value_out;
-    if (!MoneyRange(txfee_aux)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
-    }
+        // Tally transaction fees
+        txfee_aux = nValueIn - value_out;
+        if (!MoneyRange(txfee_aux)) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+        }
 
-    txfee = txfee_aux;
-    return true;
+        txfee = txfee_aux;
+        return true;
+    }
 }

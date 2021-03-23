@@ -1,6 +1,8 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
+// Copyright (c) 2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,10 +10,12 @@
 
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <dstencode.h>
 #include <key_io.h>
 #include <fs.h>
 #include <governance/governance-object.h>
 #include <protocol.h>
+#include <reward-manager.h>
 #include <serialize.h>
 #include <sync.h>
 #include <util.h>
@@ -158,6 +162,19 @@ bool WalletBatch::WriteMinVersion(int nVersion)
     return WriteIC(std::string("minversion"), nVersion);
 }
 
+bool WalletBatch::WriteStakeSplitThreshold(uint64_t nStakeSplitThreshold)
+{
+    return WriteIC(std::string("stakeSplitThreshold"), nStakeSplitThreshold);
+}
+
+bool WalletBatch::WriteAutoCombineSettings(bool fEnable, CAmount nCombineThresholdAmount)
+{
+    std::pair<bool, CAmount> pSettings;
+    pSettings.first = fEnable;
+    pSettings.second = nCombineThresholdAmount;
+    return WriteIC(std::string("autocombinesettings"), pSettings);
+}
+
 bool WalletBatch::ReadAccount(const std::string& strAccount, CAccount& account)
 {
     account.SetNull();
@@ -299,7 +316,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
             ssValue >> wtx;
             CValidationState state;
-            if (!(CheckTransaction(*wtx.tx, state) && (wtx.GetHash() == hash) && state.IsValid()))
+            if (!(CheckTransaction(*wtx.tx, state, true) && (wtx.GetHash() == hash) && state.IsValid()))
                 return false;
 
             // Undo serialize changes in 31600
@@ -579,6 +596,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Invalid governance object: LoadGovernanceObject";
                 return false;
             }
+        }
+        else if (strType == "stakeSplitThreshold")
+        {
+            uint64_t nStakeSplitThreshold;
+            ssValue >> nStakeSplitThreshold;
+            pwallet->LoadStakeSplitThreshold(nStakeSplitThreshold);
+        }
+        else if (strType == "autocombinesettings")
+        {
+            std::pair<bool, CAmount> pSettings;
+            ssValue >> pSettings;
+            pwallet->LoadAutoCombineSettings(pSettings.first, pSettings.second);
         }
         else if (strType != "bestblock" && strType != "bestblock_nomerkle"){
             wss.m_unknown_records++;

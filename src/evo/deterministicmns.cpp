@@ -1,4 +1,6 @@
 // Copyright (c) 2018-2021 The Dash Core developers
+// Copyright (c) 2019-2020 The ION Core developers
+// Copyright (c) 2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +11,7 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <script/standard.h>
+#include <spork.h>
 #include <ui_interface.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -628,7 +631,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         uiInterface.NotifyMasternodeListChanged(newList);
     }
 
-    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
+    if (nHeight == sporkManager.GetSporkValue(SPORK_4_DIP0003_ENFORCED)) {
         if (!consensusParams.DIP0003EnforcementHash.IsNull() && consensusParams.DIP0003EnforcementHash != pindex->GetBlockHash()) {
             LogPrintf("CDeterministicMNManager::%s -- DIP3 enforcement block has wrong hash: hash=%s, expected=%s, nHeight=%d\n", __func__,
                     pindex->GetBlockHash().ToString(), consensusParams.DIP0003EnforcementHash.ToString(), nHeight);
@@ -671,8 +674,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
         uiInterface.NotifyMasternodeListChanged(prevList);
     }
 
-    const auto& consensusParams = Params().GetConsensus();
-    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
+//    const auto& consensusParams = Params().GetConsensus();
+    if (nHeight == sporkManager.GetSporkValue(SPORK_4_DIP0003_ENFORCED)) {
         LogPrintf("CDeterministicMNManager::%s -- DIP3 is not enforced anymore. nHeight=%d\n", __func__, nHeight);
     }
 
@@ -719,8 +722,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
 
     DecreasePoSePenalties(newList);
 
-    // we skip the coinbase
-    for (int i = 1; i < (int)block.vtx.size(); i++) {
+    // we skip the coinbase and coinstake
+    for (int i = block.IsProofOfStake() ? 2 : 1; i < (int)block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
 
         if (tx.nVersion != 3) {
@@ -745,7 +748,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             }
 
             Coin coin;
-            if (!proTx.collateralOutpoint.hash.IsNull() && (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 1000 * COIN)) {
+            if (!proTx.collateralOutpoint.hash.IsNull() && (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 25000 * COIN)) {
                 // should actually never get to this point as CheckProRegTx should have handled this case.
                 // We do this additional check nevertheless to be 100% sure
                 return _state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
@@ -1027,7 +1030,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
 CDeterministicMNList CDeterministicMNManager::GetListAtChainTip()
 {
     LOCK(cs);
-    if (!tipIndex) {
+    if (!tipIndex || tipIndex->nHeight < sporkManager.GetSporkValue(SPORK_4_DIP0003_ENFORCED)) {
         return {};
     }
     return GetListForBlock(tipIndex);
@@ -1049,7 +1052,7 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
     if (proTx.collateralOutpoint.n >= tx->vout.size() || proTx.collateralOutpoint.n != n) {
         return false;
     }
-    if (tx->vout[n].nValue != 1000 * COIN) {
+    if (tx->vout[n].nValue != 25000 * COIN) {
         return false;
     }
     return true;
@@ -1063,7 +1066,7 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
         nHeight = tipIndex->nHeight;
     }
 
-    return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
+    return nHeight >= sporkManager.GetSporkValue(SPORK_4_DIP0003_ENFORCED);
 }
 
 void CDeterministicMNManager::CleanupCache(int nHeight)

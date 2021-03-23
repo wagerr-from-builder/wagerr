@@ -5,13 +5,12 @@
 #include <test/data/base58_encode_decode.json.h>
 
 #include <base58.h>
-#include <test/test_dash.h>
+#include <test/test_wagerr.h>
 #include <utilstrencodings.h>
 
 #include <univalue.h>
 
 #include <boost/test/unit_test.hpp>
-
 
 extern UniValue read_json(const std::string& jsondata);
 

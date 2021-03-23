@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2019 The PIVX Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,7 +82,7 @@ static const bool DEFAULT_UPNP = false;
 /** The maximum number of peer connections to maintain.
  *  Masternodes are forced to accept at least this many connections
  */
-static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
+static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 250;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** The default timeframe for -maxuploadtarget. 1 day. */
@@ -362,10 +363,13 @@ public:
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx);
-    void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayInv(CInv &inv);
+    void RelayInv(CInv &inv, const int minProtoVersion);
+    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
+    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion);
+
+    int GetMinPeerVersion();
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -410,6 +414,8 @@ public:
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
     int GetExtraOutboundCount();
+
+    void CheckOffsetDisconnectedPeers(const CNetAddr& ip);
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
