@@ -2044,7 +2044,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *node.connman));
-                zerocoinDB.reset();
+                zerocoinDB.reset(new CZerocoinDB(0, false, fReset || fReindexChainState));
                 zerocoinDB = new CZerocoinDB(0, false, fReset || fReindexChainState);
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));

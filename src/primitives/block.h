@@ -44,10 +44,10 @@ public:
     SERIALIZE_METHODS(CBlockHeader, obj)
      { READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
         //zerocoin active, header changes to include accumulator checksum
-        if(nVersion > 7)
+        if(nVersion == BLOCKHEADER_LEGACY_VERSION)
             READWRITE(obj.nAccumulatorCheckpoint);
-        void SetNull()
     }
+    void SetNull()
     {
         nVersion = 0;
         hashPrevBlock.SetNull();

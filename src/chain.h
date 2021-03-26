@@ -255,7 +255,7 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
-        if(block.nVersion > 7)
+        if(block.nVersion == BLOCKHEADER_LEGACY_VERSION)
             nAccumulatorCheckpoint = block.nAccumulatorCheckpoint;
         return block;
     }
@@ -458,7 +458,7 @@ public:
         READWRITE(obj.nNonce);
 
         READWRITE(VARINT(obj.nFlags));
-        if(this->nVersion > 7) {
+        if(this->nVersion == BLOCKHEADER_LEGACY_VERSION) {
             READWRITE(nAccumulatorCheckpoint);
             READWRITE(mapZerocoinSupply);
             READWRITE(vMintDenominationsInBlock);
