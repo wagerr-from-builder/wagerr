@@ -198,6 +198,7 @@ public:
         consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
         consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
         consensus.nStakeMinDepth = 600;
+        consensus.nBlockStakeModifierV1A = 1000;
         consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 1000;
         consensus.nBlockStakeModifierV2 = consensus.V17DeploymentHeight;
