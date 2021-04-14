@@ -16,6 +16,7 @@ class CTransaction;
 class CValidationState;
 
 /** Transaction validation functions */
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, const bool fZerocoinActive);
 
 namespace Consensus {
 /**

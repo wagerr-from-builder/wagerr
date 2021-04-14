@@ -80,6 +80,9 @@
 #include <spork.h>
 #include <walletinitinterface.h>
 
+#include <zwgr/accumulatorcheckpoints.h>
+#include <zwgr/zerocoindb.h>
+
 #include <evo/deterministicmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -350,6 +353,7 @@ void PrepareShutdown(NodeContext& node)
         llmq::quorumSnapshotManager.reset();
         deterministicMNManager.reset();
         evoDb.reset();
+        zerocoinDB.reset();
     }
     for (const auto& client : node.chain_clients) {
         client->stop();
@@ -2034,10 +2038,14 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
                 llmq::DestroyLLMQSystem();
                 // Same logic as above with pblocktree
+                // Load Accumulator Checkpoints according to network (main/test/regtest)
+                assert(AccumulatorCheckpoints::LoadCheckpoints(Params().NetworkIDString()));
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState));
                 deterministicMNManager.reset();
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb, *node.connman));
+                zerocoinDB.reset();
+                zerocoinDB = new CZerocoinDB(0, false, fReset || fReindexChainState);
                 llmq::quorumSnapshotManager.reset();
                 llmq::quorumSnapshotManager.reset(new llmq::CQuorumSnapshotManager(*evoDb));
 

@@ -182,6 +182,10 @@ public:
     uint256 nStakeModifierV2;
     unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
 
+    //! zerocoin specific fields
+    std::map<libzerocoin::CoinDenomination, int64_t> mapZerocoinSupply;
+    std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
+
     //! block header
     int32_t nVersion{0};
     uint256 hashMerkleRoot{};
@@ -201,6 +205,13 @@ public:
         nStakeModifierV2 = uint256();
         nStakeModifierChecksum = 0;
 
+        // Start supply of each denomination with 0s
+        for (auto& denom : libzerocoin::zerocoinDenomList) {
+            mapZerocoinSupply.insert(std::make_pair(denom, 0));
+        }
+        vMintDenominationsInBlock.clear();
+        nAccumulatorCheckpoint = uint256();
+
     CBlockIndex()
     {
     }
@@ -212,6 +223,8 @@ public:
           nBits{block.nBits},
           nNonce{block.nNonce}
     {
+        if(block.nVersion > 7)
+            nAccumulatorCheckpoint = block.nAccumulatorCheckpoint;
     }
 
     FlatFilePos GetBlockPos() const {
@@ -242,6 +255,8 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        if(block.nVersion > 7)
+            nAccumulatorCheckpoint = block.nAccumulatorCheckpoint;
         return block;
     }
 
@@ -319,6 +334,40 @@ public:
         nStakeModifier = nModifier;
         if (fGeneratedStakeModifier)
             nFlags |= BLOCK_STAKE_MODIFIER;
+    }
+
+    int64_t GetZerocoinSupply() const
+    {
+        int64_t nTotal = 0;
+        for (auto& denom : libzerocoin::zerocoinDenomList) {
+            nTotal += GetZcMintsAmount(denom);
+        }
+        return nTotal;
+    }
+
+    /**
+     * Total of mints added to the specific accumulator.
+     * @param denom
+     * @return
+     */
+    int64_t GetZcMints(libzerocoin::CoinDenomination denom) const
+    {
+        return mapZerocoinSupply.at(denom);
+    }
+
+    /**
+     * Total available amount in an specific denom.
+     * @param denom
+     * @return
+     */
+    int64_t GetZcMintsAmount(libzerocoin::CoinDenomination denom) const
+    {
+        return libzerocoin::ZerocoinDenominationToAmount(denom) * GetZcMints(denom);
+    }
+
+    bool MintedDenomination(libzerocoin::CoinDenomination denom) const
+    {
+        return std::find(vMintDenominationsInBlock.begin(), vMintDenominationsInBlock.end(), denom) != vMintDenominationsInBlock.end();
     }
 
     std::string ToString() const
@@ -410,6 +459,10 @@ public:
 
         READWRITE(VARINT(obj.nFlags));
         if(this->nVersion > 7) {
+            READWRITE(nAccumulatorCheckpoint);
+            READWRITE(mapZerocoinSupply);
+            READWRITE(vMintDenominationsInBlock);
+        }
         // v1/v2 modifier selection.
         if (this->nVersion > 10) {
             READWRITE(nStakeModifierV2);
@@ -429,6 +482,7 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.nAccumulatorCheckpoint = nAccumulatorCheckpoint;
         return block.GetHash();
     }
 
