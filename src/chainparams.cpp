@@ -360,7 +360,7 @@ public:
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
-        consensus.V16DeploymentHeight = 1600000;
+        consensus.V16DeploymentHeight = std::numeric_limits<int64_t>::max();
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("000001364c4ed20f1b240810b5aa91fee23ae9b64b6e746b594b611cf6d8c87b");
         consensus.BIP65Height = consensus.V16DeploymentHeight;
@@ -379,14 +379,19 @@ public:
         // Wagerr specific parameters
         // Proof of Stake parameters
         consensus.nPosStartHeight = 201;
-        consensus.nPivxProtocolV2StartHeight = std::numeric_limits<int>::max();
+        consensus.nBlockTimeProtocolV2 = consensus.V16DeploymentHeight;
         consensus.posLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 24
+        consensus.posLimit_V2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.nTimeSlotLength = 15;
         consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
         consensus.nStakeMinDepth = 600;
+        consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 1000;
-        consensus.nBlockStakeModifierV2 = std::numeric_limits<int>::max();
+        consensus.nBlockStakeModifierV2 = consensus.V16DeploymentHeight;
         // ATP parameters
-        consensus.ATPStartHeight = std::numeric_limits<int64_t>::max();
+        consensus.ATPStartHeight = consensus.V16DeploymentHeight;
         consensus.WagerrAddrPrefix = "wagerr";
         consensus.strTokenManagementKey = "sYG1qGUtbTdNRYtFsKvnY3GvuauF3eVwhT";
         consensus.nOpGroupNewRequiredConfirmations = 1;
@@ -548,7 +553,7 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
-        consensus.V16DeploymentHeight = 1600000;
+        consensus.V16DeploymentHeight = std::numeric_limits<int>::max();
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0000065432f43b3efb23bd0f63fe33d00d02a5f36233fe1b982c08274d58ef12");
         consensus.BIP65Height = consensus.V16DeploymentHeight;
@@ -567,10 +572,15 @@ public:
         // Wagerr specific parameters
         // Proof of Stake parameters
         consensus.nPosStartHeight = 201;
-        consensus.nPivxProtocolV2StartHeight = std::numeric_limits<int>::max();
+        consensus.nBlockTimeProtocolV2 = consensus.V16DeploymentHeight;
         consensus.posLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 24
+        consensus.posLimit_V2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.nTimeSlotLength = 15;
         consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
         consensus.nStakeMinDepth = 100;
+        consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 51197;
         consensus.nBlockStakeModifierV2 = std::numeric_limits<int>::max();
         // ATP parameters
@@ -739,12 +749,17 @@ public:
         // Wagerr specific parameters
         // Proof of Stake parameters
         consensus.nPosStartHeight = 201;
-        consensus.nPivxProtocolV2StartHeight = 2000;
+        consensus.nBlockTimeProtocolV2 = consensus.V16DeploymentHeight;
         consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.posLimit_V2 = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.nTimeSlotLength = 15;
         consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
         consensus.nStakeMinDepth = 100;
+        consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 1000;
-        consensus.nBlockStakeModifierV2 = consensus.nPivxProtocolV2StartHeight;
+        consensus.nBlockStakeModifierV2 = consensus.V16DeploymentHeight;
         // ATP parameters
         consensus.ATPStartHeight = std::numeric_limits<int64_t>::max();
         consensus.WagerrAddrPrefix = "wagerrtest";
@@ -889,7 +904,7 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;
-        consensus.V16DeploymentHeight = 1600000;
+        consensus.V16DeploymentHeight = 300;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
@@ -908,12 +923,17 @@ public:
         // Wagerr specific parameters
         // Proof of Stake parameters
         consensus.nPosStartHeight = 201;
-        consensus.nPivxProtocolV2StartHeight = 2000;
+        consensus.nBlockTimeProtocolV2 = consensus.V16DeploymentHeight;
         consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.posLimit_V2 = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.nTimeSlotLength = 15;
         consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
         consensus.nStakeMinDepth = 100;
+        consensus.nStakeMinAge = 0;
         consensus.nBlockStakeModifierV1A = 1000;
-        consensus.nBlockStakeModifierV2 = consensus.nPivxProtocolV2StartHeight;
+        consensus.nBlockStakeModifierV2 = consensus.V16DeploymentHeight;
         // ATP parameters
         consensus.ATPStartHeight = std::numeric_limits<int64_t>::max();
         consensus.WagerrAddrPrefix = "wagerrreg";
