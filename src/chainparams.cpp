@@ -360,7 +360,7 @@ public:
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
-        consensus.V16DeploymentHeight = std::numeric_limits<int64_t>::max();
+        consensus.V16DeploymentHeight = 99999999;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("000001364c4ed20f1b240810b5aa91fee23ae9b64b6e746b594b611cf6d8c87b");
         consensus.BIP65Height = consensus.V16DeploymentHeight;
@@ -553,7 +553,7 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
-        consensus.V16DeploymentHeight = std::numeric_limits<int>::max();
+        consensus.V16DeploymentHeight = 99999999;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0000065432f43b3efb23bd0f63fe33d00d02a5f36233fe1b982c08274d58ef12");
         consensus.BIP65Height = consensus.V16DeploymentHeight;
