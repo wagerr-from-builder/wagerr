@@ -2,10 +2,6 @@
 
 This issue tracker is only for technical issues related to Wagerr Core.
 
-General Wagerr questions and/or support requests and are best directed to the [Wagerrcurrency Reddit](https://www.reddit.com/r/wagerr/).
-
-To report critical security issues, email infosec@wagerr.com and/or see the WAGERR bug bounty program on [Bugcrowd](https://bugcrowd.com/wagerrdigitalcash) instead of creating Github issues.
-
 ### Describe the issue
 
 ### Can you reliably reproduce the issue?
