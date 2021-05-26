@@ -1,7 +1,7 @@
 # /etc/conf.d/wagerrd: config file for /etc/init.d/wagerrd
 
 # Config file location
-#BITCOIND_CONFIGFILE="/etc/wagerrcore/wagerr.conf"
+#BITCOIND_CONFIGFILE="/etc/wagerr/wagerr.conf"
 
 # What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
 #BITCOIND_PIDDIR="/var/run/wagerrd"
@@ -13,8 +13,8 @@
 #BITCOIND_DATADIR="/var/lib/wagerrd"
 
 # User and group to own wagerrd process
-#BITCOIND_USER="wagerrcore"
-#BITCOIND_GROUP="wagerrcore"
+#BITCOIND_USER="wagerr"
+#BITCOIND_GROUP="wagerr"
 
 # Path to wagerrd executable
 #BITCOIND_BIN="/usr/bin/wagerrd"
