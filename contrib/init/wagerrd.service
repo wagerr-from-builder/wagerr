@@ -13,9 +13,9 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/wagerrd -daemon -conf=/etc/wagerr/wagerr.conf -pid=/run/wagerrd/wagerrd.pid
-# Creates /run/wagerr owned by wagerrcore
+# Creates /run/wagerr owned by wagerr
 RuntimeDirectory=wagerrd
-User=wagerrcore
+User=wagerr
 Type=forking
 PIDFile=/run/wagerrd/wagerrd.pid
 Restart=on-failure
