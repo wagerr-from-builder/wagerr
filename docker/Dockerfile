@@ -1,6 +1,6 @@
 FROM phusion/baseimage:bionic-1.0.0
 LABEL maintainer="Wagerr Developers <dev@wagerr.com>"
-LABEL description="Dockerised WagerrCore, built from Travis"
+LABEL description="Dockerised Wagerr, built from Travis"
 
 ARG USER_ID
 ARG GROUP_ID
@@ -12,7 +12,7 @@ ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
 RUN groupadd -g ${GROUP_ID} wagerr
 RUN useradd -u ${USER_ID} -g wagerr -s /bin/bash -m -d /wagerr wagerr
-RUN mkdir /wagerr/.wagerrcore
+RUN mkdir /wagerr/.wagerr
 RUN chown wagerr:wagerr -R /wagerr
 
 COPY bin/* /usr/local/bin/

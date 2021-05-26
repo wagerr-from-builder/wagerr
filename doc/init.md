@@ -13,7 +13,7 @@ can be found in the contrib/init folder.
 Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "wagerrcore" user
+All three Linux startup configurations assume the existence of a "wagerr" user
 and group.  They must be created before attempting to use these scripts.
 The OS X configuration assumes wagerrd will be set up for the current user.
 
@@ -54,23 +54,23 @@ Paths
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/wagerrd`  
-Configuration file:  `/etc/wagerrcore/wagerr.conf`  
+Configuration file:  `/etc/wagerr/wagerr.conf`  
 Data directory:      `/var/lib/wagerrd`  
 PID file:            `/var/run/wagerrd/wagerrd.pid` (OpenRC and Upstart) or `/var/lib/wagerrd/wagerrd.pid` (systemd)  
 Lock file:           `/var/lock/subsys/wagerrd` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
-should all be owned by the wagerrcore user and group.  It is advised for security
+should all be owned by the wagerr user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
-wagerrcore user and group.  Access to wagerr-cli and other wagerrd rpc clients
+wagerr user and group.  Access to wagerr-cli and other wagerrd rpc clients
 can then be controlled by group membership.
 
 ### Mac OS X
 
 Binary:              `/usr/local/bin/wagerrd`  
-Configuration file:  `~/Library/Application Support/WagerrCore/wagerr.conf`  
-Data directory:      `~/Library/Application Support/WagerrCore`  
-Lock file:           `~/Library/Application Support/WagerrCore/.lock`  
+Configuration file:  `~/Library/Application Support/Wagerr/wagerr.conf`  
+Data directory:      `~/Library/Application Support/Wagerr`  
+Lock file:           `~/Library/Application Support/Wagerr/.lock`  
 
 Installing Service Configuration
 -----------------------------------
@@ -120,7 +120,7 @@ This Launch Agent will cause wagerrd to start whenever the user logs in.
 
 NOTE: This approach is intended for those wanting to run wagerrd as the current user.
 You will need to modify org.wagerr.wagerrd.plist if you intend to use it as a
-Launch Daemon with a dedicated wagerrcore user.
+Launch Daemon with a dedicated wagerr user.
 
 Auto-respawn
 -----------------------------------
