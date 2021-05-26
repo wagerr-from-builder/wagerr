@@ -153,7 +153,7 @@ For more information, see the <a style=\"%2\" href=\"%3\">%1 documentation</a>."
         )
         .arg("CoinJoin")
         .arg(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND))
-        .arg("https://docs.wagerr.com/en/stable/wallets/wagerrcore/coinjoin-instantsend.html")
+        .arg("https://docs.wagerr.com/en/stable/wallets/wagerr/coinjoin-instantsend.html")
         );
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
