@@ -1,4 +1,4 @@
-Wagerr Core staging tree 0.17
+Wagerr staging tree 5.0.0
 ===========================
 
 |CI|master|develop|
