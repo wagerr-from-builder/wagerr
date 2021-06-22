@@ -1,5 +1,5 @@
 ---
-name: "wagerr-osx-4.0.0"
+name: "wagerr-osx-4.0.99"
 enable_cache: true
 distro: "ubuntu"
 suites:
