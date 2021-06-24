@@ -400,6 +400,8 @@ public:
         consensus.nOpGroupNewRequiredConfirmations = 1;
         // Other
         consensus.nCoinbaseMaturity = 100;
+        consensus.AccruedCarbonOffsetStartHeight = consensus.V17DeploymentHeight;
+        consensus.AccruedCarbonOffsetWindow = 1000;
 
         // Zerocoin
         consensus.nZerocoinRequiredStakeDepth = 200;
@@ -587,6 +589,8 @@ public:
         consensus.nOpGroupNewRequiredConfirmations = 1;
         // Other
         consensus.nCoinbaseMaturity = 15;
+        consensus.AccruedCarbonOffsetStartHeight = 833200;
+        consensus.AccruedCarbonOffsetWindow = 100;
         // Zerocoin
         consensus.nZerocoinRequiredStakeDepth = 200;
         consensus.nZerocoinStartHeight = 25;
@@ -759,6 +763,8 @@ public:
         consensus.nOpGroupNewRequiredConfirmations = 1;
         // Other
         consensus.nCoinbaseMaturity = 15;
+        consensus.AccruedCarbonOffsetStartHeight = consensus.V17DeploymentHeight;
+        consensus.AccruedCarbonOffsetWindow = 100;
         // Zerocoin
         consensus.nZerocoinRequiredStakeDepth = 200;
         consensus.nZerocoinStartHeight = std::numeric_limits<int>::max();
@@ -922,6 +928,8 @@ public:
         consensus.strCarbonOffsetAddress = "TqMgq4qkw7bGxf6CDhtDfEqzEtWD5C7x8U";
         // ATP parameters
         consensus.ATPStartHeight = consensus.V17DeploymentHeight;
+        consensus.AccruedCarbonOffsetStartHeight = consensus.V17DeploymentHeight + 30;
+        consensus.AccruedCarbonOffsetWindow = 10;
         consensus.WagerrAddrPrefix = "wagerrreg";
         consensus.strTokenManagementKey = "TqMgq4qkw7bGxf6CDhtDfEqzEtWD5C7x8U";
         consensus.nOpGroupNewRequiredConfirmations = 1;
