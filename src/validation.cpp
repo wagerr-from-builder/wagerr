@@ -665,6 +665,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         *pfMissingInputs = false;
     }
 
+    bool fV17Active_context = (unsigned int)chainActive.Height() >= Params().GetConsensus().V17DeploymentHeight;
+    if (fV17Active_context && tx.ContainsZerocoins()) {
+        return state.DoS(30, error("%s: zerocoin has been disabled", __func__), REJECT_INVALID, "bad-txns-xwagerr");
+    }
+
     if (!CheckTransaction(tx, state, true))
         return false; // state filled in by CheckTransaction
 
@@ -2223,6 +2228,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
 
     bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
+    bool fV17Active_context = pindex->nHeight >= Params().GetConsensus().V17DeploymentHeight;
 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(block, pindex, state, view, fJustCheck, fScriptChecks)) {
@@ -2244,6 +2250,10 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         const uint256 txhash = tx->GetHash();
 
         nInputs += tx->vin.size();
+
+        if (fV17Active_context && tx->ContainsZerocoins()) {
+            return state.DoS(100, error("%s: zerocoin has been disabled", __func__), REJECT_INVALID, "bad-txns-xwagerr");
+        }
 
         if (tx->HasZerocoinSpendInputs())
         {
