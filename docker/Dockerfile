@@ -12,7 +12,7 @@ ENV USER_ID ${USER_ID:-1000}
 ENV GROUP_ID ${GROUP_ID:-1000}
 RUN groupadd -g ${GROUP_ID} wagerr
 RUN useradd -u ${USER_ID} -g wagerr -s /bin/bash -m -d /wagerr wagerr
-RUN mkdir /wagerr/.wagerr
+RUN mkdir /wagerr/.wagerrcoin
 RUN chown wagerr:wagerr -R /wagerr
 
 COPY bin/* /usr/local/bin/
