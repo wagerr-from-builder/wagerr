@@ -58,7 +58,7 @@
 #include <statsd_client.h>
 
 #if defined(NDEBUG)
-# error "Wagerr Core cannot be compiled without assertions."
+# error "WAGERR Core cannot be compiled without assertions."
 #endif
 
 /** Maximum number of in-flight objects from a peer */

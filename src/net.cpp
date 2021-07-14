@@ -2118,7 +2118,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Wagerr Core " + FormatFullVersion();
+        std::string strDesc = "WAGERR Core " + FormatFullVersion();
 
         do {
 #ifndef UPNPDISCOVER_SUCCESS
