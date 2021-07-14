@@ -51,9 +51,9 @@ Var StartMenuGroup
 # Installer attributes
 OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-${VERSION}-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\Wagerr
+InstallDir $PROGRAMFILES64\Wagerrcoin
 !else
-InstallDir $PROGRAMFILES\Wagerr
+InstallDir $PROGRAMFILES\Wagerrcoin
 !endif
 CRCCheck on
 XPStyle on
