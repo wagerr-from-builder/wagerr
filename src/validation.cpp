@@ -79,7 +79,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Wagerr Core cannot be compiled without assertions."
+# error "WAGERR Core cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001

@@ -18,7 +18,7 @@ BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/wagerrd}
 BITCOIND_NICE=${BITCOIND_NICE:-${NICELEVEL:-0}}
 BITCOIND_OPTS="${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
 
-name="Wagerr Core Daemon"
+name="WAGERR Core Daemon"
 description="Wagerr cryptocurrency P2P network daemon"
 
 command="/usr/bin/wagerrd"
@@ -84,7 +84,7 @@ checkconfig()
 		eerror "It is recommended that you also set alertnotify so you are "
 		eerror "notified of problems:"
 		eerror ""
-		eerror "ie: alertnotify=echo %%s | mail -s \"Wagerr Core Alert\"" \
+		eerror "ie: alertnotify=echo %%s | mail -s \"WAGERR Core Alert\"" \
 			"admin@foo.com"
 		eerror ""
 		return 1
