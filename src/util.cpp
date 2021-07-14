@@ -662,13 +662,13 @@ void PrintExceptionContinue(const std::exception_ptr pex, const char* pszExcepti
 
 fs::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Wagerr
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Wagerr
-    // Mac: ~/Library/Application Support/Wagerr
-    // Unix: ~/.wagerr
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Wagerrcoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Wagerrcoin
+    // Mac: ~/Library/Application Support/Wagerrcoin
+    // Unix: ~/.wagerrcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Wagerr";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Wagerrcoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -678,10 +678,10 @@ fs::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Wagerr";
+    return pathRet / "Library/Application Support/Wagerrcoin";
 #else
     // Unix
-    return pathRet / ".wagerr";
+    return pathRet / ".wagerrcoin";
 #endif
 #endif
 }
