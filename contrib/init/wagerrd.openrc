@@ -2,8 +2,8 @@
 
 # backward compatibility for existing gentoo layout 
 #
-if [ -d "/var/lib/wagerr/.wagerr" ]; then
-	BITCOIND_DEFAULT_DATADIR="/var/lib/wagerr/.wagerr"
+if [ -d "/var/lib/wagerr/.wagerrcoin" ]; then
+	BITCOIND_DEFAULT_DATADIR="/var/lib/wagerr/.wagerrcoin"
 else
 	BITCOIND_DEFAULT_DATADIR="/var/lib/wagerrd"
 fi
