@@ -68,9 +68,9 @@ can then be controlled by group membership.
 ### Mac OS X
 
 Binary:              `/usr/local/bin/wagerrd`  
-Configuration file:  `~/Library/Application Support/Wagerr/wagerr.conf`  
-Data directory:      `~/Library/Application Support/Wagerr`  
-Lock file:           `~/Library/Application Support/Wagerr/.lock`  
+Configuration file:  `~/Library/Application Support/Wagerrcoin/wagerr.conf`  
+Data directory:      `~/Library/Application Support/Wagerrcoin`  
+Lock file:           `~/Library/Application Support/Wagerrcoin/.lock`  
 
 Installing Service Configuration
 -----------------------------------
