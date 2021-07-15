@@ -18,7 +18,7 @@ are carried out collectively by the network. Wagerr Core is the name of the open
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Wagerr Core software, see https://www.wagerr.com/get-wagerr/.
+the Wagerr Core software, see https://wagerr.com/getwagerr/.
 
 
 License
