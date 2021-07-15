@@ -19,6 +19,9 @@ static const int INIT_PROTO_VERSION = 214;
 //! In this version, 'getheaders' was introduced.
 static const int GETHEADERS_VERSION = 70238;
 
+//! New spork protocol
+static const int MIN_SPORK_VERSION = 70929;
+
 //! disconnect from peers older than this proto version
 static const int MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT = 70924;
 static const int MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT = 70929;
