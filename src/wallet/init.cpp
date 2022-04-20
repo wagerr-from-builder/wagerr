@@ -55,7 +55,7 @@ public:
     //! Close all wallets.
     void Close() const override;
 
-    // Dash Specific Wallet Init
+    // Wagerr Specific Wallet Init
     void AutoLockMasternodeCollaterals() const override;
     void InitCoinJoinSettings() const override;
     void InitStaking() const override;
