@@ -10,8 +10,8 @@
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between dash-cli and dashd)
- * of a given instance of the Dash system.
+ * CBaseChainParams defines the base parameters (shared between wagerr-cli and wagerrd)
+ * of a given instance of the Wagerr system.
  */
 class CBaseChainParams
 {
