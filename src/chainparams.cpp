@@ -575,11 +575,11 @@ public:
         consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 51197;
         consensus.nBlockStakeModifierV2 = 826130;
-        consensus.strCarbonOffsetAddress = "TkDutp66Ygp5PpPnrETvfyrtnxq5UevLpo";
+        consensus.strCarbonOffsetAddress = "TrY4A3xFUWjb5Dvn6PJzX8RgZEj8jo6ADE";
         // ATP parameters
         consensus.ATPStartHeight = consensus.V17DeploymentHeight;
         consensus.WagerrAddrPrefix = "wagerrtest";
-        consensus.strTokenManagementKey = "TkDutp66Ygp5PpPnrETvfyrtnxq5UevLpo";
+        consensus.strTokenManagementKey = "TsdKwqnDKEN3N38QG5hTQBNJe6y1mdECy8";
         consensus.nOpGroupNewRequiredConfirmations = 1;
         // Other
         consensus.nCoinbaseMaturity = 15;
