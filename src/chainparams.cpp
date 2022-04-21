@@ -575,7 +575,7 @@ public:
         consensus.nStakeMinAge = 60 * 60; // 1 hour
         consensus.nBlockStakeModifierV1A = 51197;
         consensus.nBlockStakeModifierV2 = 826130;
-        consensus.strCarbonOffsetAddress = "4yAq996ZLe5Mzx3DnFJQ9ezxJWBbkqegLL";
+        consensus.strCarbonOffsetAddress = "TqqiV3twXTaD5pL4vrA3nZqT8d8BPbxM3e";
         // ATP parameters
         consensus.ATPStartHeight = consensus.V17DeploymentHeight;
         consensus.WagerrAddrPrefix = "wagerrtest";
