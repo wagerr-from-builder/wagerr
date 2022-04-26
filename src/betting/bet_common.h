@@ -167,7 +167,7 @@ class CBetOut : public CTxOut {
 
     inline int CompareTo(const CBetOut& rhs) const
     {
-        bool operator<(const &scriptPubKey rhs) const
+        bool operator<(const CBetOut& rhs) const
         if (nValue < rhs.nValue)
             return -1;
         if (nValue > rhs.nValue)
