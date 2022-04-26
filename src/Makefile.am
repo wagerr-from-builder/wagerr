@@ -122,6 +122,16 @@ BITCOIN_CORE_H = \
   addrman.h \
   attributes.h \
   base58.h \
+  betting/bet.h \
+  betting/bet_common.h \
+  betting/bet_tx.h \
+  betting/bet_db.h \
+  betting/bet_v2.h \
+  betting/bet_v3.h \
+  betting/bet_v4.h \
+  betting/oracles.h \
+  betting/quickgames/dice.h \
+  betting/quickgames/qgview.h \
   batchedlogger.h \
   bech32.h \
   bip39.h \
@@ -329,6 +339,14 @@ libwagerr_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   batchedlogger.cpp \
+  betting/bet_common.cpp \
+  betting/bet_tx.cpp \
+  betting/bet_db.cpp \
+  betting/bet.cpp \
+  betting/bet_v2.cpp \
+  betting/bet_v3.cpp \
+  betting/bet_v4.cpp \
+  betting/oracles.cpp \
   bloom.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
@@ -642,6 +660,7 @@ libwagerr_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libwagerr_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  betting/quickgames/dice.cpp \
   bip39.cpp \
   wagerraddrenc.cpp \
   chainparams.cpp \
