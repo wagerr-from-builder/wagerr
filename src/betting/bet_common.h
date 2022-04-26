@@ -165,7 +165,7 @@ class CBetOut : public CTxOut {
         return CTxOut::IsEmpty() && nEventId == 0;
     }
 
-    bool operator<(const CompareTo& rhs) const
+    bool operator<(const CBetOut& rhs) const;
     inline int CompareTo(const CBetOut& rhs) const
     {
         if (nValue < rhs.nValue)
