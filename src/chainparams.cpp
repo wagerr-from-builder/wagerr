@@ -458,7 +458,7 @@ public:
             { "WhW3dmThz2hWEfpagfbdBQ7hMfqf6MkfHR", strDevPayoutAddrNew, strOMNOPayoutAddrNew, nKeysRotateHeight, std::numeric_limits<int>::max() },
         };
 
-/*        quickGamesArr.clear();
+        quickGamesArr.clear();
         quickGamesArr.emplace_back(
             std::string("Dice"), // Game name
             QuickGamesType::qgDice, // game type
@@ -470,7 +470,7 @@ public:
 
         // workaround fixes
         nSkipBetValidationStart = 5577;
-        nSkipBetValidationEnd = 35619; */
+        nSkipBetValidationEnd = 35619;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000009db835052f74f73219"); // 1623262
@@ -692,7 +692,7 @@ public:
             { "TYijVoyFnJ8dt1SGHtMtn2wa34CEs8EVZq", strDevPayoutAddrNew, strOMNOPayoutAddrNew, nKeysRotateHeight, std::numeric_limits<int>::max() },
         };
 
-/*        quickGamesArr.clear();
+        quickGamesArr.clear();
         quickGamesArr.emplace_back(
             std::string("Dice"), // Game name
             QuickGamesType::qgDice, // game type
@@ -700,7 +700,7 @@ public:
             &quickgames::DiceBetInfoParser, // bet info parser
             std::string("TLceyDrdPLBu8DK6UZjKu4vCDUQBGPybcY"), // Dev address
             400, // OMNO reward permille (40%)
-            100); // Dev reward permille (10%) */
+            100); // Dev reward permille (10%)
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // 0
@@ -902,7 +902,7 @@ public:
             { "TYijVoyFnJ8dt1SGHtMtn2wa34CEs8EVZq", strDevPayoutAddrNew, strOMNOPayoutAddrNew, nKeysRotateHeight, std::numeric_limits<int>::max() },
         };
 
-/*        quickGamesArr.clear();
+        quickGamesArr.clear();
         quickGamesArr.emplace_back(
             std::string("Dice"), // Game name
             QuickGamesType::qgDice, // game type
@@ -910,7 +910,7 @@ public:
             &quickgames::DiceBetInfoParser, // bet info parser
             std::string("TLceyDrdPLBu8DK6UZjKu4vCDUQBGPybcY"), // Dev address
             400, // OMNO reward permille (40%)
-            100); // Dev reward permille (10%) */
+            100); // Dev reward permille (10%)
 
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
@@ -1114,7 +1114,7 @@ public:
             { "TFvZVYGdrxxNunQLzSnRSC58BSRA7si6zu", strDevPayoutAddrNew, strOMNOPayoutAddrNew, nKeysRotateHeight, std::numeric_limits<int>::max() },
         };
 
-/*        quickGamesArr.clear();
+        quickGamesArr.clear();
         quickGamesArr.emplace_back(
             std::string("Dice"), // Game name
             QuickGamesType::qgDice, // game type
@@ -1122,7 +1122,7 @@ public:
             &quickgames::DiceBetInfoParser, // bet info parser
             std::string("TLuTVND9QbZURHmtuqD5ESECrGuB9jLZTs"), // Dev address
             400, // OMNO reward permille (40%)
-            100); // Dev reward permille (10%) */
+            100); // Dev reward permille (10%)
 
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
