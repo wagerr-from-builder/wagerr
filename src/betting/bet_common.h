@@ -168,6 +168,7 @@ class CBetOut : public CTxOut {
     inline int CompareTo(const CBetOut& rhs) const
     {
         bool operator<(const CBetOut& rhs) const
+        {
         if (nValue < rhs.nValue)
             return -1;
         if (nValue > rhs.nValue)
@@ -181,6 +182,7 @@ class CBetOut : public CTxOut {
         if (nEventId > rhs.nEventId)
             return 1;
         return 0;
+        }
     }
 
     inline bool operator==(const CBetOut& rhs) const { return CompareTo(rhs) == 0; }
