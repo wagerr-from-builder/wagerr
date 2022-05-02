@@ -165,13 +165,6 @@ class CBetOut : public CTxOut {
         return CTxOut::IsEmpty() && nEventId == 0;
     }
 
-    inline bool operator==(const CBetOut& rhs) const { return CompareTo(rhs) == 0; }
-    inline bool operator!=(const CBetOut& rhs) const { return CompareTo(rhs) != 0; }
-    inline bool operator<=(const CBetOut& rhs) const { return CompareTo(rhs) <= 0; }
-    inline bool operator>=(const CBetOut& rhs) const { return CompareTo(rhs) >= 0; }
-    inline bool operator<(const CBetOut& rhs) const { return CompareTo(rhs) < 0; }
-    inline bool operator>(const CBetOut& rhs) const { return CompareTo(rhs) > 0; }
-
     inline int CompareTo(const CBetOut& rhs) const
     {
         if (nValue < rhs.nValue)
@@ -188,6 +181,13 @@ class CBetOut : public CTxOut {
             return 1;
         return 0;
     }
+
+    inline bool operator==(const CBetOut& rhs) const { return CompareTo(rhs) == 0; }
+    inline bool operator!=(const CBetOut& rhs) const { return CompareTo(rhs) != 0; }
+    inline bool operator<=(const CBetOut& rhs) const { return CompareTo(rhs) <= 0; }
+    inline bool operator>=(const CBetOut& rhs) const { return CompareTo(rhs) >= 0; }
+    inline bool operator<(const CBetOut& rhs) const { return CompareTo(rhs) < 0; }
+    inline bool operator>(const CBetOut& rhs) const { return CompareTo(rhs) > 0; }
 };
 
 /** Ensures a TX has come from an OMNO wallet. **/
