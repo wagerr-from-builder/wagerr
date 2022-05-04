@@ -396,7 +396,7 @@ public:
         // ATP parameters
         consensus.ATPStartHeight = consensus.V17DeploymentHeight;
         consensus.WagerrAddrPrefix = "wagerr";
-        consensus.strTokenManagementKey = "sYG1qGUtbTdNRYtFsKvnY3GvuauF3eVwhT";
+        consensus.strTokenManagementKey = "sYCxBVHJx3A1tt7B1tFnaCJGnci3hvEf2c"; // 04d449cc1ac45d327c34d8b116797ad9ed287980a9199ea48dc4c8beab90ae2ded738e826ba0b27b5571d63884d985e2a50afbe8eef2925fc280af51a2a2d5e0e0
         consensus.nOpGroupNewRequiredConfirmations = 1;
         // Other
         consensus.nCoinbaseMaturity = 100;
@@ -424,7 +424,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000009a720ffd0bd1bd7661"); // 1427000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000009db835052f74f73219"); // 1623262
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0");
