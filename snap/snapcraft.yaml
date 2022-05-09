@@ -1,5 +1,5 @@
 # Copyright (c) 2018-2021 The Wagerr developers
-name: wagerr
+name: wagerr-rebase
 base: core18
 version: 5.0.0
 summary:   wagerr, digital currency for media content
@@ -97,9 +97,9 @@ apps:
     plugs: [home]
 parts:
   wagerr:
-    source: http://github.com/wagerr/wagerr
+    source: http://github.com/wagerrck/wagerr
     source-type: git
-    source-tag: v5.0.0
+    source-tag: snapcraft-test
     plugin: nil
     override-build: |
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
@@ -113,7 +113,7 @@ parts:
       OVERRIDEDATADIR="false"
       OVERRIDECONF="${OVERRIDEDATADIR}"
       COPYCONF=0    # copy example config into users data folder, 1 = enabled
-      JOBS=4        # 0 means off and make will run without -j
+      JOBS=12       # 0 means off and make will run without -j
       PATCH=1       # 1 = enabled
       SPLASHPNGS=0  # patch pngs to differ visaully from those installed from self compilation or other source like deb
       FIXPPCBUILD=1 # if ppc builds fail due to failed qt, apps part will return error and build will fail, 1 = enabled
@@ -158,7 +158,6 @@ parts:
       if [ $PATCH = 1 ]; then
         echo "apply patches:"
         git apply $SNAPCRAFT_PART_BUILD/snap/local/patches/X001-default_data_dir.patch
-        git apply $SNAPCRAFT_PART_BUILD/snap/local/patches/X002-fix-bdb-tmp-folder.patch
         git apply $SNAPCRAFT_PART_BUILD/snap/local/patches/X003-fix-use-snap-instead-of-dirty.patch
         sed -i 's/tar --strip-components/tar --no-same-owner --strip-components/' ${SNAPCRAFT_PART_BUILD}/depends/funcs.mk
       else
@@ -286,6 +285,7 @@ parts:
       - doxygen
       - npm
       - libts-dev
+      - bison
     stage-packages:
       - libxkbcommon0
       - ttf-ubuntu-font-family
