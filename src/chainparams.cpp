@@ -443,7 +443,9 @@ public:
 
         genesis = CreateGenesisBlock(1518696181, 96620932, 0x1e0ffff0, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000007b9191bc7a17bfb6cedf96a8dacebb5730b498361bf26d44a9f9dcc1079"));
+        uint256 genesisComp = uint256S("0x8c9d2d46b25debcd3cfe2d43b253a8f7d214c2619fdcff90ff572f1b21fd60bd");
+        uint256 genesisHash = consensus.hashGenesisBlock;
+        assert(consensus.hashGenesisBlock == uint256S("0x8c9d2d46b25debcd3cfe2d43b253a8f7d214c2619fdcff90ff572f1b21fd60bd"));
         assert(genesis.hashMerkleRoot == uint256S("0xc4d06cf72583752c23b819fa8d8cededd1dad5733d413ea1f123f98a7db6af13"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -498,21 +500,22 @@ public:
 
         checkpointData = {
             {
-                {1, uint256S("000001364c4ed20f1b240810b5aa91fee23ae9b64b6e746b594b611cf6d8c87b")},     // First PoW premine block
-                {101, uint256S("0000005e89a1fab52bf996e7eb7d653962a0eb064c16c09887504797deb7feaf")},     // Last premine block
-                {1001, uint256S("0000002a314058a8f61293e18ddbef5664a2097ac0178005f593444549dd5b8c")},     // Last PoW block
-                {5530, uint256S("b3a8e6eb90085394c1af916d5690fd5b83d53c43cf60c7b6dd1e904e0ede8e88")},     // Block on which switch off happened, 5531, 5532 differed
-                {14374, uint256S("61dc2dbb225de3146bc59ab96dedf48047ece84d004acaf8f386ae7a7d074983")},
-                {70450, uint256S("ea83266a9dfd7cf92a96aa07f86bdf60d45850bd47c175745e71a1aaf60b4091")},
-                {257142, uint256S("eca635870323e7c0785fec1e663f4cb8645b7e84b5df4511ba4c189e580bfafd")},
-                {290000, uint256S("5a70e614a2e6035be0fa1dd1a67bd6caa0a78e396e889aac42bbbc08e11cdabd")},
-                {294400, uint256S("01be3c3c84fd6063ba27080996d346318242d5335efec936408c1e1ae3fdb4a1")},
-                {320000, uint256S("9060f8d44058c539653f37eaac4c53de7397e457dda264c5ee1be94293e9f6bb")},
-                {695857, uint256S("680a170b5363f308cc0698a53ab6a83209dab06c138c98f91110f9e11e273778")},
-                {720000, uint256S("63fc356380b3b8791e83a9d63d059ccc8d0e65dab703575ef4ca070e26e02fc7")},
-                {732900, uint256S("5d832b3de9b207e03366fb8d4da6265d52015f5d1bd8951a656b5d4508a1da8e")},
-                {891270, uint256S("eedb1794ca9267fb0ef88aff27afdd376ac93a54491a7b812cbad4b6c2e28d25")},
-                {1427000, uint256S("2ee16722a21094f4ae8e371021c28d19268d6058de42e37ea0d4c90273c6a42e")},    // 3693972 1605485238
+                {0, uint256S("639f096e3ac85730d87aaa5479b4bef1627eae28a49659b929da378fe3b32fa7")},     // First PoW premine block
+               // {1, uint256S("000001364c4ed20f1b240810b5aa91fee23ae9b64b6e746b594b611cf6d8c87b")},     // First PoW premine block
+               // {101, uint256S("0000005e89a1fab52bf996e7eb7d653962a0eb064c16c09887504797deb7feaf")},     // Last premine block
+              // {1001, uint256S("0000002a314058a8f61293e18ddbef5664a2097ac0178005f593444549dd5b8c")},     // Last PoW block
+             //  {5530, uint256S("b3a8e6eb90085394c1af916d5690fd5b83d53c43cf60c7b6dd1e904e0ede8e88")},     // Block on which switch off happened, 5531, 5532 differed
+            //   {14374, uint256S("61dc2dbb225de3146bc59ab96dedf48047ece84d004acaf8f386ae7a7d074983")},
+           //    {70450, uint256S("ea83266a9dfd7cf92a96aa07f86bdf60d45850bd47c175745e71a1aaf60b4091")},
+              // {257142, uint256S("eca635870323e7c0785fec1e663f4cb8645b7e84b5df4511ba4c189e580bfafd")},
+              // {290000, uint256S("5a70e614a2e6035be0fa1dd1a67bd6caa0a78e396e889aac42bbbc08e11cdabd")},
+             //  {294400, uint256S("01be3c3c84fd6063ba27080996d346318242d5335efec936408c1e1ae3fdb4a1")},
+             //  {320000, uint256S("9060f8d44058c539653f37eaac4c53de7397e457dda264c5ee1be94293e9f6bb")},
+             //  {695857, uint256S("680a170b5363f308cc0698a53ab6a83209dab06c138c98f91110f9e11e273778")},
+             //  {720000, uint256S("63fc356380b3b8791e83a9d63d059ccc8d0e65dab703575ef4ca070e26e02fc7")},
+             //  {732900, uint256S("5d832b3de9b207e03366fb8d4da6265d52015f5d1bd8951a656b5d4508a1da8e")},
+             //  {891270, uint256S("eedb1794ca9267fb0ef88aff27afdd376ac93a54491a7b812cbad4b6c2e28d25")},
+             //  {1427000, uint256S("2ee16722a21094f4ae8e371021c28d19268d6058de42e37ea0d4c90273c6a42e")},    // 3693972 1605485238
             }
         };
 
@@ -623,7 +626,9 @@ public:
 
         genesis = CreateGenesisBlock(1518696182, 75183976, 0x1e0ffff0, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000fdc268f54ff1368703792dc046b1356e60914c2b5b6348032144bcb2de5"));
+        uint256 genesisComp = uint256S("0x639f096e3ac85730d87aaa5479b4bef1627eae28a49659b929da378fe3b32fa7");
+        uint256 genesisHash = consensus.hashGenesisBlock;
+        assert(consensus.hashGenesisBlock == uint256S("0x639f096e3ac85730d87aaa5479b4bef1627eae28a49659b929da378fe3b32fa7"));
         //assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
         vFixedSeeds.clear();
@@ -678,12 +683,13 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("00000fdc268f54ff1368703792dc046b1356e60914c2b5b6348032144bcb2de5")},
-                {1, uint256S("0000098cc93ece2804776d2e9eda2d01e2ff830d80bab22500821361259f8aa3")},
-                {450, uint256S("3cec3911fdf321a22b8109ca95ca28913e6b51f0d80cc6d2b2e30e1f2a6115c0")},
-                {469, uint256S("d69d843cd63d333cfa3ff4dc0675fa320d6ef8cab7ab1a73bf8a1482210f93ce")},
-                {1100, uint256S("fa462709a1f3cf81d699ffbd45440204aa4d38de84c2da1fc8b3ff15c3c7a95f")},  // 1588780440
-                {2000, uint256S("a5aab45e4e2345715adf79774d661a5bb9b2a2efd001c339df5678418fb51409")}, // 1588834261
+                {0, uint256S("639f096e3ac85730d87aaa5479b4bef1627eae28a49659b929da378fe3b32fa7")},
+               // {0, uint256S("00000fdc268f54ff1368703792dc046b1356e60914c2b5b6348032144bcb2de5")},
+               // {1, uint256S("0000098cc93ece2804776d2e9eda2d01e2ff830d80bab22500821361259f8aa3")},
+               // {450, uint256S("3cec3911fdf321a22b8109ca95ca28913e6b51f0d80cc6d2b2e30e1f2a6115c0")},
+               // {469, uint256S("d69d843cd63d333cfa3ff4dc0675fa320d6ef8cab7ab1a73bf8a1482210f93ce")},
+               // {1100, uint256S("fa462709a1f3cf81d699ffbd45440204aa4d38de84c2da1fc8b3ff15c3c7a95f")},  // 1588780440
+               // {2000, uint256S("a5aab45e4e2345715adf79774d661a5bb9b2a2efd001c339df5678418fb51409")}, // 1588834261
             }
         };
 
@@ -795,7 +801,9 @@ public:
 
         genesis = CreateGenesisBlock(1524496461, 12351, 0x207fffff, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x618435c615f3d628acf97c19c4b3e6320555c62f515d4144425e4e8b7610fbab"));
+        uint256 genesisComp = uint256S("0x79cdeb4714560245d67df16210d7faff2ad4e3e6839a72cb8d651b3e07691c8f");
+        uint256 genesisHash = consensus.hashGenesisBlock;
+        assert(consensus.hashGenesisBlock == uint256S("0x79cdeb4714560245d67df16210d7faff2ad4e3e6839a72cb8d651b3e07691c8f"));
 //        assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
         if (!fHelpOnly) {
@@ -850,16 +858,20 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")},
-                { 1, devnetGenesis.GetHash() },
+                { 0, uint256S("79cdeb4714560245d67df16210d7faff2ad4e3e6839a72cb8d651b3e07691c8f")},
+                // { 1, devnetGenesis.GetHash() },
             }
         };
 
         chainTxData = ChainTxData{
-            devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
-            2,                            // * we only have 2 coinbase transactions when a devnet is started up
-            0.01                          // * estimated number of transactions per second
+            0,
+            0,
+            0
         };
+        //     devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
+        //    2,                            // * we only have 2 coinbase transactions when a devnet is started up
+        //    0.01                          // * estimated number of transactions per second
+        //};
     }
 };
 
@@ -962,7 +974,9 @@ public:
 
         genesis = CreateGenesisBlock(1518696183, 574752, 0x207fffff, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x671d0510c128608897d98d1819d26b40810c8b7e4901447a909c87a9edc2f5ec"));
+        uint256 genesisComp = uint256S("0x51f1966d9506ed50bf130db397758f09970e26523bf7cad0d76740e2ebb8396e");
+        uint256 genesisHash = consensus.hashGenesisBlock;
+        assert(consensus.hashGenesisBlock == uint256S("0x51f1966d9506ed50bf130db397758f09970e26523bf7cad0d76740e2ebb8396e"));
 //        assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -991,7 +1005,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x671d0510c128608897d98d1819d26b40810c8b7e4901447a909c87a9edc2f5ec")},
+                {0, uint256S("0x51f1966d9506ed50bf130db397758f09970e26523bf7cad0d76740e2ebb8396e")},
             }
         };
 
