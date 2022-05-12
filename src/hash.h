@@ -602,5 +602,6 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 
   memcpy(&hash[0], hashA, 32);
   return hash[0];
+}
 
 #endif // BITCOIN_HASH_H
