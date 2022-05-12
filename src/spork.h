@@ -110,9 +110,9 @@ public:
     /**
      * GetHash returns the double-sha256 hash of the serialized spork message.
      */
-    uint256 GetHash() const;
+    uint256 GetHash() const { return HashQuark(BEGIN(nSporkID), END(nTimeSigned)); };
 
-    /**
+   /**
      * GetSignatureHash returns the hash of the serialized spork message
      * without the signature included. The intent of this method is to get the
      * hash to be signed.
