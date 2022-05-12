@@ -442,7 +442,7 @@ inline uint256 HashX11(const T1 pbegin, const T1 pend)
 }
 
 /* ----------- Quark Hash ------------------------------------------------ */
-/* template <typename T1>
+template <typename T1>
 inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 
 {
@@ -454,8 +454,8 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_skein512_context ctx_skein;
     static unsigned char pblank[1];
 
-    //uint512 mask = 8;
-    //uint512 zero = 0;
+    uint32_t mask = 8;
+    uint32_t zero = 0;
 
     uint512 hash[9];
 
@@ -469,17 +469,17 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_bmw512(&ctx_bmw, static_cast<const void*>(&hash[0]), 64);
     sph_bmw512_close(&ctx_bmw, static_cast<void*>(&hash[1]));
 
-    //if ((hash[1] &mask) != zero) {
+    if ((hash[1] &mask) != zero) {
         sph_groestl512_init(&ctx_groestl);
         // ZGROESTL;
         sph_groestl512(&ctx_groestl, static_cast<const void*>(&hash[1]), 64);
         sph_groestl512_close(&ctx_groestl, static_cast<void*>(&hash[2]));
-    //} else {
-    //    sph_skein512_init(&ctx_skein);
-    //    // ZSKEIN;
-    //    sph_skein512(&ctx_skein, static_cast<const void*>(&hash[1]), 64);
-    //    sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[2]));
-    //}
+    } else {
+        sph_skein512_init(&ctx_skein);
+        // ZSKEIN;
+        sph_skein512(&ctx_skein, static_cast<const void*>(&hash[1]), 64);
+        sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[2]));
+    }
 
     sph_groestl512_init(&ctx_groestl);
     // ZGROESTL;
@@ -491,17 +491,17 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_jh512(&ctx_jh, static_cast<const void*>(&hash[3]), 64);
     sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[4]));
 
-    //if ((hash[4] &mask) != zero) {
-    //    sph_blake512_init(&ctx_blake);
-    //    // ZBLAKE;
-    //    sph_blake512(&ctx_blake, static_cast<const void*>(&hash[4]), 64);
-    //    sph_blake512_close(&ctx_blake, static_cast<void*>(&hash[5]));
-    //} else {
+    if ((hash[4] &mask) != zero) {
+        sph_blake512_init(&ctx_blake);
+        // ZBLAKE;
+        sph_blake512(&ctx_blake, static_cast<const void*>(&hash[4]), 64);
+        sph_blake512_close(&ctx_blake, static_cast<void*>(&hash[5]));
+    } else {
         sph_bmw512_init(&ctx_bmw);
         // ZBMW;
         sph_bmw512(&ctx_bmw, static_cast<const void*>(&hash[4]), 64);
         sph_bmw512_close(&ctx_bmw, static_cast<void*>(&hash[5]));
-   // }
+    }
 
     sph_keccak512_init(&ctx_keccak);
     // ZKECCAK;
@@ -513,21 +513,21 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_skein512(&ctx_skein, static_cast<const void*>(&hash[6]), 64);
     sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[7]));
 
-    //if ((hash[7] &mask) != zero) {
-    //    sph_keccak512_init(&ctx_keccak);
+    if ((hash[7] &mask) != zero) {
+        sph_keccak512_init(&ctx_keccak);
         // ZKECCAK;
-    //    sph_keccak512(&ctx_keccak, static_cast<const void*>(&hash[7]), 64);
-    //    sph_keccak512_close(&ctx_keccak, static_cast<void*>(&hash[8]));
-    //} else {
+        sph_keccak512(&ctx_keccak, static_cast<const void*>(&hash[7]), 64);
+        sph_keccak512_close(&ctx_keccak, static_cast<void*>(&hash[8]));
+    } else {
         sph_jh512_init(&ctx_jh);
         // ZJH;
         sph_jh512(&ctx_jh, static_cast<const void*>(&hash[7]), 64);
         sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[8]));
-    //}
+    }
     return hash[8].trim256();
-} */
+}
 //! quark_hash
-template <typename T1>
+/*template <typename T1>
 inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 {
   sph_blake512_context ctx_blake;
@@ -602,6 +602,6 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 
   memcpy(&hash[0], hashA, 32);
   return hash[0];
-}
+} */
 
 #endif // BITCOIN_HASH_H
