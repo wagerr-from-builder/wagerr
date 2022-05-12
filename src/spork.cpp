@@ -353,7 +353,7 @@ std::string CSporkManager::ToString() const
     return strprintf("Sporks: %llu", mapSporksActive.size());
 }
 
-uint256 CSporkMessage::GetHash() const = { return HashQuark(BEGIN(nSporkID), END(nTimeSigned)); };
+uint256 CSporkMessage::GetHash() const
 {
     return SerializeHash(*this);
 }
