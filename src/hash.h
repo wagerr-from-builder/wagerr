@@ -415,15 +415,15 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[4]));
 
     //if ((hash[4] &mask) != zero) {
-        sph_blake512_init(&ctx_blake);
-        // ZBLAKE;
-        sph_blake512(&ctx_blake, static_cast<const void*>(&hash[4]), 64);
-        sph_blake512_close(&ctx_blake, static_cast<void*>(&hash[5]));
+    //    sph_blake512_init(&ctx_blake);
+    //    // ZBLAKE;
+    //    sph_blake512(&ctx_blake, static_cast<const void*>(&hash[4]), 64);
+    //    sph_blake512_close(&ctx_blake, static_cast<void*>(&hash[5]));
     //} else {
-    //    sph_bmw512_init(&ctx_bmw);
+        sph_bmw512_init(&ctx_bmw);
         // ZBMW;
-    //    sph_bmw512(&ctx_bmw, static_cast<const void*>(&hash[4]), 64);
-    //    sph_bmw512_close(&ctx_bmw, static_cast<void*>(&hash[5]));
+        sph_bmw512(&ctx_bmw, static_cast<const void*>(&hash[4]), 64);
+        sph_bmw512_close(&ctx_bmw, static_cast<void*>(&hash[5]));
    // }
 
     sph_keccak512_init(&ctx_keccak);
