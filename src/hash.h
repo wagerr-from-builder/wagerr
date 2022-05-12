@@ -525,8 +525,8 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
         sph_jh512(&ctx_jh, static_cast<const void*>(&hash[7]), 64);
         sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[8]));
     }
-    memcpy(&hash[0], hashfinal, 32);
-    return hashfinal[0].trim256();
+    memcpy(&hash[8], hashfinal, 32);
+    return hashfinal[8].trim256();
 }
 
 #endif // BITCOIN_HASH_H
