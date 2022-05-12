@@ -355,7 +355,7 @@ std::string CSporkManager::ToString() const
 
 uint256 CSporkMessage::GetHash() const
 {
-    return SerializeHash(*this);
+    return HashQuark(BEGIN(nSporkID), END(nTimeSigned));
 }
 
 uint256 CSporkMessage::GetSignatureHash() const
