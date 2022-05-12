@@ -456,8 +456,9 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 
     uint32_t mask = 8;
     uint32_t zero = 0;
-
     uint32_t hash[9];
+
+    uint512 hashfinal[9];
 
     sph_blake512_init(&ctx_blake);
     // ZBLAKE;
@@ -524,8 +525,10 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
         sph_jh512(&ctx_jh, static_cast<const void*>(&hash[7]), 64);
         sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[8]));
     }
-    return hash[8].trim256();
+    memcpy(&hash[0], hashfinal, 32);
+    return hashfinal[0];
 }
+
 //! quark_hash
 /*template <typename T1>
 inline uint256 HashQuark(const T1 pbegin, const T1 pend)
