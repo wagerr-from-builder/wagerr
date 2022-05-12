@@ -110,7 +110,7 @@ public:
     /**
      * GetHash returns the double-sha256 hash of the serialized spork message.
      */
-    uint256 GetHash() const;
+    uint256 GetHash() const { return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size()); }
 
    /**
      * GetSignatureHash returns the hash of the serialized spork message
