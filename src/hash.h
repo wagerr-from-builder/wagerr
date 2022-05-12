@@ -458,7 +458,7 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     uint32_t zero = 0;
     uint32_t hash[9];
 
-    uint512 hashfinal[9];
+    uint256 hashfinal[9];
 
     sph_blake512_init(&ctx_blake);
     // ZBLAKE;
