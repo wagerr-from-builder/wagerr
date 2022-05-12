@@ -19,7 +19,7 @@ uint256 CBlockHeader::GetHash() const
     CVectorWriter ss(SER_GETHASH, PROTOCOL_VERSION, vch, 0);
     ss << *this;
     if ((nVersion & BLOCKTYPEBITS_MASK) == BlockTypeBits::BLOCKTYPE_MINING) {
-        return HashX11((const char *)vch.data(), (const char *)vch.data() + vch.size());
+        return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size());
     } else {
         return Hash((const char *)vch.data(), (const char *)vch.data() + vch.size());
     }
