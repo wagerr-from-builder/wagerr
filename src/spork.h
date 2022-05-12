@@ -108,11 +108,11 @@ public:
     }
 
     /**
-     * GetHash returns the double-sha256 hash of the serialized spork message.
+     * GetHash returns the quark hash of the serialized spork message.
      */
     uint256 GetHash() const;
 
-    /**
+   /**
      * GetSignatureHash returns the hash of the serialized spork message
      * without the signature included. The intent of this method is to get the
      * hash to be signed.
