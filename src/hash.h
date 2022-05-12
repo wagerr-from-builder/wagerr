@@ -391,7 +391,7 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_bmw512(&ctx_bmw, static_cast<const void*>(&hash[0]), 64);
     sph_bmw512_close(&ctx_bmw, static_cast<void*>(&hash[1]));
 
-    if ((hash[1] & mask) != zero) {
+    if ((hash[1] &mask) != zero) {
         sph_groestl512_init(&ctx_groestl);
         // ZGROESTL;
         sph_groestl512(&ctx_groestl, static_cast<const void*>(&hash[1]), 64);
@@ -413,7 +413,7 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_jh512(&ctx_jh, static_cast<const void*>(&hash[3]), 64);
     sph_jh512_close(&ctx_jh, static_cast<void*>(&hash[4]));
 
-    if ((hash[4] & mask) != zero) {
+    if ((hash[4] &mask) != zero) {
         sph_blake512_init(&ctx_blake);
         // ZBLAKE;
         sph_blake512(&ctx_blake, static_cast<const void*>(&hash[4]), 64);
@@ -435,7 +435,7 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_skein512(&ctx_skein, static_cast<const void*>(&hash[6]), 64);
     sph_skein512_close(&ctx_skein, static_cast<void*>(&hash[7]));
 
-    if ((hash[7] & mask) != zero) {
+    if ((hash[7] &mask) != zero) {
         sph_keccak512_init(&ctx_keccak);
         // ZKECCAK;
         sph_keccak512(&ctx_keccak, static_cast<const void*>(&hash[7]), 64);
