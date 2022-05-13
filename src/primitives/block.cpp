@@ -32,8 +32,8 @@ uint256 CBlockHeader::GetHash() const
     CVectorWriter ss(SER_GETHASH, PROTOCOL_VERSION, vch, 0);
     ss << *this;
     if (nVersion < 4)
-        return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size());
-        //return HashQuark(BEGIN(nVersion), END(nNonce));
+        //return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size());
+        return HashQuark(BEGIN(nVersion), END(nNonce));
 
     if (nVersion < 7)
         return Hash((const char *)vch.data(), (const char *)vch.data() + vch.size());
