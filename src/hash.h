@@ -27,7 +27,11 @@
 #include <crypto/sph_echo.h>
 #include <crypto/sha512.h>
 
+#include <iomanip>
+#include <openssl/sha.h>
+#include <sstream>
 #include <vector>
+
 
 typedef uint256 ChainCode;
 
