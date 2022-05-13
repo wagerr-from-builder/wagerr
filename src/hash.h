@@ -32,6 +32,8 @@
 #include <sstream>
 #include <vector>
 
+using namespace std;
+
 
 typedef uint256 ChainCode;
 
