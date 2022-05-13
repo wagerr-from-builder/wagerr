@@ -458,8 +458,8 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_skein512_context ctx_skein;
     static unsigned char pblank[1];
 
-    uint512 mask = 8;
-    uint512 zero = 0;
+    //uint512 mask = 8;
+    //uint512 zero = 0;
 
     uint512 hash[9];
 
