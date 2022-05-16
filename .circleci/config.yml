@@ -333,59 +333,6 @@ jobs:
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-glibc-back-compat --enable-reduce-exports
             make -j${JOBS}
-  win32_bionic_depends:
-    docker:
-      - image: cimg/base:stable-18.04
-        user: root
-    environment:
-      HOST: i686-w64-mingw32
-      JOBS: 4
-    steps:
-      - checkout
-      - restore_cache:
-          keys: 
-          - wagerr-win32-depends-{{ .Branch }}-{{ .Revision }}
-      - run:
-          command: |
-            if [ -d depends/i686-w64-mingw32 ]; then
-              exit
-            else
-              git submodule update --init --recursive
-              apt-get -y update
-              apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 mingw-w64 g++-mingw-w64 g++-multilib gcc-multilib bison
-              update-alternatives --install /usr/bin/i686-w64-mingw32-gcc i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix 100
-              update-alternatives --install /usr/bin/i686-w64-mingw32-g++ i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix 100
-              make -j${JOBS} -C depends HOST=${HOST}
-            fi
-      - save_cache:
-          key: wagerr-win32-depends-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - /root/project/depends/built
-            - /root/project/depends/sources
-            - /root/project/depends/i686-w64-mingw32
-            - /root/project/depends/work
-  win32_bionic:
-    docker:
-      - image: cimg/base:stable-18.04
-        user: root
-    environment:
-      HOST: i686-w64-mingw32
-      JOBS: 4
-    steps:
-      - checkout
-      - restore_cache:
-          keys: 
-          - wagerr-win32-depends-{{ .Branch }}-{{ .Revision }}
-      - run:
-          command: |
-            git submodule update --init --recursive
-            apt-get -y update
-            apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 mingw-w64 g++-mingw-w64 g++-multilib gcc-multilib bison
-            update-alternatives --install /usr/bin/i686-w64-mingw32-gcc i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix 100
-            update-alternatives --install /usr/bin/i686-w64-mingw32-g++ i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix 100
-            ./autogen.sh
-            ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-reduce-exports
-            make -j${JOBS}
   win64_bionic_depends:
     docker:
       - image: cimg/base:stable-18.04
@@ -460,10 +407,10 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 librsvg2-bin libtiff-tools imagemagick libcap-dev libz-dev libbz2-dev python3-dev python3-setuptools fonts-tuffy g++-8-multilib gcc-8-multilib bison
-              wget https://github.com/gitianuser/MacOSX-SDKs/releases/download/MacOSX10.11.sdk/MacOSX10.11.sdk.tar.xz
+              wget ttps://bitcoincore.org/depends-sources/sdks/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
               mkdir -p `pwd`/depends/SDKs
               echo "Extracting Mac SDK"
-              tar -C `pwd`/depends/SDKs -xJf ./MacOSX10.11.sdk.tar.xz
+              tar -C `pwd`/depends/SDKs -xf ./Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -531,12 +478,6 @@ workflows:
       - arm64_bionic:
           requires:
             - arm64_bionic_depends
-      - win32_bionic_depends:
-          requires:
-            - lint_all
-      - win32_bionic:
-          requires:
-            - win32_bionic_depends
       - win64_bionic_depends:
           requires:
             - lint_all
