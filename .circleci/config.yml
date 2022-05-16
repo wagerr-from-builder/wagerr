@@ -100,13 +100,13 @@ jobs:
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
             make -j${JOBS}
-            apt-get -y install libfontconfig1
-            make -j${JOBS} check
-            git clone http://github.com/wagerr/wagerr_hash
-            cd wagerr_hash
-            python3 setup.py install
-            cd -
-            test/functional/test_runner.py
+            #apt-get -y install libfontconfig1
+            #make -j${JOBS} check
+            #git clone http://github.com/wagerr/wagerr_hash
+            #cd wagerr_hash
+            #python3 setup.py install
+            #cd -
+            #test/functional/test_runner.py
   x86_64_focal_depends:
     docker:
       - image: cimg/base:stable-20.04
