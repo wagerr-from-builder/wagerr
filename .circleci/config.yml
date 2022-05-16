@@ -22,7 +22,7 @@ jobs:
             # secp256k1
             git remote add -f secp256k1 https://github.com/bitcoin-core/secp256k1.git
             # ctaes
-            git remote add -f crypto/ctaes https://github.com/bitcoin-core/ctaes
+            git remote add -f ctaes https://github.com/bitcoin-core/ctaes
             # univalue
             git remote add -f univalue https://github.com/jgarzik/univalue
             git rm -rf src/leveldb
