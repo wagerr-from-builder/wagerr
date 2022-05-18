@@ -107,18 +107,18 @@ script: |
   LD64_VERSION=6
   # Build dependencies for each host
   for i in $HOSTS; do
-  #CC=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
-  #            -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-  #            -u LIBRARY_PATH \
-  CC=clang --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
+  CC=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
+              -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
+              -u LIBRARY_PATH \
+              ${BASE_PREFIX}/${i}/bin/clang --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B${BASE_PREFIX}/${i}/bin -mlinker-version=$(LD64_VERSION) \
               -isysroot$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
-              -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include`
-  #CXX=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
-  #            -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-  #            -u LIBRARY_PATH \
-  CXX=clang++ --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
+              -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include'
+  CXX=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
+              -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
+              -u LIBRARY_PATH \
+              ${BASE_PREFIX}/${i}/bin/clang++ --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B${BASE_PREFIX}/${i}/bin -mlinker-version=$(LD64_VERSION) \
               -isysroot$(OSX_SDK) \
               -stdlib=libc++ \
