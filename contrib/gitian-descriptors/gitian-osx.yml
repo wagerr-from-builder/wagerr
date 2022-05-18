@@ -99,7 +99,7 @@ script: |
 
   mkdir -p ${BASEPREFIX}/SDKs
   tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
-  OSX_SDK=${BASEPREFIX}/SDKs//Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers
+  OSX_SDK=${BASEPREFIX}/SDKs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers
   OSX_MIN_VERSION=10.14
   OSX_SDK_VERSION=10.15.6
   XCODE_VERSION=12.1
@@ -107,7 +107,7 @@ script: |
   LD64_VERSION=6
   # Build dependencies for each host
   for i in $HOSTS; do
-  CC=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
+  CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH \
               clang --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
@@ -115,7 +115,7 @@ script: |
               -isysroot$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
-  CXX=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
+  CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH \
               clang++ --target=${i} -mmacosx-version-min=$(OSX_MIN_VERSION) \
