@@ -121,20 +121,20 @@ script: |
   CC=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH` \
-              ${BASEPREFIX}/depends/${i}/bin/clang --target=${i} -mmacosx-version-min=${OSX_MIN_VERSION} \
-              -B${BASEPREFIX}/depends/${i}/bin -mlinker-version=${LD64_VERSION} \
+              ${BASEPREFIX}/${i}/bin/clang --target=${i} -mmacosx-version-min=${OSX_MIN_VERSION} \
+              -B${BASEPREFIX}/${i}/bin -mlinker-version=${LD64_VERSION} \
               -isysroot${OSX_SDK} \
               -Xclang -internal-externc-isystem${BASEPREFIX}/${i}/include \
               -Xclang -internal-externc-isystem${OSX_SDK}/usr/include
   CXX=`env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH` \
-              ${BASEPREFIX}/depends/${i}/bin/clang++ --target=${i} -mmacosx-version-min=${OSX_MIN_VERSION} \
-              -B${BASEPREFIX}/depends/${i}/bin -mlinker-version=${LD64_VERSION} \
+              ${BASEPREFIX}/${i}/bin/clang++ --target=${i} -mmacosx-version-min=${OSX_MIN_VERSION} \
+              -B${BASEPREFIX}/${i}/bin -mlinker-version=${LD64_VERSION} \
               -isysroot${OSX_SDK} \
               -stdlib=libc++ \
               -stdlib++-isystem${OSX_SDK}/usr/include/c++/v1 \
-              -Xclang -internal-externc-isystem${BASEPREFIX}/depends/${i}/include \
+              -Xclang -internal-externc-isystem${BASEPREFIX}/${i}/include \
               -Xclang -internal-externc-isystem${OSX_SDK}/usr/include
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
