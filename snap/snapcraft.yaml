@@ -97,9 +97,9 @@ apps:
     plugs: [home]
 parts:
   wagerr:
-    source: http://github.com/wagerr/wagerr
+    source: http://github.com/wagerrck/wagerr
     source-type: git
-    source-tag: v5.0.0
+    source-tag: snapcraft
     plugin: nil
     override-build: |
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
