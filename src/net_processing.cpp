@@ -2258,7 +2258,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
             // DeepOnion: Due to Tor proxy we do not know it's onion address, so set it here.
            if(fLogIPs)
-                LogPrint(BCLog::NET, "ProcessMessages: setting peer %d AddrName to %s isTorV3 ? %s\n", pfrom->GetId(), addrFrom.ToString().c_str(), addrFrom.IsTorV3() ? "yes" : "no");
+            //    LogPrint(BCLog::NET, "ProcessMessages: setting peer %d AddrName to %s isTorV3 ? %s\n", pfrom->GetId(), addrFrom.ToString().c_str(), addrFrom.IsTorV3() ? "yes" : "no");
             pfrom->MaybeSetAddrName(addrFrom.ToString());
         }
 
