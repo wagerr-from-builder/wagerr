@@ -22,258 +22,233 @@ Before every major release:
 * Update hardcoded [seeds](/contrib/seeds/README.md). TODO: Give example PR for Wagerr
 * Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
-  [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
+  [this pull request](https://github.com/wagerr/wagerr/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
+
+## Building
 
 ### First time / New builders
 
-If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
+Install Guix using one of the installation methods detailed in
+[contrib/guix/INSTALL.md](/contrib/guix/INSTALL.md).
 
 Check out the source code in the following directory hierarchy.
 
-	cd /path/to/your/toplevel/build
-	git clone https://github.com/wagerr/gitian.sigs.git
-	git clone https://github.com/wagerr/wagerr-detached-sigs.git
-	git clone https://github.com/devrandom/gitian-builder.git
-	git clone https://github.com/wagerr/wagerr.git
+    cd /path/to/your/toplevel/build
+    git clone https://github.com/wagerr/guix.sigs.git
+    git clone https://github.com/wagerr/wagerr-detached-sigs.git
+    git clone https://github.com/wagerr/wagerr.git
 
-### Wagerr Core maintainers/release engineers, suggestion for writing release notes
+### Write the release notes
 
-Write release notes. git shortlog helps a lot, for example:
+Open a draft of the release notes for collaborative editing at https://github.com/wagerr/wagerr-devwiki/wiki.
 
-    git shortlog --no-merges v(current version, e.g. 0.12.2)..v(new version, e.g. 0.12.3)
+For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
+
+Generate the change log. As this is a huge amount of work to do manually, there is the `list-pulls` script to do a pre-sorting step based on github PR metadata. See the [documentation in the README.md](https://github.com/wagerr/wagerr-maintainer-tools/blob/master/README.md#list-pulls).
 
 Generate list of authors:
 
-    git log --format='- %aN' v(current version, e.g. 0.16.0)..v(new version, e.g. 0.16.1) | sort -fiu
+    git log --format='- %aN' v(current version, e.g. 0.20.0)..v(new version, e.g. 0.20.1) | sort -fiu
 
-Tag version (or release candidate) in git
+### Setup and perform Guix builds
 
-    git tag -s v(new version, e.g. 0.12.3)
+Checkout the Wagerr version you'd like to build:
 
-### Setup and perform Gitian builds
+```sh
+pushd ./wagerr
+SIGNER='(your builder key, ie bluematt, sipa, etc)'
+VERSION='(new version without v-prefix, e.g. 0.20.0)'
+git fetch origin "v${VERSION}"
+git checkout "v${VERSION}"
+popd
+```
 
-If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--build" command. Otherwise ignore this.
+Ensure your guix.sigs are up-to-date if you wish to `guix-verify` your builds
+against other `guix-attest` signatures.
 
-Setup Gitian descriptors:
+```sh
+git -C ./guix.sigs pull
+```
 
-    pushd ./wagerr
-    export SIGNER="(your Gitian key, ie UdjinM6, Pasta, etc)"
-    export VERSION=(new version, e.g. 0.12.3)
-    git fetch
-    git checkout v${VERSION}
-    popd
+### Create the macOS SDK tarball (first time, or when SDK version changes)
 
-Ensure your gitian.sigs are up-to-date if you wish to gverify your builds against other Gitian signatures.
+Create the macOS SDK tarball, see the [macdeploy
+instructions](/contrib/macdeploy/README.md#deterministic-macos-dmg-notes) for
+details.
 
-    pushd ./gitian.sigs
-    git pull
-    popd
+### Build and attest to build outputs
 
-Ensure gitian-builder is up-to-date:
+Follow the relevant Guix README.md sections:
+- [Building](/contrib/guix/README.md#building)
+- [Attesting to build outputs](/contrib/guix/README.md#attesting-to-build-outputs)
 
-    pushd ./gitian-builder
-    git pull
-    popd
+### Verify other builders' signatures to your own (optional)
 
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
+- [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
-### Fetch and create inputs: (first time, or when dependency versions change)
+### Commit your non codesigned signature to guix.sigs
 
-    pushd ./gitian-builder
-    mkdir -p inputs
-    wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
-    echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c
-    popd
+```sh
+pushd ./guix.sigs
+git add "${VERSION}/${SIGNER}"/noncodesigned.SHA256SUMS{,.asc}
+git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
+git push  # Assuming you can push to the guix.sigs tree
+popd
+```
 
-Create the OS X SDK tarball, see the [OS X readme](README_osx.md) for details, and copy it into the inputs directory.
+## Codesigning
 
-### Optional: Seed the Gitian sources cache and offline git repositories
+### macOS codesigner only: Create detached macOS signatures (assuming [signapple](https://github.com/achow101/signapple/) is installed and up to date with master branch)
 
-NOTE: Gitian is sometimes unable to download files. If you have errors, try the step below.
-
-By default, Gitian will fetch source files as needed. To cache them ahead of time, make sure you have checked out the tag you want to build in wagerr, then:
-
-    pushd ./gitian-builder
-    make -C ../wagerr/depends download SOURCES_PATH=`pwd`/cache/common
-    popd
-
-Only missing files will be fetched, so this is safe to re-run for each build.
-
-NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from local URLs. For example:
-
-    pushd ./gitian-builder
-    ./bin/gbuild --url wagerr=/path/to/wagerr,signature=/path/to/sigs {rest of arguments}
-    popd
-
-The gbuild invocations below <b>DO NOT DO THIS</b> by default.
-
-### Build and sign Wagerr Core for Linux, Windows, and OS X:
-
-    pushd ./gitian-builder
-    ./bin/gbuild --num-make 2 --memory 3000 --commit wagerr=v${VERSION} ../wagerr/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../wagerr/contrib/gitian-descriptors/gitian-linux.yml
-    mv build/out/wagerr-*.tar.gz build/out/src/wagerr-*.tar.gz ../
-
-    ./bin/gbuild --num-make 2 --memory 3000 --commit wagerr=v${VERSION} ../wagerr/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../wagerr/contrib/gitian-descriptors/gitian-win.yml
-    mv build/out/wagerr-*-win-unsigned.tar.gz inputs/wagerr-win-unsigned.tar.gz
-    mv build/out/wagerr-*.zip build/out/wagerr-*.exe ../
-
-    ./bin/gbuild --num-make 2 --memory 3000 --commit wagerr=v${VERSION} ../wagerr/contrib/gitian-descriptors/gitian-osx.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../wagerr/contrib/gitian-descriptors/gitian-osx.yml
-    mv build/out/wagerr-*-osx-unsigned.tar.gz inputs/wagerr-osx-unsigned.tar.gz
-    mv build/out/wagerr-*.tar.gz build/out/wagerr-*.dmg ../
-    popd
-
-Build output expected:
-
-  1. source tarball (`wagerr-${VERSION}.tar.gz`)
-  2. linux 32-bit and 64-bit dist tarballs (`wagerr-${VERSION}-linux[32|64].tar.gz`)
-  3. windows 32-bit and 64-bit unsigned installers and dist zips (`wagerr-${VERSION}-win[32|64]-setup-unsigned.exe`, `wagerr-${VERSION}-win[32|64].zip`)
-  4. OS X unsigned installer and dist tarball (`wagerr-${VERSION}-osx-unsigned.dmg`, `wagerr-${VERSION}-osx64.tar.gz`)
-  5. Gitian signatures (in `gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
-
-### Verify other gitian builders signatures to your own. (Optional)
-
-Add other gitian builders keys to your gpg keyring, and/or refresh keys.
-
-    gpg --import wagerr/contrib/gitian-keys/*.pgp
-    gpg --refresh-keys
-
-Verify the signatures
-
-    pushd ./gitian-builder
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../wagerr/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../wagerr/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../wagerr/contrib/gitian-descriptors/gitian-osx.yml
-    popd
-
-### Next steps:
-
-Commit your signature to gitian.sigs:
-
-    pushd gitian.sigs
-    git add ${VERSION}-linux/"${SIGNER}"
-    git add ${VERSION}-win-unsigned/"${SIGNER}"
-    git add ${VERSION}-osx-unsigned/"${SIGNER}"
-    git commit -a
-    git push  # Assuming you can push to the gitian.sigs tree
-    popd
-
-Codesigner only: Create Windows/OS X detached signatures:
-- Only one person handles codesigning. Everyone else should skip to the next step.
-- Only once the Windows/OS X builds each have 3 matching signatures may they be signed with their respective release keys.
-
-Codesigner only: Sign the osx binary:
-
-    transfer wagerr-osx-unsigned.tar.gz to osx for signing
     tar xf wagerr-osx-unsigned.tar.gz
-    ./detached-sig-create.sh -s "Key ID" -o runtime
+    ./detached-sig-create.sh /path/to/codesign.p12
     Enter the keychain password and authorize the signature
-    Move signature-osx.tar.gz back to the gitian host
+    signature-osx.tar.gz will be created
 
-Codesigner only: Sign the windows binaries:
+### Windows codesigner only: Create detached Windows signatures
 
     tar xf wagerr-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
-Codesigner only: Commit the detached codesign payloads:
+### Windows and macOS codesigners only: test code signatures
+It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
+However if this is done, once the release has been tagged in the wagerr-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds.
 
-    cd ~/wagerr-detached-sigs
-    checkout the appropriate branch for this release series
-    rm -rf *
-    tar xf signature-osx.tar.gz
-    tar xf signature-win.tar.gz
-    git add -a
-    git commit -m "point to ${VERSION}"
-    git tag -s v${VERSION} HEAD
-    git push the current branch and new tag
+### Windows and macOS codesigners only: Commit the detached codesign payloads
 
-Non-codesigners: wait for Windows/OS X detached signatures:
+```sh
+pushd ./wagerr-detached-sigs
+# checkout the appropriate branch for this release series
+rm -rf ./*
+tar xf signature-osx.tar.gz
+tar xf signature-win.tar.gz
+git add -A
+git commit -m "point to ${VERSION}"
+git tag -s "v${VERSION}" HEAD
+git push the current branch and new tag
+popd
+```
 
-- Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
+### Non-codesigners: wait for Windows and macOS detached signatures
+
+- Once the Windows and macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
 - Detached signatures will then be committed to the [wagerr-detached-sigs](https://github.com/wagerr/wagerr-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
-Create (and optionally verify) the signed OS X binary:
+### Create the codesigned build outputs
 
-    pushd ./gitian-builder
-    ./bin/gbuild -i --commit signature=v${VERSION} ../wagerr/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../wagerr/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../wagerr/contrib/gitian-descriptors/gitian-osx-signer.yml
-    mv build/out/wagerr-osx-signed.dmg ../wagerr-${VERSION}-osx.dmg
-    popd
+- [Codesigning build outputs](/contrib/guix/README.md#codesigning-build-outputs)
 
-Create (and optionally verify) the signed Windows binaries:
+### Verify other builders' signatures to your own (optional)
 
-    pushd ./gitian-builder
-    ./bin/gbuild -i --commit signature=v${VERSION} ../wagerr/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../wagerr/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../wagerr/contrib/gitian-descriptors/gitian-win-signer.yml
-    mv build/out/wagerr-*win64-setup.exe ../wagerr-${VERSION}-win64-setup.exe
-    mv build/out/wagerr-*win32-setup.exe ../wagerr-${VERSION}-win32-setup.exe
-    popd
+- [Add other builders keys to your gpg keyring, and/or refresh keys](/contrib/builder-keys/README.md)
+- [Verifying build output attestations](/contrib/guix/README.md#verifying-build-output-attestations)
 
-Commit your signature for the signed OS X/Windows binaries:
+### Commit your codesigned signature to guix.sigs (for the signed macOS/Windows binaries)
 
-    pushd gitian.sigs
-    git add ${VERSION}-osx-signed/"${SIGNER}"
-    git add ${VERSION}-win-signed/"${SIGNER}"
-    git commit -a
-    git push  # Assuming you can push to the gitian.sigs tree
-    popd
+```sh
+pushd ./guix.sigs
+git add "${VERSION}/${SIGNER}"/all.SHA256SUMS{,.asc}
+git commit -m "Add attestations by ${SIGNER} for ${VERSION} codesigned"
+git push  # Assuming you can push to the guix.sigs tree
+popd
+```
 
-### After 3 or more people have gitian-built and their results match:
+## After 3 or more people have guix-built and their results match
 
-- Create `SHA256SUMS.asc` for the builds, and GPG-sign it:
+Combine the `all.SHA256SUMS.asc` file from all signers into `SHA256SUMS.asc`:
 
 ```bash
-sha256sum * > SHA256SUMS
+cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 ```
 
-The list of files should be:
-```
-wagerr-${VERSION}-aarch64-linux-gnu.tar.gz
-wagerr-${VERSION}-arm-linux-gnueabihf.tar.gz
-wagerr-${VERSION}-i686-pc-linux-gnu.tar.gz
-wagerr-${VERSION}-x86_64-linux-gnu.tar.gz
-wagerr-${VERSION}-osx64.tar.gz
-wagerr-${VERSION}-osx.dmg
-wagerr-${VERSION}.tar.gz
-wagerr-${VERSION}-win32-setup.exe
-wagerr-${VERSION}-win32.zip
-wagerr-${VERSION}-win64-setup.exe
-wagerr-${VERSION}-win64.zip
-```
-The `*-debug*` files generated by the Gitian build contain debug symbols
-for troubleshooting by developers. It is assumed that anyone that is interested
-in debugging can run Gitian to generate the files for themselves. To avoid
-end-user confusion about which file to pick, as well as save storage
-space *do not upload these to the wagerr.com server*.
 
-- GPG-sign it, delete the unsigned file:
-```
-gpg --digest-algo sha256 --clearsign SHA256SUMS # outputs SHA256SUMS.asc
-rm SHA256SUMS
-```
-(the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
-Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
+- Upload to the wagerr.org server (`/var/www/bin/wagerr-${VERSION}/`):
+    1. The contents of each `./wagerr/guix-build-${VERSION}/output/${HOST}/` directory, except for
+       `*-debug*` files.
 
-- Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the wagerr.com server
+       Guix will output all of the results into host subdirectories, but the SHA256SUMS
+       file does not include these subdirectories. In order for downloads via torrent
+       to verify without directory structure modification, all of the uploaded files
+       need to be in the same directory as the SHA256SUMS file.
 
-- Update wagerr.com
+       The `*-debug*` files generated by the guix build contain debug symbols
+       for troubleshooting by developers. It is assumed that anyone that is
+       interested in debugging can run guix to generate the files for
+       themselves. To avoid end-user confusion about which file to pick, as well
+       as save storage space *do not upload these to the wagerr.org server,
+       nor put them in the torrent*.
+
+       ```sh
+       find guix-build-${VERSION}/output/ -maxdepth 2 -type f -not -name "SHA256SUMS.part" -and -not -name "*debug*" -exec scp {} user@wagerr.org:/var/www/bin/wagerr-${VERSION} \;
+       ```
+
+    2. The `SHA256SUMS` file
+
+    3. The `SHA256SUMS.asc` combined signature file you just created
+
+- Create a torrent of the `/var/www/bin/wagerr-${VERSION}` directory such
+  that at the top level there is only one file: the `wagerr-${VERSION}`
+  directory containing everything else. Name the torrent
+  `wagerr-${VERSION}.torrent` (note that there is no `-core-` in this name).
+
+  Optionally help seed this torrent. To get the `magnet:` URI use:
+
+  ```sh
+  transmission-show -m <torrent file>
+  ```
+
+  Insert the magnet URI into the announcement sent to mailing lists. This permits
+  people without access to `wagerr.org` to download the binary distribution.
+  Also put it into the `optional_magnetlink:` slot in the YAML file for
+  wagerr.org.
+
+- Update other repositories and websites for new version
+
+  - wagerr.org blog post
+
+  - wagerr.org maintained versions update:
+    [table](https://github.com/wagerr/wagerr.org/commits/master/_includes/posts/maintenance-table.md)
+
+  - Delete post-EOL [release branches](https://github.com/wagerr/wagerr/branches/all) and create a tag `v${branch_name}-final`.
+
+  - Delete ["Needs backport" labels](https://github.com/wagerr/wagerr/labels?q=backport) for non-existing branches.
+
+  - wagerr.org RPC documentation update
+
+      - Install [golang](https://golang.org/doc/install)
+
+      - Install the new Wagerr release
+
+      - Run wagerrd on regtest
+
+      - Clone the [wagerr.org repository](https://github.com/wagerr/wagerr.org)
+
+      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with wagerr-cli in PATH
+
+      - Add the generated files to git
+
+  - Update packaging repo
+
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.wagerr.wagerr-qt/pull/2
+
+      - Push the snap, see https://github.com/wagerr/packaging/blob/master/snap/build.md
+
+  - This repo
+
+      - Archive the release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
+
+      - Create a [new GitHub release](https://github.com/wagerr/wagerr/releases/new) with a link to the archived release notes
 
 - Announce the release:
 
-  - Release on Wagerr forum: https://www.wagerr.com/forum/topic/official-announcements.54/
+  - wagerr-dev and wagerr-dev mailing list
 
-  - Optionally Discord, twitter, reddit /r/Wagerrcurrency, ... but this will usually sort out itself
+  - Wagerr announcements list https://wagerr.org/en/list/announcements/join/
 
-  - Notify flare so that he can start building [the PPAs](https://launchpad.net/~wagerr.com/+archive/ubuntu/wagerr)
-
-  - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
-
-  - Create a [new GitHub release](https://github.com/wagerr/wagerr/releases/new) with a link to the archived release notes.
+  - Wagerr Twitter https://twitter.com/wagerrorg
 
   - Celebrate
