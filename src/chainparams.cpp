@@ -469,7 +469,7 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x02, 0x21, 0x31, 0x2B};
 
         // Wagerr BIP44 coin type is '0x776772'
-        nExtCoinType = 7825266;
+        nExtCoinType = 26482;
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
