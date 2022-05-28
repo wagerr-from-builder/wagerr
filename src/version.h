@@ -11,20 +11,20 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70928;
+static const int PROTOCOL_VERSION = 70929;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 214;
 
 //! In this version, 'getheaders' was introduced.
-static const int GETHEADERS_VERSION = 70238;
+static const int GETHEADERS_VERSION = 70912;
 
 //! New spork protocol
 static const int MIN_SPORK_VERSION = 70926;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT = 70926;
-static const int MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT = 70928;
+static const int MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT = 70923;
+static const int MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT = 70927;
 
 //! minimum proto version of masternode to accept in DKGs
 static const int MIN_MASTERNODE_PROTO_VERSION = 70926;
@@ -37,7 +37,7 @@ static const int GOVERNANCE_POSE_BANNED_VOTES_VERSION = 70926;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
-static const int CADDR_TIME_VERSION = 70926;
+static const int CADDR_TIME_VERSION = 70912;
 
 //! introduction of LLMQs
 static const int LLMQS_PROTO_VERSION = 70925;
