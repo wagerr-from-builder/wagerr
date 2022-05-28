@@ -21,19 +21,16 @@ class CSporkManager;
     - This would result in old clients getting confused about which spork is for what
 */
 enum SporkId : int32_t {
-    SPORK_2_SWIFTTX                             = 10001,
-    SPORK_3_SWIFTTX_BLOCK_FILTERING             = 10002,
-    SPORK_5_MAX_VALUE                           = 10004,
-    SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT      = 10007,
-    SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT       = 10008,
-    SPORK_10_MASTERNODE_PAY_UPDATED_NODES       = 10009,
-    SPORK_13_ENABLE_SUPERBLOCKS                 = 10012,
-    SPORK_14_NEW_PROTOCOL_ENFORCEMENT           = 10013,
-    SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2         = 10014,
-    SPORK_16_ZEROCOIN_MAINTENANCE_MODE          = 10015,
-    SPORK_18_ZEROCOIN_PUBLICSPEND_V4            = 10018,
-    SPORK_19_NEW_PROTOCOL_ENFORCEMENT_3         = 10019,
-    SPORK_20_BETTING_MAINTENANCE_MODE           = 10020,
+    SPORK_2_INSTANTSEND_ENABLED                            = 10001,
+    SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
+    SPORK_4_DIP0003_ENFORCED                               = 10004,
+    SPORK_8_NEW_PROTOCOL_ENFORCEMENT                       = 10005,
+    SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
+    SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
+    SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
+    SPORK_20_BETTING_MAINTENANCE_MODE                      = 10020,
+    SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
+    SPORK_23_QUORUM_POSE                                   = 10022,
 
     SPORK_INVALID                               = -1
 };
