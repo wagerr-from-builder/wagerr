@@ -109,7 +109,7 @@ public:
     }
 
     /**
-     * GetHash returns the quark hash of the serialized spork message.
+     * GetHash returns the double-sha256 hash of the serialized spork message.
      */
     uint256 GetHash() const;
 
