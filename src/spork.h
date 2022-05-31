@@ -111,7 +111,7 @@ public:
     /**
      * GetHash returns the quark hash of the serialized spork message.
      */
-    uint256 GetHash() const;
+    uint256 GetHash() const { return HashQuark(BEGIN(nSporkID), END(nTimeSigned));}
 
    /**
      * GetSignatureHash returns the hash of the serialized spork message
