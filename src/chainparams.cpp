@@ -620,22 +620,22 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x0000009303aeadf8cf3812f5c869691dbd4cb118ad20e9bf553be434bafe6a52"); // 470000
 
-        //pchMessageStart[0] = 0x87;
-        //pchMessageStart[1] = 0x9e;
-        //pchMessageStart[2] = 0xd1;
-        //pchMessageStart[3] = 0x99;
-        pchMessageStart[0] = 0x88;
-        pchMessageStart[1] = 0x9f;
-        pchMessageStart[2] = 0xd2;
-        pchMessageStart[3] = 0x9a;
+        pchMessageStart[0] = 0x87;
+        pchMessageStart[1] = 0x9e;
+        pchMessageStart[2] = 0xd1;
+        pchMessageStart[3] = 0x99;
+        //pchMessageStart[0] = 0x88;
+        //pchMessageStart[1] = 0x9f;
+        //pchMessageStart[2] = 0xd2;
+        //pchMessageStart[3] = 0x9a;
         nDefaultPort = 55004;
         nPruneAfterHeight = 1000;
 
-        //genesis = CreateGenesisBlock(1518696182, 75183976, 0x1e0ffff0, 1, 0 * COIN);
-        genesis = CreateGenesisBlock(1518696182, 94553957, 0x1e0ffff0, 1, 0 * COIN);
+        genesis = CreateGenesisBlock(1518696182, 75183976, 0x1e0ffff0, 1, 0 * COIN);
+        //genesis = CreateGenesisBlock(1518696182, 94553957, 0x1e0ffff0, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S("0x00000fdc268f54ff1368703792dc046b1356e60914c2b5b6348032144bcb2de5"));
-        assert(consensus.hashGenesisBlock == uint256S("0x00000e87ad4662e3bf7524a239609f27e569447c837b0d691eedd46a5753ba1c"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000fdc268f54ff1368703792dc046b1356e60914c2b5b6348032144bcb2de5"));
+        //assert(consensus.hashGenesisBlock == uint256S("0x00000e87ad4662e3bf7524a239609f27e569447c837b0d691eedd46a5753ba1c"));
         //assert(genesis.hashMerkleRoot == uint256S("0xc4d06cf72583752c23b819fa8d8cededd1dad5733d413ea1f123f98a7db6af13"));
 
         vFixedSeeds.clear();
