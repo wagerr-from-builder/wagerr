@@ -523,7 +523,7 @@ public:
             1605485238, // * UNIX timestamp of last known number of transactions (Block 1344000)
             3693972,     // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.0008        // * estimated number of transactions per second after that timestamp
+            0.05        // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -694,10 +694,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            1518696183, // * UNIX timestamp of last known number of transactions (Block 387900)
-            0,       // * total number of transactions between genesis and that timestamp
-                     //   (the tx=... number in the SetBestChain debug.log lines)
-            0.000019 // * estimated number of transactions per second after that timestamp
+            1588834261, // * UNIX timestamp of last known number of transactions (Block 387900)
+            3724,       // * total number of transactions between genesis and that timestamp
+                        //   (the tx=... number in the SetBestChain debug.log lines)
+            0.01        // * estimated number of transactions per second after that timestamp
         };
 
     }
@@ -1008,9 +1008,9 @@ public:
         };
 
         chainTxData = ChainTxData{
+            1518696183,
             0,
-            0,
-            0
+            0.001
         };
 
         // Testnet Wagerr addresses start with 'y'
