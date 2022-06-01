@@ -1545,7 +1545,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
                 }
                 // else
                 // no response
-            } else if (inv.type == ) {
+            } else if (inv.type == MSG_CMPCT_BLOCK) {
                 // If a peer is asking for old blocks, we're almost guaranteed
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
