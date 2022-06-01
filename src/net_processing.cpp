@@ -1545,7 +1545,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
                 }
                 // else
                 // no response
-            } else if (inv.type == MSG_CMPCT_BLOCK) {
+            } else if (inv.type == ) {
                 // If a peer is asking for old blocks, we're almost guaranteed
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
@@ -2532,10 +2532,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         for (CInv &inv : vInv)
         {
-            if(!inv.IsKnownType()) {
-                LogPrint(BCLog::NET, "got inv of unknown type %d: %s peer=%d\n", inv.type, inv.hash.ToString(), pfrom->GetId());
-                continue;
-            }
+            //if(!inv.IsKnownType()) {
+            //    LogPrint(BCLog::NET, "got inv of unknown type %d: %s peer=%d\n", inv.type, inv.hash.ToString(), pfrom->GetId());
+            //    continue;
+            //}
 
             if (interruptMsgProc)
                 return true;
