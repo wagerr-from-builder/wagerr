@@ -399,7 +399,7 @@ public:
 enum GetDataMsg {
     UNDEFINED = 0,
     MSG_TX = 1,
-    MSG_BLOCK = 15,
+    MSG_BLOCK = 2,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
     // Wagerr message types
