@@ -12,16 +12,16 @@
 #include <versionbits.h>
 #include <crypto/common.h>
 
-/*uint256 CBlockHeader::GetHash() const
-{
-    // CVectorWriter grows vch when necessary
-    std::vector<unsigned char> vch(80);
-    CVectorWriter ss(SER_GETHASH, PROTOCOL_VERSION, vch, 0);
-    ss << *this;
-    return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size());
-}*/
+ uint256 CBlockHeader::GetHash() const
+ {
+     // CVectorWriter grows vch when necessary
+     std::vector<unsigned char> vch(80);
+     CVectorWriter ss(SER_GETHASH, PROTOCOL_VERSION, vch, 0);
+     ss << *this;
+     return HashQuark((const char *)vch.data(), (const char *)vch.data() + vch.size());
+}
 
-uint256 CBlockHeader::GetHash() const
+/* uint256 CBlockHeader::GetHash() const
 {
     // CVectorWriter grows vch when necessary
     std::vector<unsigned char> vch(80);
@@ -36,7 +36,7 @@ uint256 CBlockHeader::GetHash() const
         //return Hash(BEGIN(nVersion), END(nAccumulatorCheckpoint));
 
     return Hash(BEGIN(nVersion), END(nNonce));
-}
+} */
 
 std::string CBlock::ToString() const
 {
