@@ -408,6 +408,7 @@ enum GetDataMsg {
     /* MSG_TXLOCK_VOTE = 5, Legacy InstantSend and not used anymore  */
     MSG_SPORK = 6,
     /* 7 - 15 were used in old Wagerr versions and were mainly budget and MN broadcast/ping related*/
+    MSG_MASTERNODE_PING = 15,
     MSG_DSTX = 16,
     MSG_GOVERNANCE_OBJECT = 17,
     MSG_GOVERNANCE_OBJECT_VOTE = 18,
