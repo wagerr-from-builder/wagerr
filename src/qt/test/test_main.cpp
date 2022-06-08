@@ -25,7 +25,7 @@
 
 #include <openssl/ssl.h>
 
-//#if defined(QT_STATICPLUGIN)
+#if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_MINIMAL)
 Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
@@ -37,7 +37,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
-//#endif
+#endif
 
 extern void noui_connect();
 
