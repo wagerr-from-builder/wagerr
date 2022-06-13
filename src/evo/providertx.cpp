@@ -136,7 +136,8 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
-        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 25000 * COIN) {
+        //if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 25000 * COIN) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 499999895800) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -156,8 +157,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         if (ptx.collateralOutpoint.n >= tx.vout.size()) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-index");
         }
-        //if (tx.vout[ptx.collateralOutpoint.n].nValue != 25000 * COIN) {
-        if (tx.vout[ptx.collateralOutpoint.n].nValue != 499999895800) {
+        if (tx.vout[ptx.collateralOutpoint.n].nValue != 25000 * COIN) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
