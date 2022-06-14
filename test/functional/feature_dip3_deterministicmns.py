@@ -22,7 +22,7 @@ class DIP3Test(BitcoinTestFramework):
         self.setup_clean_chain = True
 
         self.extra_args = ["-budgetparams=10:10:10"]
-        self.extra_args += ["-sporkkey=5rE5LTDq3tRhaPW3RT1De35MocGc9wD8foaBGioxSXJsn45XaFG"]
+        self.extra_args += ["-sporkkey=6xLZdACFRA53uyxz8gKDLcgVrm5kUUEu2B3BUzWUxHqa2W7irbH"]
         self.extra_args += ["-dip3params=135:150"]
 
 
@@ -48,7 +48,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("funding controller node")
-        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
+        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 25000:
             self.nodes[0].generate(10) # generate enough for collaterals
         self.log.info("controller node has {} wagerr".format(self.nodes[0].getbalance()))
 
@@ -228,20 +228,20 @@ class DIP3Test(BitcoinTestFramework):
 
     def create_mn_collateral(self, node, mn):
         mn.collateral_address = node.getnewaddress()
-        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
+        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 25000)
         mn.collateral_vout = -1
         node.generate(1)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal(25000):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
-        node.sendtoaddress(mn.fundsAddr, 1000.001)
+        node.sendtoaddress(mn.fundsAddr, 25000.001)
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
@@ -251,7 +251,7 @@ class DIP3Test(BitcoinTestFramework):
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal(25000):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
