@@ -28,8 +28,8 @@ enum SporkId : int32_t {
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
-    SPORK_20_BETTING_MAINTENANCE_MODE                      = 10019,
-    SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
+    SPORK_20_BETTING_MAINTENANCE_MODE                      = 10020,
+    SPORK_21_QUORUM_ALL_CONNECTED                          = 10021,
     SPORK_23_QUORUM_POSE                                   = 10022,
 
     SPORK_INVALID                                          = -1,
