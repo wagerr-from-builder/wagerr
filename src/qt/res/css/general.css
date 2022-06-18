@@ -236,7 +236,7 @@ QCalendarWidget  {
 
 QCalendarWidget QToolButton {
     width: 80px;
-    color: red;
+    color: #fcfcfc;
     background-color: red;
 }
 
@@ -254,14 +254,14 @@ QCalendarWidget QAbstractItemView {
 
 QCalendarWidget QAbstractItemView:enabled
 {
-    color: red;
+    color: #fff;
     background-color: red;
     selection-background-color: red;
     selection-color: red;
 }
 
 QCalendarWidget QAbstractItemView:disabled {
-    color: red;
+    color: #fff;
 }
 
 /******************************************************
@@ -384,7 +384,7 @@ QGroupBox
 
 QGroupBox {
     background-color:red;
-    color: red;
+    color: #fff;
     padding-top: 20px;
 }
 
@@ -510,7 +510,7 @@ QPushButton {
     background-color: red;
     border: 0;
     border-radius: 8px;
-    color: red;
+    color: #fff;
     max-height: 26px;
     min-height: 26px;
     padding-left: 12px;
@@ -554,7 +554,7 @@ QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM {
     background-color: red;
-    color: red;
+    color: #fff;
 }
 
 QWidget#AddressBookPage QPushButton#newAddress:hover,
@@ -572,7 +572,7 @@ QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:hover,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:hover {
     background-color: red;
     border-color: red;
-    color: red;
+    color: #fff;
 }
 
 QWidget#AddressBookPage QPushButton#newAddress:pressed,
@@ -591,7 +591,7 @@ QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:pressed {
     border: 0;
     background-color: red;
     border-color: red;
-    color: red;
+    color: #fff;
 }
 
 QWidget#AddressBookPage QPushButton#newAddress:disabled,
@@ -610,7 +610,7 @@ QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:disabled {
     border: 1px solid;
     background-color: red;
     border-color: red;
-    color: red;
+    color: #fff;
 }
 
 /******************************************************
@@ -635,7 +635,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnVerifyMessage {
     background: none;
     border-radius: 0px;
-    color: red;
+    color: #fff;
     border-bottom: 2px solid red;
     background-color: transparent;
 }
@@ -657,7 +657,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnSignMessage:hover:checked,
 #btnVerifyMessage:hover:checked {
     border: none;
-    color: red;
+    color: #fff;
     border-radius: 0px;
     border-bottom: 2px solid red;
     background-color:transparent;
@@ -680,7 +680,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnSignMessage:hover:!checked,
 #btnVerifyMessage:hover:!checked {
     border: none;
-    color: red;
+    color: #fff;
     border-radius: 0px;
     border-bottom: 2px solid red;
     background-color:transparent;
@@ -703,7 +703,7 @@ QPushButton - Special case, tabbar replacement buttons
 #btnSignMessage:checked,
 #btnVerifyMessage:checked {
     border: none;
-    color: red;
+    color: #fff;
     border-radius: 0px;
     border-bottom: 2px solid red;
     background-color:transparent;
@@ -893,11 +893,11 @@ QToolBar > QToolButton {
 
 QToolBar > QToolButton:hover:!checked {
     background-color: red;
-    color: red;
+    color: #fff;
 }
 
 QToolBar > QToolButton:disabled {
-    color: red;
+    color: #fff;
 }
 
 QToolBar QLabel#lblToolbarLogo {
@@ -1642,11 +1642,11 @@ QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
 
 #rpcAutoCompleter::item {
     background-color: #333333;
-    color: red;
+    color: #fff;
 }
 
 #rpcAutoCompleter::item:selected {
-    color: red;
+    color: #fff;
 }
 
 
