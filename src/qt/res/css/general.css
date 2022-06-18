@@ -32,7 +32,7 @@ in the <theme.css> file.
 
 # Used colors in general.css for commit 44de8a93f2
 
-#00000000
+#333333
 #222222
 #5e8c41
 #a84832
@@ -54,7 +54,7 @@ QDialog {
 }
 
 .QFrame {
-    background-color: #00000000;
+    background-color: #333333;
     border: 0px;
 }
 
@@ -128,15 +128,15 @@ QAbstractSpinBox
 QAbstractSpinBox {
 }
 
-QAbstractSpinBox::up-button {
-    background-color: #00000000;
+::up-button {
+    background-color: #e7e7e7;
     width: 20px;
     border: 0px;
     padding: 2px 1px 0px 5px;
 }
 
 QAbstractSpinBox::down-button {
-    background-color: #00000000;
+    background-color: #e7e7e7;
     width: 20px;
     border: 0px;
     padding: 0px 1px 2px 5px;
@@ -269,7 +269,7 @@ QCheckBox
 ******************************************************/
 
 QCheckBox{
-    background-color: #00000000;
+    background-color: #333333;
     min-height: 25px;
     margin-right: 10px;
 }
@@ -314,7 +314,7 @@ QComboBox:checked {
 }
 
 QComboBox:editable {
-    border: 0px solid #00000000;
+    border: 0px solid #333333;
 }
 
 QComboBox:focus {
@@ -342,14 +342,14 @@ QComboBox::item:alternate {
 }
 
 QComboBox::item:selected {
-    border: 0px solid #00000000;
+    border: 0px solid #333333;
 }
 
 QComboBox::indicator {
-    background-color: #00000000;
-    selection-background-color: #00000000;
-    color: #00000000;
-    selection-color: #00000000;
+    background-color: #333333;
+    selection-background-color: #333333;
+    color: #333333;
+    selection-color: #333333;
 }
 
 QComboBox::down-arrow {
@@ -389,7 +389,7 @@ QGroupBox {
 }
 
 QGroupBox:title {
-    background-color: #00000000;
+    background-color: #b70000;
     margin-top: 5px;
     margin-left: 7px;
 }
@@ -399,7 +399,7 @@ QHeaderView
 ******************************************************/
 
 QHeaderView { /* Table Header */
-    background-color: #00000000;
+    background-color: #b70000;
 }
 
 QHeaderView::section { /* Table Header Sections */
@@ -482,8 +482,8 @@ QProgressBar
 ******************************************************/
 
 QProgressBar {
-    background-color: red;
-    color: #00000000;
+    background-color: transparent;
+    color: #AAAAAA;
     border: 0px solid red;
     border-radius: 4px;
     min-height: 10px;
@@ -491,7 +491,7 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-    background-color: red;
+    background-color: #b7000057;
     border-radius: 3px;
 }
 
@@ -735,7 +735,7 @@ QRadioButton
 ******************************************************/
 
 QRadioButton {
-    background-color: #00000000;
+    background-color: #333333;
 }
 QRadioButton::indicator {
     width: 15px;
@@ -764,7 +764,7 @@ QScrollArea
 ******************************************************/
 
 .QScrollArea {
-    background-color: #00000000;
+    background-color: #333333;
     border: 0px;
 }
 
@@ -786,7 +786,7 @@ QSlider {
 }
 
 QSlider::groove:horizontal {
-    background: #00000000;
+    background: #333333;
     height: 12px;
     border-radius: 4px;
 }
@@ -832,7 +832,7 @@ QTableView
 
 .QTableView { /* Table - has to be selected as a class otherwise it throws off QCalendarWidget */
     border: 1px solid red;
-    background-color: #00000000;
+    background-color: #333333;
     qproperty-showGrid: false;
 }
 
@@ -882,7 +882,7 @@ QToolBar {
 }
 
 QToolBar > QToolButton {
-    background-color: #00000000;
+    background-color: #333333;
     border: none;
     min-height: 50px;
     max-height: 50px;
@@ -913,7 +913,7 @@ QToolTip
 QToolTip {
     border: 1px solid red;
     border-radius: 2px;
-    background-color: #00000000;
+    background-color: #333333;
     padding: 1px;
 }
 
@@ -1152,7 +1152,7 @@ QDialog#CoinControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Coin Cont
 }
 
 QDialog#CoinControlDialog QHeaderView::section:first { /* Bug Fix: the number 1 displays in this table for some reason... */
-    color: #00000000;
+    color: #333333;
 }
 
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
@@ -1160,7 +1160,7 @@ QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
     min-height: 25px;
 }
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:hover {
-    background-color: #00000000;
+    background-color: #333333;
 }
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:selected { /* Coin Control Item (selected) */
 }
@@ -1232,7 +1232,7 @@ QWidget#bgWidget { /* The frame overlaying the overview-page */
 }
 
 QWidget#bgWidget .QLabel#warningIcon {
-    background-color: #00000000;
+    background-color: #333333;
     margin-left: 10px;
     margin-right: 10px;
 }
@@ -1430,7 +1430,7 @@ OverviewPage CoinJoin
 ******************************************************/
 
 QWidget .QFrame#frameCoinJoin { /* CoinJoin Widget */
-    background-color: #00000000;
+    background-color: #333333;
     max-width: 451px;
     max-height: 350px;
 }
@@ -1528,18 +1528,18 @@ QWidget .QFrame#frame_2 { /* Transactions Widget */
     min-width: 430;
 }
 
-QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
+QWidget .#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
     margin-right: 0px;
     min-height: 30px;
 }
 
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
-    color: #a84832;
+    color: #b70000;
 }
 
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
-    background: #00000000;
+    background: #333333;
     max-width: 430px;
     margin-right: 10px;
 }
@@ -1617,14 +1617,14 @@ QWidget#RPCConsole QLineEdit#lineEdit { /* Console Input */
 }
 
 QWidget#RPCConsole .QToolButton { /* Console buttons fontbigger/fontsmaller/clear */
-    background-color: #00000000;
+    background-color: #333333;
     margin-left: 3px;
     margin-bottom:5px;
     border: 0;
 }
 
 QWidget#RPCConsole .QGroupBox #line { /* Network In Line */
-    background-color: #5e8c41;
+    background-color: #b70000;
 }
 
 QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
@@ -1641,7 +1641,7 @@ QWidget#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
 }
 
 #rpcAutoCompleter::item {
-    background-color: #00000000;
+    background-color: #333333;
     color: red;
 }
 
@@ -1684,7 +1684,7 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlInsuffF
 }
 
 QDialog#SendCoinsDialog .QScrollArea#scrollArea .QWidget#scrollAreaWidgetContents { /* Send To Widget */
-    background-color: #00000000;
+    background-color: #333333;
 }
 
 QDialog#SendCoinsDialog QLabel#labelBalanceText,
@@ -1711,7 +1711,7 @@ SendCoinsEntry
 ******************************************************/
 
 QStackedWidget#SendCoinsEntry .QFrame#SendCoins > .QLabel { /* Send Coin Entry Labels */
-    background-color: #00000000;
+    background-color: #333333;
     min-width: 50px;
     min-height: 25px;
     margin-right: 5px;
@@ -1725,7 +1725,7 @@ QStackedWidget#SendCoinsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field 
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton { /* General Settings for Pay To Icons */
-    background-color: #00000000;
+    background-color: #333333;
     margin-left: 5px;
     margin-right: 5px;
     border: 0;
@@ -1752,7 +1752,7 @@ QDialog#SignVerifyMessageDialog {
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_SM { /* Address Book Button */
-    background-color: #00000000;
+    background-color: #333333;
 }
 
 QDialog#SignVerifyMessageDialog QPlainTextEdit { /* Message Signing Text */
@@ -1774,7 +1774,7 @@ QDialog#SignVerifyMessageDialog QLabel#signatureLabel_SM {
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-    background-color: #00000000;
+    background-color: #333333;
 }
 
 QDialog#SignVerifyMessageDialog QLineEdit#signatureOut_SM,
@@ -1782,16 +1782,16 @@ QDialog#SignVerifyMessageDialog QLineEdit#signatureIn_VM {
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-    background-color: #00000000;
+    background-color: #333333;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_VM { /* Verify Message - Address Book Button */
-    background-color: #00000000;
+    background-color: #333333;
     border: 0px solid red;
 }
 
 QDialog#SignVerifyMessageDialog .QToolButton { /* General Settings for Pay To Icons */
-    background-color: #00000000;
+    background-color: #333333;
     margin-left: 5px;
     margin-right: 5px;
     border: 0;
