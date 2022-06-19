@@ -106,7 +106,7 @@ static const std::map<QString, QString> mapThemeToStyle{
 /** loadFonts stores the SystemDefault font in osDefaultFont to be able to reference it later again */
 static std::unique_ptr<QFont> osDefaultFont;
 /** Font related default values. */
-static const FontFamily defaultFontFamily = FontFamily::Monospace;
+static const FontFamily defaultFontFamily = FontFamily::Montserrat;
 static const int defaultFontSize = 12;
 static const double fontScaleSteps = 0.01;
 #ifdef Q_OS_MAC
@@ -1154,8 +1154,8 @@ FontFamily fontFamilyFromString(const QString& strFamily)
     if (strFamily == "SystemDefault") {
         return FontFamily::SystemDefault;
     }
-    if (strFamily == "Monospace") {
-        return FontFamily::Monospace;
+    if (strFamily == "Montserrat") {
+        return FontFamily::Montserrat;
     }
     throw std::invalid_argument(strprintf("Invalid font-family: %s", strFamily.toStdString()));
 }
@@ -1165,8 +1165,8 @@ QString fontFamilyToString(FontFamily family)
     switch (family) {
     case FontFamily::SystemDefault:
         return "SystemDefault";
-    case FontFamily::Monospace:
-        return "Monospace";
+    case FontFamily::Montserrat:
+        return "Montserrat";
     default:
         assert(false);
     }
@@ -1302,7 +1302,7 @@ bool loadFonts()
     // Before any font changes store the applications default font to use it as SystemDefault.
     osDefaultFont = std::make_unique<QFont>(QApplication::font());
 
-    QString family = fontFamilyToString(FontFamily::Monospace);
+    QString family = fontFamilyToString(FontFamily::Montserrat);
     QString italic = "Italic";
 
     std::map<QString, bool> mapStyles{
@@ -1388,7 +1388,7 @@ bool loadFonts()
     };
 
     mapSupportedWeights.insert(std::make_pair(FontFamily::SystemDefault, supportedWeights(FontFamily::SystemDefault)));
-    mapSupportedWeights.insert(std::make_pair(FontFamily::Monospace, supportedWeights(FontFamily::Monospace)));
+    mapSupportedWeights.insert(std::make_pair(FontFamily::Montserrat, supportedWeights(FontFamily::Montserrat)));
 
     auto getBestMatch = [&](FontFamily fontFamily, QFont::Weight targetWeight) {
         auto& vecSupported = mapSupportedWeights[fontFamily];
@@ -1420,7 +1420,7 @@ bool loadFonts()
     };
 
     addBestDefaults(FontFamily::SystemDefault);
-    addBestDefaults(FontFamily::Monospace);
+    addBestDefaults(FontFamily::Montserrat);
 
     // Load supported defaults. May become overwritten later.
     mapWeights = mapDefaultWeights;
@@ -1441,8 +1441,8 @@ void setApplicationFont()
 
     std::unique_ptr<QFont> font;
 
-    if (fontFamily == FontFamily::Monospace) {
-        QString family = fontFamilyToString(FontFamily::Monospace);
+    if (fontFamily == FontFamily::Montserrat) {
+        QString family = fontFamilyToString(FontFamily::Montserrat);
 #ifdef Q_OS_MAC
         if (getFontWeightNormal() != getFontWeightNormalDefault()) {
             font = std::make_unique<QFont>(getFontNormal());
@@ -1594,8 +1594,8 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
         return font;
     }
 
-    if (family == FontFamily::Monospace) {
-        static std::map<QFont::Weight, QString> mapMonospaceMapping{
+    if (family == FontFamily::Montserrat) {
+        static std::map<QFont::Weight, QString> mapMontserratMapping{
             {QFont::Thin, "Thin"},
             {QFont::ExtraLight, "ExtraLight"},
             {QFont::Light, "Light"},
@@ -1612,11 +1612,11 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
 #endif
         };
 
-        assert(mapMonospaceMapping.count(qWeight));
+        assert(mapMontserratMapping.count(qWeight));
 
 #ifdef Q_OS_MAC
 
-        QString styleName = mapMonospaceMapping[qWeight];
+        QString styleName = mapMontserratMapping[qWeight];
 
         if (fItalic) {
             if (styleName == "Regular") {
@@ -1626,10 +1626,10 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
             }
         }
 
-        font.setFamily(fontFamilyToString(FontFamily::Monospace));
+        font.setFamily(fontFamilyToString(FontFamily::Montserrat));
         font.setStyleName(styleName);
 #else
-        font.setFamily(fontFamilyToString(FontFamily::Monospace) + " " + mapMonospaceMapping[qWeight]);
+        font.setFamily(fontFamilyToString(FontFamily::Montserrat) + " " + mapMontserratMapping[qWeight]);
         font.setWeight(qWeight);
         font.setStyle(fItalic ? QFont::StyleItalic : QFont::StyleNormal);
 #endif
