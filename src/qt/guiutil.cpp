@@ -1532,8 +1532,9 @@ void updateFonts()
 
         QFont font = w->font();
         //assert(font.pointSize() > 0);
-        if (font.pointSize() <= 0);
-            font->setPointSizeF(defaultFontSize);
+        if (font.pointSize() <= 0) {
+            font.setPointSize(defaultFontSize);
+        }
         font.setFamily(qApp->font().family());
         font.setWeight(getFontWeightNormal());
         font.setStyleName(qApp->font().styleName());
