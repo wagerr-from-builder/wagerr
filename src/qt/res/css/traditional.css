@@ -1222,7 +1222,7 @@ WalletFrame {
     
     QWidget .QFrame#frame_CombinedBalances .QLabel#labelBalancez { /* Available WGR Balance */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
-    font-size:26px;
+    font-size:12px;
     font-weight:normal;
     color:#500000;
     }
@@ -1257,7 +1257,7 @@ WalletFrame {
     
     QWidget .QFrame#frame_CombinedBalances .QLabel#labelTotalz { /* Available total Balance */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
-    font-size:26px;
+    font-size:12px;
     font-weight:normal;
     color:#500000;
     }
