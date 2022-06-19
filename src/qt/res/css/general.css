@@ -742,13 +742,13 @@ WalletFrame {
     }
     
     QWidget#PrivacyDialog QLabel#zWGRLabel {
-    font-size:14px;
+    font-size:12px;
     color:#ffffff;
     background-color:#b70000;
     }
     
     QWidget#PrivacyDialog QLabel#oWGRLabel {
-    font-size:14px;
+    font-size:12px;
     color:#ffffff;
     background-color:#b70000;
     }
@@ -824,7 +824,7 @@ WalletFrame {
     }
     
     QDialog#OptionsDialog QLabel#labelStakeSplitThresholdText {
-    font-size:16px;
+    font-size:12px;
     }
     
     /**************************** TOOLS MENU ************************************************/
@@ -908,7 +908,7 @@ WalletFrame {
     /* Headers */
     QLabel#labelOverviewHeaderLeft {
     font-weight:bold;
-    font-size:20px;
+    font-size:12px;
     background-color:#ffffff;
     }
     
@@ -972,7 +972,7 @@ WalletFrame {
     background-color:transparent;
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     margin-right:5px;
     padding-right:5px;
     }
@@ -1122,7 +1122,7 @@ WalletFrame {
     background-color:transparent;
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     margin-right:5px;
     padding-right:5px;
     }
@@ -1205,7 +1205,7 @@ WalletFrame {
     background-color:transparent;
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     margin-right:5px;
     padding-right:5px;
     }
@@ -1277,7 +1277,7 @@ WalletFrame {
     background-color:transparent;
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     margin-right:5px;
     padding-right:5px;
     }
@@ -1334,7 +1334,7 @@ WalletFrame {
     background-color:transparent;
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     margin-right:5px;
     padding-right:5px;
     }
@@ -1609,7 +1609,7 @@ WalletFrame {
     QWidget#ReceiveCoinsDialog .QFrame#frame .QLabel#label_6 { /* Requested Payments History Label */
     color:#454545;
     font-weight:bold;
-    font-size:14px;
+    font-size:12px;
     }
     
     /**************************** RECEIVE COINS DIALOG **************************************/
@@ -1734,11 +1734,11 @@ QWidget#GovernancePage .ProposalFrame#proposalFramePassingUnfunded {
 }
 
 QWidget#GovernancePage .ProposalFrame > QLabel#strProposalName, QLabel#strMonthlyPayout, QLabel#strRemainingPaymentCount {
-    font-size:18pt;
+    font-size:12pt;
 }
 
 QWidget#GovernancePage .ProposalFrame > QLabel#strProposalURL {
-    font-size:14pt;
+    font-size:12pt;
 }
 
 QWidget#GovernancePage .QScrollArea, .QWidget#scrollAreaWidgetContents {

@@ -278,7 +278,7 @@ namespace GUIUtil
 
     enum class FontFamily {
         SystemDefault,
-        Monospace,
+        Montserrat,
     };
 
     FontFamily fontFamilyFromString(const QString& strFamily);
