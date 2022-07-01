@@ -27,7 +27,7 @@ jobs:
             git remote add -f univalue https://github.com/jgarzik/univalue
             git rm -rf src/leveldb
             git rm -rf src/secp256k1
-            git rm -rf src/crypto/ctaes
+            #git rm -rf src/crypto/ctaes
             git rm -rf src/univalue
             git add .
             git config --global user.email "lint@dev.null"
@@ -102,11 +102,11 @@ jobs:
             make -j${JOBS}
             #apt-get -y install libfontconfig1
             #make -j${JOBS} check
-            #git clone http://github.com/wagerr/wagerr_hash
-            #cd wagerr_hash
-            #python3 setup.py install
-            #cd -
-            #test/functional/test_runner.py
+            git clone http://github.com/wagerrck/wagerr_hash
+            cd wagerr_hash
+            python3 setup.py install
+            cd -
+            test/functional/test_runner.py
   x86_64_focal_depends:
     docker:
       - image: cimg/base:stable-20.04
