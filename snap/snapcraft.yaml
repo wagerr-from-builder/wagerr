@@ -1,5 +1,5 @@
 # Copyright (c) 2018-2021 The Wagerr developers
-name: wagerr
+name: wagerr-rebase
 base: core18
 version: 5.0.0
 summary:   wagerr, digital currency for media content
@@ -97,9 +97,9 @@ apps:
     plugs: [home]
 parts:
   wagerr:
-    source: http://github.com/wagerr/wagerr
+    source: http://github.com/wagerrck/wagerr
     source-type: git
-    source-tag: v5.0.0
+    source-tag: update-snap
     plugin: nil
     override-build: |
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
@@ -286,6 +286,7 @@ parts:
       - doxygen
       - npm
       - libts-dev
+      - bison
     stage-packages:
       - libxkbcommon0
       - ttf-ubuntu-font-family
