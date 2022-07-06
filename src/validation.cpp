@@ -3888,7 +3888,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         return state.Invalid(false, REJECT_INVALID, "time-too-new", strprintf("block timestamp too far in the future %d %d", block.GetBlockTime(), nAdjustedTime + 2 * 60 * 60));
 
     // Check blocktime mask
-    if (!IsValidBlockTimeStamp(block.GetBlockTime(), nHeight, consensusParams) && Params().NetworkIDString() != CBaseChainParams::REGTEST)
+    if (!IsValidBlockTimeStamp(block.GetBlockTime(), nHeight, consensusParams) && (Params().NetworkIDString() != CBaseChainParams::REGTEST) && (Params().NetworkIDString() != CBaseChainParams::DEVNET))
         return state.DoS(100, error("%s : block timestamp mask not valid", __func__), REJECT_INVALID, "invalid-time-mask");
 
     // check for version 2, 3 and 4 upgrades
