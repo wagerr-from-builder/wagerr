@@ -850,8 +850,7 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("174db003bb4ce38c3462e7cbd9598ae891011f0043bdaaddeb67d2b42247e530")},
-                { 1, devnetGenesis.GetHash() },
+                { 0, devnetGenesis.GetHash() },
             }
         };
 
