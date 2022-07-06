@@ -2072,7 +2072,9 @@ bool AppInitMain()
                 // block tree into mapBlockIndex!
 
                 // Load Accumulator Checkpoints according to network (main/test/regtest)
-                assert(AccumulatorCheckpoints::LoadCheckpoints(Params().NetworkIDString()));
+                if (chainparams.NetworkIDString() != CBaseChainParams::DEVNET) {
+                    assert(AccumulatorCheckpoints::LoadCheckpoints(Params().NetworkIDString()));
+                }
 
                 // Drop all information from the tokenDB and repopulate
                 bool fReindexTokens = gArgs.GetBoolArg("-reindex-tokens", false);
