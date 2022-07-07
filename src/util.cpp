@@ -842,7 +842,7 @@ std::string ArgsManager::GetChainName() const
 
 std::string ArgsManager::GetDevNetName() const
 {
-    assert(IsArgSet("-devnet"));
+    //assert(IsArgSet("-devnet"));
     std::string devNetName = GetArg("-devnet", "");
     return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }

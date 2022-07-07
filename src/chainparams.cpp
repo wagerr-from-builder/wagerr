@@ -795,10 +795,11 @@ public:
 
         genesis = CreateGenesisBlock(1518696184, 4638953, 0x207fffff, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-//        assert(consensus.hashGenesisBlock == uint256S("0x174db003bb4ce38c3462e7cbd9598ae891011f0043bdaaddeb67d2b42247e530"));
+        assert(consensus.hashGenesisBlock == uint256S("0x174db003bb4ce38c3462e7cbd9598ae891011f0043bdaaddeb67d2b42247e530"));
 //        assert(genesis.hashMerkleRoot == uint256S("0xc4d06cf72583752c23b819fa8d8cededd1dad5733d413ea1f123f98a7db6af13"));
-        devnetGenesis = FindDevNetGenesisBlock(genesis, 0 * COIN);
-        consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
+
+        //devnetGenesis = FindDevNetGenesisBlock(genesis, 0 * COIN);
+        //consensus.hashDevnetGenesisBlock = devnetGenesis.GetHash();
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -847,14 +848,15 @@ public:
 
         checkpointData = {
             {
-                {0, devnetGenesis.GetHash()},
+                { 0, uint256S("0x174db003bb4ce38c3462e7cbd9598ae891011f0043bdaaddeb67d2b42247e530")},
+                //{ 0, genesis.GetHash()},
             }
         };
 
         chainTxData = ChainTxData{
-            devnetGenesis.GetBlockTime(), // * UNIX timestamp of devnet genesis block
-            2,                            // * we only have 2 coinbase transactions when a devnet is started up
-            0.01                          // * estimated number of transactions per second
+            0, // * UNIX timestamp of devnet genesis block
+            0,                            // * we only have 2 coinbase transactions when a devnet is started up
+            0,                          // * estimated number of transactions per second
         };
     }
 };
