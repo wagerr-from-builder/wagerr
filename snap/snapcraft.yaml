@@ -99,7 +99,7 @@ parts:
   wagerr:
     source: http://github.com/wagerrck/wagerr
     source-type: git
-    source-tag: update-snap
+    source-tag: update-devnet-good
     plugin: nil
     override-build: |
       echo "+++++++++++++++++++++++++++++++++++++++++++++++"
