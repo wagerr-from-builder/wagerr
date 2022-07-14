@@ -429,7 +429,8 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     CAddress addr = pnode->addr;
 
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService(), addr.nServices));
-    CAddress addrMe = CAddress(CService(), nLocalNodeServices);
+    //CAddress addrMe = CAddress(CService(), nLocalNodeServices);
+    CAddress addrMe = GetLocalAddress(&addr, nLocalNodeServices);
 
     uint256 mnauthChallenge;
     GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
@@ -446,7 +447,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
             nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
 
-/*    if(addrYou.IsTor() && pnode->nVersion < TORV3_SERVICES_VERSION) {
+    if(addrYou.IsTor() && pnode->nVersion < TORV3_SERVICES_VERSION) {
         LogPrint(BCLog::NET, "send version 1 message: pnode->nVersion %d \n", pnode->nVersion);
         connman->PushMessage(pnode, CNetMsgMaker(SEGWIT_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
                 nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
@@ -454,7 +455,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
         LogPrint(BCLog::NET, "send version 2 message: pnode->nVersion %d \n", pnode->nVersion);
         connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
                 nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
-    } */
+    } 
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -2176,9 +2177,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         bool fRelay = true;
 
         // Tor v3 address - we need the version before deserialisation of an address.
-        /*vRecv >> nVersion;
+        vRecv >> nVersion;
         vRecv.SetVersion(nVersion);
-        vRecv >> nServiceInt >> nTime >> addrMe;*/
+        vRecv >> nServiceInt >> nTime >> addrMe;
         vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
 
         nSendVersion = std::min(nVersion, PROTOCOL_VERSION);
@@ -2258,7 +2259,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
             // DeepOnion: Due to Tor proxy we do not know it's onion address, so set it here.
            if(fLogIPs)
-            //    LogPrint(BCLog::NET, "ProcessMessages: setting peer %d AddrName to %s isTorV3 ? %s\n", pfrom->GetId(), addrFrom.ToString().c_str(), addrFrom.IsTorV3() ? "yes" : "no");
+                LogPrint(BCLog::NET, "ProcessMessages: setting peer %d AddrName to %s isTorV3 ? %s\n", pfrom->GetId(), addrFrom.ToString().c_str(), addrFrom.IsTorV3() ? "yes" : "no");
             pfrom->MaybeSetAddrName(addrFrom.ToString());
         }
 

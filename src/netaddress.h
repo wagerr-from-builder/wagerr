@@ -147,56 +147,28 @@ class CNetAddr
         }
             LogPrintf("\n");
         if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
+                s.GetVersion() >= TORV3_SERVICES_VERSION || 
                 s.GetType() == SER_DISK
             ) {
             READWRITE(FLATDATA(ip));
             // Reads at this point should be Tor v3 address's if they it is a Tor address
             if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                LogPrintf("Internal Tor V3 1\n");
                 usesTorV3 = true;
             }
         } else { // backwards compatibility
 
             if (ser_action.ForRead()) {
-                if (IsTor() && ip[40] != '\0') {
-                    LogPrintf("Tor V3 set 1\n");
-                    usesTorV3 = true;
-                    unsigned char compatibleIP[41];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                } else {
-                    LogPrintf("Not Tor V3 set 1\n");
-                    unsigned char compatibleIP[16];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                }
-                /*unsigned char compatibleIP[41];
+                unsigned char compatibleIP[16];
                 READWRITE(FLATDATA(compatibleIP));
                 memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                SetLegacyIPv6(compatibleIP);*/
-
             } else {
-               if (IsTor() && ip[40] != '\0') {
-                    usesTorV3 = true;
-                    LogPrintf("Tor V3 set 2\n");
-                    unsigned char compatibleIP[41];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-                } else {
-                    LogPrintf("Not Tor V3 set 2\n");
-                    unsigned char compatibleIP[16];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                }
-                /*unsigned char compatibleIP[41];
+                unsigned char compatibleIP[16];
                 memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                 READWRITE(FLATDATA(compatibleIP));
-                SetLegacyIPv6(compatibleIP);*/
             }
         }
     }
+
     friend class CSubNet;
 };
 
@@ -240,88 +212,54 @@ class CSubNet
 /** A combination of a network address (CNetAddr) and a (TCP) port */
 class CService : public CNetAddr
 {
-    protected:
-        uint16_t port; // host order
+protected:
+    uint16_t port; // host order
 
-    public:
-        CService();
-        CService(const CNetAddr& ip, unsigned short port);
-        CService(const struct in_addr& ipv4Addr, unsigned short port);
-        explicit CService(const struct sockaddr_in& addr);
-        void SetPort(unsigned short portIn);
-        unsigned short GetPort() const;
-        bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
-        bool SetSockAddr(const struct sockaddr* paddr);
-        friend bool operator==(const CService& a, const CService& b);
-        friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
-        friend bool operator<(const CService& a, const CService& b);
-        std::vector<unsigned char> GetKey() const;
-        std::string ToString(bool fUseGetnameinfo = true) const;
-        std::string ToStringPort() const;
-        std::string ToStringIPPort(bool fUseGetnameinfo = true) const;
+public:
+    CService();
+    CService(const CNetAddr& ip, unsigned short port);
+    CService(const struct in_addr& ipv4Addr, unsigned short port);
+    explicit CService(const struct sockaddr_in& addr);
+    void SetPort(unsigned short portIn);
+    unsigned short GetPort() const;
+    bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
+    bool SetSockAddr(const struct sockaddr* paddr);
+    friend bool operator==(const CService& a, const CService& b);
+    friend bool operator!=(const CService& a, const CService& b);
+    friend bool operator<(const CService& a, const CService& b);
+    std::vector<unsigned char> GetKey() const;
+    std::string ToString(bool fUseGetnameinfo = true) const;
+    std::string ToStringPort() const;
+    std::string ToStringIPPort(bool fUseGetnameinfo = true) const;
 
-        CService(const struct in6_addr& ipv6Addr, unsigned short port);
-        explicit CService(const struct sockaddr_in6& addr);
+    CService(const struct in6_addr& ipv6Addr, unsigned short port);
+    explicit CService(const struct sockaddr_in6& addr);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
-        {
-            LogPrintf("IP Address 2 ");
-            for(int i = 0 ; i < 41 ; i ++ ){
-                LogPrintf("%d ",ip[i]);
-            }
-            LogPrintf("\n");
-            if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
+    {
+        if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
+                s.GetVersion() >= TORV3_SERVICES_VERSION || 
                 s.GetType() == SER_DISK
             ) {
             READWRITE(FLATDATA(ip));
             // Reads at this point should be Tor v3 address's if they are a Tor address
             if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                LogPrintf("Internal Tor V3 2\n");
                 usesTorV3 = true;
             }
         } else {
             if (ser_action.ForRead()) {
-                if (IsTor() && ip[40] != '\0') {
-                    usesTorV3 = true;
-                    LogPrintf("Tor V3 set 3\n");
-                    unsigned char compatibleIP[41];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                } else {
-                    LogPrintf("Not Tor V3 set 3\n");
-                    unsigned char compatibleIP[16];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                }
-                /* unsigned char compatibleIP[41];
+                unsigned char compatibleIP[16];
                 READWRITE(FLATDATA(compatibleIP));
                 memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-                SetLegacyIPv6(compatibleIP); */
             } else {
-                if (IsTor() && ip[40] != '\0') {
-                    usesTorV3 = true;
-                    LogPrintf("Tor V3 set 4\n");
-                    unsigned char compatibleIP[41];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-                } else {
-                    LogPrintf("Not Tor V3 set 4\n");
-                    unsigned char compatibleIP[16];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                }
-                /*unsigned char compatibleIP[41];
+                unsigned char compatibleIP[16];
                 memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                 READWRITE(FLATDATA(compatibleIP));
-                SetLegacyIPv6(compatibleIP); */
-
             }
-        } 
+        }
         unsigned short portN = htons(port);
         READWRITE(FLATDATA(portN));
         if (ser_action.ForRead())
