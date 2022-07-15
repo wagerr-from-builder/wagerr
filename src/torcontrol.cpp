@@ -534,7 +534,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
-            private_key = "NEW:RSA1024"; // Explicitly request RSA1024 - see issue #9214
+            private_key = "NEW:ED25519-V3"; // Explicitly request RSA1024 - see issue #9214
         // Request hidden service, redirect port.
         // Note that the 'virtual' port doesn't have to be the same as our internal port, but this is just a convenient
         // choice.  TODO; refactor the shutdown sequence some day.
@@ -731,7 +731,7 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 
 /****** Thread ********/
 static struct event_base *gBase;
-static std::thread torControlThread;
+static boost::thread torControlThread;
 
 static void TorControlThread()
 {
@@ -740,7 +740,8 @@ static void TorControlThread()
     event_base_dispatch(gBase);
 }
 
-void StartTorControl()
+//void StartTorControl()
+void StartTorControl(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     assert(!gBase);
 #ifdef WIN32
@@ -754,7 +755,8 @@ void StartTorControl()
         return;
     }
 
-    torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    //torControlThread = std::thread(std::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
+    torControlThread = boost::thread(boost::bind(&TraceThread<void (*)()>, "torcontrol", &TorControlThread));
 }
 
 void InterruptTorControl()
