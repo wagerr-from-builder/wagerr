@@ -17,6 +17,8 @@ static const unsigned char g_internal_prefix[] = { 0xFD, 0x6B, 0x88, 0xC0, 0x87,
 
 bool fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
 
+extern bool fTorEnabled;
+
 CNetAddr::CNetAddr()
 {
     memset(ip, 0, sizeof(ip));
@@ -76,7 +78,7 @@ bool CNetAddr::SetInternal(const std::string &name)
 bool CNetAddr::SetSpecial(const std::string &strName)
 {
     if (strName.size()>6 && strName.substr(strName.size() - 6, 6) == ".onion") {
-
+        fTorEnabled = true;
         std::vector<unsigned char> vchAddr = DecodeBase32(strName.substr(0, strName.size() - 6).c_str());
         // 16' length - v2 tor addresses
         if (vchAddr.size() == 16 - sizeof(pchOnionCat)){
@@ -97,6 +99,7 @@ bool CNetAddr::SetSpecial(const std::string &strName)
             return true;
         }
     }
+    fTorEnabled = false;
     return false;
 }
 
