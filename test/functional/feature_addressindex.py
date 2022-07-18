@@ -330,6 +330,15 @@ class AddressIndexTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(address1, 10)
         self.nodes[0].generate(1)
+        self.stop_node(1)
+        self.stop_node(2)
+        self.stop_node(3)
+        self.start_node(1, ["-addressindex=1", "-reindex"])
+        self.start_node(2, ["-addressindex=1", "-reindex"])
+        self.start_node(3, ["-addressindex=1", "-reindex"])
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[0], 2)
+        connect_nodes(self.nodes[0], 3)
         self.sync_all()
 
         utxos = self.nodes[1].getaddressutxos({"addresses": [address1]})
