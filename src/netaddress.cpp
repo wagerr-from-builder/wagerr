@@ -131,10 +131,12 @@ bool CNetAddr::IsBindAny() const
 
 bool CNetAddr::IsIPv4() const { return m_net == NET_IPV4; }
 
-bool CNetAddr::IsIPv6() const
+bool CNetAddr::IsIPv6() const { return m_net == NET_IPV6; }
+
+/* bool CNetAddr::IsIPv6() const
  {
     return (!IsIPv4() && !IsTor() && !IsTorV3() && !IsInternal());
- }
+ }*/
 
 bool CNetAddr::IsRFC1918() const
 {
@@ -220,12 +222,12 @@ bool CNetAddr::IsRFC7343() const
 
 bool CNetAddr::IsTor() const
 {
-     return !usesTorV3 && (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
+     return m_net == NET_ONION && !usesTorV3 && (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
 }
 
 bool CNetAddr::IsTorV3() const
 {
-    return usesTorV3 && (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
+    return m_net == NET_ONION && usesTorV3 && (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
 }
 
 bool CNetAddr::IsLocal() const
@@ -287,7 +289,7 @@ bool CNetAddr::IsRoutable() const
         return false;
     if (!fAllowPrivateNet && IsRFC1918())
         return false;
-    return !(IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && (!IsTor() && !IsTorV3())) || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
+    return !(IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && (!IsTor() || !IsTorV3())) || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
 }
 
 bool CNetAddr::IsInternal() const
@@ -303,11 +305,11 @@ enum Network CNetAddr::GetNetwork() const
     if (!IsRoutable())
         return NET_UNROUTABLE;
 
-    if (IsIPv4())
+    /*if (IsIPv4())
         return NET_IPV4;
 
     if (IsTor() || IsTorV3())
-        return NET_ONION;
+        return NET_ONION; */
 
     return m_net;
 }
@@ -615,12 +617,16 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
 
 std::vector<unsigned char> CService::GetKey() const
 {
-     std::vector<unsigned char> vKey;
+    /* std::vector<unsigned char> vKey;
      vKey.resize(18);
      memcpy(vKey.data(), ip, 16);
      vKey[16] = port / 0x100;
      vKey[17] = port & 0x0FF;
-     return vKey;
+     return vKey; */
+    auto key = GetAddrBytes();
+    key.push_back(port / 0x100);
+    key.push_back(port & 0x0FF);
+    return key;
 }
 
 std::string CService::ToStringPort() const
