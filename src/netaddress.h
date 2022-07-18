@@ -20,6 +20,7 @@
 #include <logging.h>
 
 extern bool fAllowPrivateNet;
+extern bool fTorEnable;
 
 /**
  * A network type.
