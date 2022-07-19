@@ -152,7 +152,6 @@ class DIP3Test(WagerrTestFramework):
         # change voting address and see if changes are reflected in `masternode status` rpc output
         mn = mns[0]
         node = self.nodes[0]
-        breakpoint()
         old_dmnState = mn.node.masternode("status")["dmnState"]
         old_voting_address = old_dmnState["votingAddress"]
         new_voting_address = node.getnewaddress()

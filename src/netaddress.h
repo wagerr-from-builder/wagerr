@@ -64,7 +64,6 @@ class CNetAddr
         /**
          * Network to which this address belongs.
          */
-        Network m_net{NET_IPV6};
         unsigned char ip[41]; // in network byte order
         bool usesTorV3 = false;
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
@@ -72,6 +71,7 @@ class CNetAddr
     public:
         CNetAddr();
         explicit CNetAddr(const struct in_addr& ipv4Addr);
+        void Init();
         void SetIP(const CNetAddr& ip);
 
         /**
@@ -192,7 +192,7 @@ class CSubNet
         bool IsValid() const;
 
         friend bool operator==(const CSubNet& a, const CSubNet& b);
-        friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
+        friend bool operator!=(const CSubNet& a, const CSubNet& b);
         friend bool operator<(const CSubNet& a, const CSubNet& b);
 
         ADD_SERIALIZE_METHODS;
