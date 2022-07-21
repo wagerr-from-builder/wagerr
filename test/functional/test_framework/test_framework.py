@@ -149,7 +149,7 @@ class BitcoinTestFramework():
 
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
-        self.options.bitcoind = os.getenv("BITCOIND", default=config["environment"]["BUILDDIR"] + '/src//wagerrd' + config["environment"]["EXEEXT"])
+        self.options.bitcoind = os.getenv("BITCOIND", default=config["environment"]["BUILDDIR"] + '/src/qt/wagerr-qt' + config["environment"]["EXEEXT"])
         self.options.bitcoincli = os.getenv("BITCOINCLI", default=config["environment"]["BUILDDIR"] + '/src/wagerr-cli' + config["environment"]["EXEEXT"])
 
         self.extra_args_from_options = self.options.wagerrd_extra_args
@@ -950,6 +950,7 @@ class WagerrTestFramework(BitcoinTestFramework):
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
+        breakpoint()
         wait_until(check_quorum_connections, timeout=timeout, sleep=1)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
