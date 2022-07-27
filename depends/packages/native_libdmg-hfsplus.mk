@@ -16,7 +16,7 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -C dmg
+  $(MAKE)
 endef
 
 define $(package)_stage_cmds
