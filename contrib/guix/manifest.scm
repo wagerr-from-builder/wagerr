@@ -132,7 +132,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-10)
+(define base-gcc gcc-8)
 (define base-linux-kernel-headers linux-libre-headers-5.15)
 
 (define* (make-wagerr-cross-toolchain target
@@ -150,10 +150,7 @@ desirable for building Wagerr Core release binaries."
                         base-gcc))
 
 (define (make-gcc-with-pthreads gcc)
-  (package-with-extra-configure-variable
-    (package-with-extra-patches gcc
-      (search-our-patches "gcc-10-remap-guix-store.patch"))
-    "--enable-threads" "posix"))
+  (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
 
 (define (make-mingw-w64-cross-gcc cross-gcc)
   (package-with-extra-patches cross-gcc
@@ -594,8 +591,8 @@ inspecting signatures in Mach-O binaries.")
         bison
         cmake
         ;; Native GCC 10 toolchain
-        gcc-toolchain-10
-        (list gcc-toolchain-10 "static")
+        gcc-toolchain-8
+        (list gcc-toolchain-8 "static")
         ;; Scripting
         perl
         python-3
@@ -608,7 +605,7 @@ inspecting signatures in Mach-O binaries.")
            ;; Windows
            (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-for-gcc-10 nsis-x86_64)
+                 (make-nsis-for-gcc-8 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
            (list (cond ((string-contains target "riscv64-")
