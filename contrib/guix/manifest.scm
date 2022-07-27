@@ -156,7 +156,7 @@ chain for " target " development."))
 
 (define* (make-wagerr-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc gcc-10)
+                                       (base-gcc-for-libc gcc-7)
                                        (base-kernel-headers linux-libre-headers-4.9)
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
