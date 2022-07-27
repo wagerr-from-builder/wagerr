@@ -135,9 +135,10 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc
-  (package-with-extra-patches gcc-8
-    (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
+(define base-gcc gcc-10)
+;;(define base-gcc
+;;  (package-with-extra-patches gcc-8
+;;    (search-our-patches "gcc-8-sort-libtool-find-output.patch")))
 
 ;; Building glibc with stack smashing protector first landed in glibc 2.25, use
 ;; this function to disable for older glibcs
@@ -155,7 +156,7 @@ chain for " target " development."))
 
 (define* (make-wagerr-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc gcc-7)
+                                       (base-gcc-for-libc gcc-10)
                                        (base-kernel-headers linux-libre-headers-4.9)
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
@@ -641,9 +642,9 @@ inspecting signatures in Mach-O binaries.")
         git
         ;; Tests
         lief
-        ;; Native gcc 7 toolchain
-        gcc-toolchain-7
-        (list gcc-toolchain-7 "static"))
+        ;; Native gcc 10 toolchain
+        gcc-toolchain-10
+        (list gcc-toolchain-10 "static"))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
