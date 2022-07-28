@@ -319,7 +319,7 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "00pk1z983xdg7n5gn8hn4njz882gj28lc8cpk6pvvbp6qa2frdfp"))))
+           "1k6jijxa9jzxvr3zgb6kra2pq2yf4bs0inja5lqwlh83jfy3qbmb"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
