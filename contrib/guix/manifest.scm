@@ -306,7 +306,7 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
     (license license:expat)))
 
 (define-public python-elfesteem
-  (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
+  (let ((commit "5800fcf150dec3ce524f14bc2f24dc037f4826e6"))
     (package
       (name "python-elfesteem")
       (version (git-version "0.1" "1" commit))
