@@ -646,31 +646,36 @@ inspecting signatures in Mach-O binaries.")
         automake
         pkg-config
         bison
-        cmake
         ;; Scripting
         perl
         python-3
         ;; Git
         git
         ;; Tests
-        lief
-        ;; Native gcc 10 toolchain
-        gcc-toolchain-10
-        (list gcc-toolchain-10 "static"))
+        lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list zip
+           (list ;; Native GCC 10 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-with-sde-support nsis-x86_64)
+                 (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (cond ((string-contains target "riscv64-")
-                        (make-wagerr-cross-toolchain target
-                                                      #:base-libc glibc-2.27/wagerr-patched
+           (list ;; Native GCC 7 toolchain
+                 gcc-toolchain-7
+                 (list gcc-toolchain-7 "static")
+                 (cond ((string-contains target "riscv64-")
+                        (make-bitcoin-cross-toolchain target
+                                                      #:base-libc glibc-2.27/bitcoin-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
-                        (make-wagerr-cross-toolchain target)))))
+                        (make-bitcoin-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+           (list ;; Native GCC 10 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))
