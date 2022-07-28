@@ -583,7 +583,7 @@ inspecting signatures in Mach-O binaries.")
 
 (define-public glibc-2.24
   (package
-    (inherit glibc)
+    (inherit glibc-2.31)
     (version "2.24")
     (source (origin
               (method git-fetch)
