@@ -306,7 +306,7 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
     (license license:expat)))
 
 (define-public python-elfesteem
-  (let ((commit "5800fcf150dec3ce524f14bc2f24dc037f4826e6"))
+  (let ((commit "87bbd79ab7e361004c98cc8601d4e5f029fd8bd5"))
     (package
       (name "python-elfesteem")
       (version (git-version "0.1" "1" commit))
@@ -319,7 +319,7 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1k6jijxa9jzxvr3zgb6kra2pq2yf4bs0inja5lqwlh83jfy3qbmb"))))
+           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
