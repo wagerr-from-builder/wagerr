@@ -672,7 +672,7 @@ inspecting signatures in Mach-O binaries.")
                                                       #:base-libc glibc-2.27/bitcoin-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
-                        (make-bitcoin-cross-toolchain target)))))
+                        (make-wagerr-cross-toolchain target)))))
           ((string-contains target "darwin")
            (list ;; Native GCC 10 toolchain
                  gcc-toolchain-10
