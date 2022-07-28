@@ -319,7 +319,8 @@ PKCS#8, PKCS#12, PKCS#5, X.509 and TSP.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))))
+           "1nyvjisvyxyxnd0023xjf5846xd03lwawp5pfzr8vrky7wwm5maz"))
+      (patches (search-our-patches "elfsteem-value-error-python-39.patch"))))
       (build-system python-build-system)
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
