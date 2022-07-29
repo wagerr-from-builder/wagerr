@@ -632,12 +632,21 @@ inspecting signatures in Mach-O binaries.")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list (cond ((string-contains target "riscv64-")
+           (list ;; Native GCC 7 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 (cond ((string-contains target "riscv64-")
                         (make-wagerr-cross-toolchain target
-                                                      #:base-libc glibc-2.27/wagerr-patched
+                                                      #:base-libc glibc-2.27/bitcoin-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
                         (make-wagerr-cross-toolchain target)))))
+           ;;(list (cond ((string-contains target "riscv64-")
+           ;;             (make-wagerr-cross-toolchain target
+           ;;                                           #:base-libc glibc-2.27/wagerr-patched
+           ;;                                           #:base-kernel-headers linux-libre-headers-4.19))
+           ;;            (else
+           ;;             (make-wagerr-cross-toolchain target)))))
           ((string-contains target "darwin")
            (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
           (else '())))))
