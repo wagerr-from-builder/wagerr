@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Wagerr Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
@@ -78,6 +78,19 @@ export OBJCPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
 prepend_to_search_env_var() {
     export "${1}=${2}${!1:+:}${!1}"
 }
+
+case "$HOST" in
+    *darwin*)
+        # When targeting darwin, zlib is required by native_libdmg-hfsplus.
+        zlib_store_path=$(store_path "zlib")
+        zlib_static_store_path=$(store_path "zlib" static)
+
+        prepend_to_search_env_var LIBRARY_PATH "${zlib_static_store_path}/lib:${zlib_store_path}/lib"
+        prepend_to_search_env_var C_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var CPLUS_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
+esac
 
 # Set environment variables to point the CROSS toolchain to the right
 # includes/libs for $HOST
@@ -158,9 +171,6 @@ case "$HOST" in
                 x86_64-linux-gnu)      echo /lib64/ld-linux-x86-64.so.2 ;;
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
                 aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
-                riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
             esac
         )
@@ -191,12 +201,19 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
                                    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
                                    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
+                                   i686_linux_CC=i686-linux-gnu-gcc \
+                                   i686_linux_CXX=i686-linux-gnu-g++ \
+                                   i686_linux_AR=i686-linux-gnu-ar \
+                                   i686_linux_RANLIB=i686-linux-gnu-ranlib \
+                                   i686_linux_NM=i686-linux-gnu-nm \
+                                   i686_linux_STRIP=i686-linux-gnu-strip \
                                    x86_64_linux_CC=x86_64-linux-gnu-gcc \
                                    x86_64_linux_CXX=x86_64-linux-gnu-g++ \
                                    x86_64_linux_AR=x86_64-linux-gnu-ar \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
+                                   qt_config_opts_i686_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
                                    qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
@@ -246,13 +263,6 @@ esac
 # Using --no-tls-get-addr-optimize retains compatibility with glibc 2.18, by
 # avoiding a PowerPC64 optimisation available in glibc 2.22 and later.
 # https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
-case "$HOST" in
-    *powerpc64*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--no-tls-get-addr-optimize" ;;
-esac
-
-case "$HOST" in
-    powerpc64-linux-*|riscv64-linux-*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-z,noexecstack" ;;
-esac
 
 # Make $HOST-specific native binaries from depends available in $PATH
 export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
@@ -279,7 +289,7 @@ mkdir -p "$DISTSRC"
 
     sed -i.old 's/-lstdc++ //g' config.status libtool
 
-    # Build Bitcoin Core
+    # Build Wagerr Core
     make --jobs="$JOBS" ${V:+V=1}
 
     # Check that symbol/security checks tools are sane.
@@ -306,12 +316,12 @@ mkdir -p "$DISTSRC"
             ;;
     esac
 
-    # Setup the directory where our Bitcoin Core build for HOST will be
+    # Setup the directory where our Wagerr Core build for HOST will be
     # installed. This directory will also later serve as the input for our
     # binary tarballs.
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p "${INSTALLPATH}"
-    # Install built Bitcoin Core to $INSTALLPATH
+    # Install built Wagerr Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
             make install-strip DESTDIR="${INSTALLPATH}" ${V:+V=1}
@@ -328,7 +338,8 @@ mkdir -p "$DISTSRC"
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
                 osx_volname \
-                contrib/macdeploy/detached-sig-create.sh
+                contrib/macdeploy/detached-sig-{apply,create}.sh \
+                "${BASEPREFIX}/${HOST}"/native/bin/dmg
             mv --target-directory="unsigned-app-${HOST}" dist
             (
                 cd "unsigned-app-${HOST}"
@@ -363,9 +374,6 @@ mkdir -p "$DISTSRC"
                 # Split binaries and libraries from their debug symbols
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
-                    if [ -d "${DISTNAME}/lib" ]; then
-                        find "${DISTNAME}/lib" -type f -print0
-                    fi
                 } | xargs -0 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 ;;
         esac

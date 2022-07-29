@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 
 # Source the common prelude, which:
-#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   1. Checks if we're at the top directory of the Wagerr Core repository
 #   2. Defines a few common functions and variables
 #
 # shellcheck source=libexec/prelude.bash
@@ -222,6 +222,20 @@ JOBS="${JOBS:-$(nproc)}"
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --format=%at -1)}"
 
+# Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
+# across time.
+time-machine() {
+    # shellcheck disable=SC2086
+    guix time-machine --url=https://git.savannah.gnu.org/git/guix.git \
+                      --commit=ae03f401381e956c4c41b4cf495cbde964fa43d0 \
+                      --cores="$JOBS" \
+                      --keep-failed \
+                      --fallback \
+                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
+                      -- "$@"
+}
+
 # Make sure an output directory exists for our builds
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
 mkdir -p "$OUTDIR_BASE"
@@ -256,7 +270,7 @@ output directory.
 EOF
 }
 
-# Deterministically build Bitcoin Core
+# Deterministically build Wagerr Core
 # shellcheck disable=SC2153
 for host in $HOSTS; do
 

@@ -16,8 +16,6 @@
              (gnu packages gawk)
              (gnu packages gcc)
              (gnu packages gnome)
-             (gnu packages image)
-             (gnu packages imagemagick)
              (gnu packages installers)
              (gnu packages linux)
              (gnu packages llvm)
@@ -31,7 +29,6 @@
              (gnu packages shells)
              (gnu packages tls)
              (gnu packages version-control)
-             (guix build-system font)
              (guix build-system gnu)
              (guix build-system python)
              (guix build-system trivial)
@@ -155,7 +152,7 @@ chain for " target " development."))
                                        (base-libc (make-glibc-without-ssp glibc-2.24))
                                        (base-gcc (make-gcc-rpath-link base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building Wagerr Core release binaries."
   (make-cross-toolchain target
                         base-gcc-for-libc
                         base-kernel-headers
@@ -164,6 +161,10 @@ desirable for building Bitcoin Core release binaries."
 
 (define (make-gcc-with-pthreads gcc)
   (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
+
+;; Required to support std::filesystem for mingw-w64 target.
+(define (make-gcc-without-newlib gcc)
+  (package-with-extra-configure-variable gcc "--with-newlib" "no"))
 
 (define (make-mingw-w64-cross-gcc cross-gcc)
   (package-with-extra-patches cross-gcc
@@ -176,7 +177,7 @@ desirable for building Bitcoin Core release binaries."
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
-                                    #:xgcc (make-ssp-fixed-gcc (make-mingw-w64-cross-gcc base-gcc))
+                                    #:xgcc (make-gcc-without-newlib (make-ssp-fixed-gcc (make-mingw-w64-cross-gcc base-gcc)))
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc))))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
@@ -202,29 +203,10 @@ chain for " target " development."))
   (package-with-extra-patches base-nsis
     (search-our-patches "nsis-gcc-10-memmove.patch")))
 
-(define-public font-tuffy
-  (package
-    (name "font-tuffy")
-    (version "20120614")
-    (source
-     (origin
-       (method url-fetch)
-       (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
-       (file-name (string-append name "-" version ".tar.gz"))
-       (sha256
-        (base32
-         "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
-    (build-system font-build-system)
-    (home-page "http://tulrich.com/fonts/")
-    (synopsis "The Tuffy Truetype Font Family")
-    (description
-     "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
-    (license license:public-domain)))
-
 (define-public lief
   (package
    (name "python-lief")
-   (version "0.12.0")
+   (version "0.11.5")
    (source
     (origin
      (method git-fetch)
@@ -234,7 +216,7 @@ chain for " target " development."))
      (file-name (git-file-name name version))
      (sha256
       (base32
-       "026jchj56q25v6gc0754dj9cj5hz5zaza8ij93y5ga94w20kzm9q"))))
+       "0qahjfg1n0x76ps2mbyljvws1l3qhkqvmxqbahps4qgywl2hbdkj"))))
    (build-system python-build-system)
    (native-inputs
     `(("cmake" ,cmake)))
@@ -375,7 +357,7 @@ thus should be able to compile on most platforms where these exist.")
              #t)))))))
 
 (define-public python-certvalidator
-  (let ((commit "a145bf25eb75a9f014b3e7678826132efbba6213"))
+  (let ((commit "e5bdb4bfcaa09fa0af355eb8867d00dfeecba08c"))
     (package
       (name "python-certvalidator")
       (version (git-version "0.1" "1" commit))
@@ -388,7 +370,7 @@ thus should be able to compile on most platforms where these exist.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1qw2k7xis53179lpqdqyylbcmp76lj7sagp883wmxg5i7chhc96k"))))
+           "18pvxkvpkfkzgvfylv0kx65pmxfcv1hpsg03cip93krfvrrl4c75"))))
       (build-system python-build-system)
       (propagated-inputs
        `(("python-asn1crypto" ,python-asn1crypto)
@@ -534,7 +516,8 @@ and endian independent.")
          ("python-certvalidator" ,python-certvalidator)
          ("python-elfesteem" ,python-elfesteem)
          ("python-requests" ,python-requests)
-         ("python-macholib" ,python-macholib)))
+         ("python-macholib" ,python-macholib)
+         ("libcrypto" ,openssl)))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
@@ -600,6 +583,8 @@ inspecting signatures in Mach-O binaries.")
         bzip2
         gzip
         xz
+        zlib
+        (list zlib "static")
         ;; Build tools
         gnu-make
         libtool
@@ -613,30 +598,24 @@ inspecting signatures in Mach-O binaries.")
         ;; Git
         git
         ;; Tests
-        lief)
+        lief
+        ;; Native gcc 7 toolchain
+        gcc-toolchain-7
+        (list gcc-toolchain-7 "static"))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 zip
+           (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 7 toolchain
-                 gcc-toolchain-7
-                 (list gcc-toolchain-7 "static")
-                 (cond ((string-contains target "riscv64-")
+           (list (cond ((string-contains target "riscv64-")
                         (make-wagerr-cross-toolchain target
                                                       #:base-libc glibc-2.27/wagerr-patched
                                                       #:base-kernel-headers linux-libre-headers-4.19))
                        (else
                         (make-wagerr-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list ;; Native GCC 10 toolchain
-                 gcc-toolchain-10
-                 (list gcc-toolchain-10 "static")
-                 clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+           (list clang-toolchain-10 binutils cmake xorriso python-signapple))
           (else '())))))
