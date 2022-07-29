@@ -154,12 +154,10 @@ case "$HOST" in
     *linux*)
         glibc_dynamic_linker=$(
             case "$HOST" in
+                i686-linux-gnu)        echo /lib/ld-linux.so.2 ;;
                 x86_64-linux-gnu)      echo /lib64/ld-linux-x86-64.so.2 ;;
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
                 aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
-                riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
             esac
         )
@@ -190,12 +188,19 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
                                    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
                                    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
+                                   i686_linux_CC=i686-linux-gnu-gcc \
+                                   i686_linux_CXX=i686-linux-gnu-g++ \
+                                   i686_linux_AR=i686-linux-gnu-ar \
+                                   i686_linux_RANLIB=i686-linux-gnu-ranlib \
+                                   i686_linux_NM=i686-linux-gnu-nm \
+                                   i686_linux_STRIP=i686-linux-gnu-strip \
                                    x86_64_linux_CC=x86_64-linux-gnu-gcc \
                                    x86_64_linux_CXX=x86_64-linux-gnu-g++ \
                                    x86_64_linux_AR=x86_64-linux-gnu-ar \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
+                                   qt_config_opts_i686_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
                                    qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
@@ -246,9 +251,6 @@ esac
 # Using --no-tls-get-addr-optimize retains compatibility with glibc 2.18, by
 # avoiding a PowerPC64 optimisation available in glibc 2.22 and later.
 # https://sourceware.org/binutils/docs-2.35/ld/PowerPC64-ELF64.html
-case "$HOST" in
-    *powerpc64*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,--no-tls-get-addr-optimize" ;;
-esac
 
 # Make $HOST-specific native binaries from depends available in $PATH
 export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
@@ -340,13 +342,13 @@ mkdir -p "$DISTSRC"
     (
         cd installed
 
-        case "$HOST" in
-            *mingw*)
-                if [ -d $DISTNAME/lib/ ]; then
-                    mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
-                fi
-                ;;
-        esac
+        #case "$HOST" in
+        #    *mingw*)
+        #        if [ -d $DISTNAME/lib/ ]; then
+        #            mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
+        #        fi
+        #        ;;
+        #esac
 
         # Prune libtool and object archives
         find . -name "lib*.la" -delete
