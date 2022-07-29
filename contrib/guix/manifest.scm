@@ -627,12 +627,16 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list zip
+           ;;(list zip
+           (list ;; Native GCC 10 toolchain
+                 gcc-toolchain-10
+                 (list gcc-toolchain-10 "static")
+                 zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-for-gcc-10 nsis-x86_64)
                  osslsigncode))
           ((string-contains target "-linux-")
-           (list ;; Native GCC 7 toolchain
+           (list ;; Native GCC 10 toolchain
                  gcc-toolchain-10
                  (list gcc-toolchain-10 "static")
                  (cond ((string-contains target "riscv64-")
