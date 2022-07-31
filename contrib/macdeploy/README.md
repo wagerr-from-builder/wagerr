@@ -6,7 +6,7 @@ The `macdeployqtplus` script should not be run manually. Instead, after building
 make deploy
 ```
 
-When complete, it will have produced `Bitcoin-Core.dmg`.
+When complete, it will have produced `Wagerr-Core.dmg`.
 
 ## SDK Extraction
 
@@ -15,16 +15,14 @@ When complete, it will have produced `Bitcoin-Core.dmg`.
 A free Apple Developer Account is required to proceed.
 
 Our current macOS SDK
-(`Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`)
+(`Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz`) can be
 can be extracted from
-[Xcode_12.2.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
+[Xcode_12.1.xip](https://download.developer.apple.com/Developer_Tools/Xcode_12.1/Xcode_12.1.xip).
 
 Alternatively, after logging in to your account go to 'Downloads', then 'More'
-and search for [`Xcode 12.2`](https://developer.apple.com/download/all/?q=Xcode%2012.2).
+and search for [`Xcode 12.1`](https://developer.apple.com/download/all/?q=Xcode%2012.1).
 
 An Apple ID and cookies enabled for the hostname are needed to download this.
-
-The `sha256sum` of the downloaded XIP archive should be `28d352f8c14a43d9b8a082ac6338dc173cb153f964c6e8fb6ba389e5be528bd0`.
 
 After Xcode version 7.x, Apple started shipping the `Xcode.app` in a `.xip`
 archive. This makes the SDK less-trivial to extract on non-macOS machines. One
@@ -33,32 +31,30 @@ approach (tested on Debian Buster) is outlined below:
 ```bash
 # Install/clone tools needed for extracting Xcode.app
 apt install cpio
-git clone https://github.com/bitcoin-core/apple-sdk-tools.git
+git clone https://github.com/wagerr/apple-sdk-tools.git
 
-# Unpack Xcode_12.2.xip and place the resulting Xcode.app in your current
+# Unpack Xcode_12.1.xip and place the resulting Xcode.app in your current
 # working directory
-python3 apple-sdk-tools/extract_xcode.py -f Xcode_12.2.xip | cpio -d -i
+python3 apple-sdk-tools/extract_xcode.py -f Xcode_12.1.xip | cpio -d -i
 ```
 
 On macOS the process is more straightforward:
 
 ```bash
-xip -x Xcode_12.2.xip
+xip -x Xcode_12.1.xip
 ```
 
-### Step 2: Generating `Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz` from `Xcode.app`
+### Step 2: Generating `Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz` from `Xcode.app`
 
-To generate `Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz`, run
+To generate `Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz`, run
 the script [`gen-sdk`](./gen-sdk) with the path to `Xcode.app` (extracted in the
 previous stage) as the first argument.
 
 ```bash
-# Generate a Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz from
+# Generate a Xcode-12.1-12B45b-extracted-SDK-with-libcxx-headers.tar.gz from
 # the supplied Xcode.app
 ./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
-
-The `sha256sum` of the generated TAR.GZ archive should be `df75d30ecafc429e905134333aeae56ac65fac67cb4182622398fd717df77619`.
 
 ## Deterministic macOS DMG Notes
 
@@ -107,6 +103,6 @@ deterministic. Here's how it works:
   of a tarball, which also contains all of the tools that have been previously (deterministically)
   built in order to create a final DMG.
 - The Apple keyholder uses this unsigned app to create a detached signature, using the
-  script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
+  script that is also included there. Detached signatures are available from this [repository](https://github.com/wagerr/wagerr-detached-sigs).
 - Builders feed the unsigned app + detached signature back into Guix. It uses the
   pre-built tools to recombine the pieces into a deterministic DMG.

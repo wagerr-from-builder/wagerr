@@ -654,10 +654,5 @@ inspecting signatures in Mach-O binaries.")
                        (else
                         (make-wagerr-cross-toolchain target)))))
           ((string-contains target "darwin")
-           (list ;; Native GCC 7 toolchain
-                 gcc-toolchain-7
-                 (list gcc-toolchain-7 "static")
-                 zlib
-                 (list zlib "static")
-                  clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
+            (list clang-toolchain-10 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso python-signapple))
           (else '())))))
