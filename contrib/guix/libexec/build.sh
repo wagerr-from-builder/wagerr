@@ -213,8 +213,8 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-nm \
                                    x86_64_linux_STRIP=x86_64-linux-gnu-strip \
-                                   qt_config_opts_i686_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
-                                   qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform wagerr-linux-g++' \
+                                   qt_config_opts_i686_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
+                                   qt_config_opts_x86_64_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
@@ -239,8 +239,7 @@ mkdir -p "$OUTDIR"
 # CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
-    *linux*) CONFIGFLAGS+="--enable-crash-hooks --disable-threadlocal" ;;
-    *mingw*) CONFIGFLAGS+="--enable-crash-hooks" ;;
+    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
 esac
 
 # CFLAGS
@@ -300,39 +299,31 @@ mkdir -p "$DISTSRC"
 
     sed -i.old 's/-lstdc++ //g' config.status libtool src/univalue/config.status src/univalue/libtool
 
-    # Build Wagerr Core
+    # Build Bitcoin Core
     make --jobs="$JOBS" ${V:+V=1}
 
     # Check that symbol/security checks tools are sane.
-    case "$HOST" in
-        *darwin*)
-            make -C src --jobs=1 check-symbols  ${V:+V=1}
-            ;;
-        *)
-            #make test-security-check ${V:+V=1}
-            # Perform basic security checks on a series of executables.
-            make -C src --jobs=1 check-security ${V:+V=1}
-            # Check that executables only contain allowed version symbols.
-            make -C src --jobs=1 check-symbols  ${V:+V=1}
-            ;;
-    esac
+    make test-security-check ${V:+V=1}
+    # Perform basic security checks on a series of executables.
+    make -C src --jobs=1 check-security ${V:+V=1}
+    # Check that executables only contain allowed version symbols.
+    make -C src --jobs=1 check-symbols  ${V:+V=1}
 
     mkdir -p "$OUTDIR"
 
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
-            make deploy ${V:+V=1} 
-            cp -f wagerr-*setup*.exe ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe
+            make deploy ${V:+V=1} BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             ;;
     esac
 
-    # Setup the directory where our Wagerr Core build for HOST will be
+    # Setup the directory where our Bitcoin Core build for HOST will be
     # installed. This directory will also later serve as the input for our
     # binary tarballs.
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p "${INSTALLPATH}"
-    # Install built Wagerr Core to $INSTALLPATH
+    # Install built Bitcoin Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
             make install-strip DESTDIR="${INSTALLPATH}" ${V:+V=1}
@@ -366,11 +357,11 @@ mkdir -p "$DISTSRC"
     (
         cd installed
 
-        #case "$HOST" in
-        #    *mingw*)
-        #        mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
-        #        ;;
-        #esac
+        case "$HOST" in
+            *mingw*)
+                mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
+                ;;
+        esac
 
         # Prune libtool and object archives
         find . -name "lib*.la" -delete
@@ -385,6 +376,7 @@ mkdir -p "$DISTSRC"
                 # Split binaries and libraries from their debug symbols
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
+                    find "${DISTNAME}/lib" -type f -print0
                 } | xargs -0 -n1 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 ;;
         esac
