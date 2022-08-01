@@ -173,6 +173,7 @@ chain for " target " development."))
         gzip
         xz
         zlib
+        (list zlib "static")
         ;; Build tools
         gnu-make
         libtool
