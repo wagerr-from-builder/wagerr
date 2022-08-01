@@ -239,7 +239,8 @@ mkdir -p "$OUTDIR"
 # CONFIGFLAGS
 CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
-    *linux*) CONFIGFLAGS+=" --disable-threadlocal" ;;
+    *linux*) CONFIGFLAGS+="--enable-crash-hooks --disable-threadlocal" ;;
+    *mingw*) CONFIGFLAGS+="--enable-crash-hooks" ;;
 esac
 
 # CFLAGS
@@ -303,18 +304,26 @@ mkdir -p "$DISTSRC"
     make --jobs="$JOBS" ${V:+V=1}
 
     # Check that symbol/security checks tools are sane.
-    make test-security-check ${V:+V=1}
-    # Perform basic security checks on a series of executables.
-    make -C src --jobs=1 check-security ${V:+V=1}
-    # Check that executables only contain allowed version symbols.
-    make -C src --jobs=1 check-symbols  ${V:+V=1}
+    case "$HOST" in
+        *darwin*)
+            make -C src --jobs=1 check-symbols  ${V:+V=1}
+            ;;
+        *)
+            #make test-security-check ${V:+V=1}
+            # Perform basic security checks on a series of executables.
+            make -C src --jobs=1 check-security ${V:+V=1}
+            # Check that executables only contain allowed version symbols.
+            make -C src --jobs=1 check-symbols  ${V:+V=1}
+            ;;
+    esac
 
     mkdir -p "$OUTDIR"
 
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
-            make deploy ${V:+V=1} BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+            make deploy ${V:+V=1} 
+            cp -f wagerr-*setup*.exe ${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe
             ;;
     esac
 
@@ -357,11 +366,11 @@ mkdir -p "$DISTSRC"
     (
         cd installed
 
-        case "$HOST" in
-            *mingw*)
-                mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
-                ;;
-        esac
+        #case "$HOST" in
+        #    *mingw*)
+        #        mv --target-directory="$DISTNAME"/lib/ "$DISTNAME"/bin/*.dll
+        #        ;;
+        #esac
 
         # Prune libtool and object archives
         find . -name "lib*.la" -delete
@@ -376,7 +385,6 @@ mkdir -p "$DISTSRC"
                 # Split binaries and libraries from their debug symbols
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
-                    find "${DISTNAME}/lib" -type f -print0
                 } | xargs -0 -n1 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 ;;
         esac
