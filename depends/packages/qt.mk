@@ -1,4 +1,5 @@
 PACKAGE=qt
+include gmd
 $(package)_version=5.9.6
 $(package)_download_path=https://download.qt.io/archive/qt/5.9/$($(package)_version)/submodules
 $(package)_suffix=opensource-src-$($(package)_version).tar.xz
@@ -170,6 +171,7 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
+  $(__BREAKPOINT)
   $(MAKE) -C src $(addprefix sub-,$($(package)_qt_libs)) && \
   $(MAKE) -C ../qttools/src/linguist/lrelease && \
   $(MAKE) -C ../qttools/src/linguist/lupdate && \
