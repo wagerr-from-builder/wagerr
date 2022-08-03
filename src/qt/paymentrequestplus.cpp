@@ -106,7 +106,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         X509 *cert = d2i_X509(nullptr, &data, certChain.certificate(i).size());
         if (cert)
             certs.push_back(cert);
-    }
+    }*/
     if (certs.empty()) {
         qWarning() << "PaymentRequestPlus::getMerchant: Payment request: empty certificate chain";
         return false;
@@ -202,7 +202,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         X509_free(certs[i]);
 
     return fResult;
-}*/
+}
 
 QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
 {
