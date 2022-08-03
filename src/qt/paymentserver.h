@@ -32,7 +32,7 @@
 // sends them to the server.
 //
 
-#include <qt/paymentrequestplus.h>
+//#include <qt/paymentrequestplus.h>
 #include <qt/walletmodel.h>
 
 #include <QObject>
