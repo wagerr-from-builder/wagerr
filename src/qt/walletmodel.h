@@ -10,7 +10,7 @@
 #include <serialize.h>
 #include <script/standard.h>
 
-#include <qt/paymentrequestplus.h>
+//#include <qt/paymentrequestplus.h>
 #include <qt/walletmodeltransaction.h>
 
 #include <interfaces/wallet.h>
