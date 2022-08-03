@@ -89,7 +89,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         return false;
     }
 
-    std::vector<X509*> certs;
+    /*std::vector<X509*> certs;
     const QDateTime currentTime = QDateTime::currentDateTime();
     for (int i = 0; i < certChain.certificate_size(); i++) {
         QByteArray certData(certChain.certificate(i).data(), certChain.certificate(i).size());
@@ -202,7 +202,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         X509_free(certs[i]);
 
     return fResult;
-}
+}*/
 
 QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
 {

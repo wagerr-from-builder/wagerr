@@ -37,9 +37,9 @@
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QSslCertificate>
+/*#include <QSslCertificate>
 #include <QSslError>
-#include <QSslSocket>
+#include <QSslSocket> */
 #include <QStringList>
 #include <QTextDocument>
 #include <QUrlQuery>
@@ -94,15 +94,15 @@ static QString ipcServerName()
 
 static QList<QString> savedPaymentRequests;
 
-static void ReportInvalidCertificate(const QSslCertificate& cert)
+/*static void ReportInvalidCertificate(const QSslCertificate& cert)
 {
     qDebug() << QString("%1: Payment server found an invalid certificate: ").arg(__func__) << cert.serialNumber() << cert.subjectInfo(QSslCertificate::CommonName) << cert.subjectInfo(QSslCertificate::DistinguishedNameQualifier) << cert.subjectInfo(QSslCertificate::OrganizationalUnitName);
-}
+}*/
 
 //
 // Load OpenSSL's list of root certificate authorities
 //
-void PaymentServer::LoadRootCAs(X509_STORE* _store)
+/*void PaymentServer::LoadRootCAs(X509_STORE* _store)
 {
     // Unit tests mostly use this, to pass in fake root CAs:
     if (_store)
@@ -180,7 +180,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
     //   would it be easier to just use a compiled-in blacklist?
     //    or use Qt's blacklist?
     //   "certificate stapling" with server-side caching is more efficient
-}
+} */
 
 //
 // Sending to the server is done synchronously, at startup.
@@ -350,7 +350,7 @@ bool PaymentServer::eventFilter(QObject *object, QEvent *event)
     return QObject::eventFilter(object, event);
 }
 
-void PaymentServer::initNetManager()
+/*void PaymentServer::initNetManager()
 {
     if (!optionsModel)
         return;
@@ -374,7 +374,7 @@ void PaymentServer::initNetManager()
             this, SLOT(netRequestFinished(QNetworkReply*)));
     connect(netManager, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)),
             this, SLOT(reportSslErrors(QNetworkReply*, const QList<QSslError> &)));
-}
+}*/
 
 void PaymentServer::uiReady()
 {
@@ -449,18 +449,18 @@ void PaymentServer::handleURIOrFile(const QString& s)
 
     if (QFile::exists(s)) // payment request file
     {
-        PaymentRequestPlus request;
+i/*        PaymentRequestPlus request;
         SendCoinsRecipient recipient;
         if (!readPaymentRequestFromFile(s, request))
-        {
+        { */
             Q_EMIT message(tr("Payment request file handling"),
                 tr("Payment request file cannot be read! This can be caused by an invalid payment request file."),
                 CClientUIInterface::ICON_WARNING);
-        }
+        /*}
         else if (processPaymentRequest(request, recipient))
             Q_EMIT receivedPaymentRequest(recipient);
 
-        return;
+        return;*/
     }
 }
 
@@ -721,7 +721,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     }
 }
 
-void PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError> &errs)
+/*void PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError> &errs)
 {
     Q_UNUSED(reply);
 
@@ -731,7 +731,7 @@ void PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError>
         errString += err.errorString() + "\n";
     }
     Q_EMIT message(tr("Network request error"), errString, CClientUIInterface::MSG_ERROR);
-}
+}*/
 
 void PaymentServer::setOptionsModel(OptionsModel *_optionsModel)
 {

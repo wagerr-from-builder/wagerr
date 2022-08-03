@@ -119,7 +119,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void handleURIConnection();
     void netRequestFinished(QNetworkReply*);
-    void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
+    /*void reportSslErrors(QNetworkReply*, const QList<QSslError> &);*/
     void handlePaymentACK(const QString& paymentACKMsg);
 
 protected:
