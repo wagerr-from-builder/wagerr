@@ -10,7 +10,6 @@ $(package)_patches+=add_zlib_static.patch
 
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/remove-libcrypto-dependency.patch && \
-  patch -p1 < $($(package)_patch_dir)/add_zlib_library.patch && \
   patch -p1 < $($(package)_patch_dir)/add_zlib_static.patch && \
   mkdir build
 endef
