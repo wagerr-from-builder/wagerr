@@ -6,10 +6,12 @@ $(package)_sha256_hash=56fbdc48ec110966342f0ecddd6f8f89202f4143ed2a3336e42bbf88f
 $(package)_build_subdir=build
 $(package)_patches=remove-libcrypto-dependency.patch
 $(package)_patches+=add_zlib_library.patch
+$(package)_patches+=add_zlib_static.patch
 
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/remove-libcrypto-dependency.patch && \
   patch -p1 < $($(package)_patch_dir)/add_zlib_library.patch && \
+  patch -p1 < $($(package)_patch_dir)/add_zlib_static.patch && \
   mkdir build
 endef
 

@@ -1,0 +1,11 @@
+--- a/dmg/CMakeLists.txt	2022-08-04 12:08:34.153125945 +0100
++++ ib/dmg/CMakeLists.txt	2022-08-04 12:10:18.832023208 +0100
+@@ -12,7 +12,7 @@
+ ENDIF(NOT ZLIB_FOUND)
+ 
+ include_directories(${ZLIB_INCLUDE_DIR})
+-link_directories(${ZLIB_LIBRARIES})
++link_directories(${ZLIB_LIBRARIES} /home/ckti/.guix-profile/lib)
+ 
+ link_directories(${PROJECT_BINARY_DIR}/common ${PROJECT_BINARY_DIR}/hfs)
+ 
