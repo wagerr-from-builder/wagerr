@@ -92,7 +92,7 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #
 darwin_CC=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-              -u LIBRARY_PATH \
+              -u LIBRARY_PATH -u /home/ckti/.guix-profile/lib \
             $(clang_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
               -isysroot$(OSX_SDK) \
@@ -100,7 +100,7 @@ darwin_CC=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 darwin_CXX=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
-               -u LIBRARY_PATH \
+               -u LIBRARY_PATH -u /home/ckti/.guix-profile/lib \
              $(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
                -isysroot$(OSX_SDK) \
