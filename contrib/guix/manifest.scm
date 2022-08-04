@@ -585,8 +585,8 @@ inspecting signatures in Mach-O binaries.")
         bzip2
         gzip
         xz
-        zlib
-        (list zlib "static")
+        ;;zlib
+        ;;(list zlib "static")
         ;; Build tools
         gnu-make
         libtool-2.4.7
