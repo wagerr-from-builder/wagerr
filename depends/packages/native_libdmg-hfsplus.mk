@@ -12,7 +12,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags) -Wl,--build-id=none -L/home/ckti/.guix-profile/lib" -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_SHARED_LINKER_FLAGS="--verbose" ..
+  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags) -Wl,--build-id=none" -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_SHARED_LINKER_FLAGS="--verbose" ..
 endef
 
 define $(package)_build_cmds
