@@ -1,5 +1,5 @@
---- CMakeLists.txt.orig	2022-08-04 12:08:34.153125945 +0100
-+++ CMakeLists.txt	2022-08-07 11:06:19.027487629 +0100
+--- a/dmg/CMakeLists.txti   2022-08-04 12:08:34.153125945 +0100
++++ ib/dmg/CMakeLists.txt	2022-08-07 11:06:19.027487629 +0100
 @@ -12,7 +12,7 @@
  ENDIF(NOT ZLIB_FOUND)
  
