@@ -7,7 +7,8 @@ $(package)_build_subdir=build
 $(package)_patches=remove-libcrypto-dependency.patch
 
 define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/remove-libcrypto-dependency.patch add_zlib_library.patch && \
+  patch -p1 < $($(package)_patch_dir)/remove-libcrypto-dependency.patch && \
+  patch -p1 < $($(package)_patch_dir)/add_zlib_library.patch && \
   mkdir build
 endef
 
