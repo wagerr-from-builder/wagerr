@@ -262,7 +262,9 @@ mkdir -p "$DISTSRC"
                     --disable-ccache \
                     --disable-maintainer-mode \
                     --disable-dependency-tracking \
-                    ${CONFIGFLAGS} 
+                    ${CONFIGFLAGS} \
+                    ${HOST_CFLAGS:+CFLAGS="${HOST_CFLAGS}"} \
+                    ${HOST_CXXFLAGS:+CXXFLAGS="${HOST_CXXFLAGS}"} 
 
     sed -i.old 's/-lstdc++ //g' config.status libtool
 
