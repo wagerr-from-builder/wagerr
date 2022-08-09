@@ -1,6 +1,6 @@
 .NOTPARALLEL :
 
-print-%: FORCE
+print-%:
 	@echo '$*'='$($*)'
 SOURCES_PATH ?= $(BASEDIR)/sources
 WORK_PATH = $(BASEDIR)/work
