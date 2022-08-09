@@ -1,5 +1,5 @@
 package=libxcb
-$(package)_version=1.13
+$(package)_version=1.14
 $(package)_download_path=http://xcb.freedesktop.org/dist
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=2c7fcddd1da34d9b238c9caeda20d3bd7486456fc50b3cc6567185dbd5b0ad02
