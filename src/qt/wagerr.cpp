@@ -241,7 +241,9 @@ private:
 
 #include <qt/wagerr.moc>
 
-BitcoinCore::~BitcoinCore(interfaces::Node& node) :
+BitcoinCore::~BitcoinCore(){};
+
+BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
 }
