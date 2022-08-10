@@ -152,8 +152,6 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 
-BitcoinCore::~BitcoinCore(){};
-
 class BitcoinCore: public QObject
 {
     Q_OBJECT
