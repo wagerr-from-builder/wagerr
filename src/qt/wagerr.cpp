@@ -157,6 +157,7 @@ class BitcoinCore: public QObject
     Q_OBJECT
 public:
     explicit BitcoinCore(interfaces::Node& node);
+    ~BitcoinCore();
 
 public Q_SLOTS:
     void initialize();
