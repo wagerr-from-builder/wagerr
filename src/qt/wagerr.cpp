@@ -241,10 +241,7 @@ private:
 
 #include <qt/wagerr.moc>
 
-BitcoinCore::~BitcoinCore(){};
-
-BitcoinCore::BitcoinCore(interfaces::Node& node) :
-    QObject(), m_node(node)
+BitcoinCore::BitcoinCore() : QObject()
 {
 }
 
