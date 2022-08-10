@@ -156,9 +156,6 @@ class BitcoinCore: public QObject
 {
     Q_OBJECT
 public:
-    virtual ~BitcoinCore()
-    { };
-
     explicit BitcoinCore(interfaces::Node& node);
 
 public Q_SLOTS:
