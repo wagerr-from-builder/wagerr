@@ -1,14 +1,21 @@
-packages:=boost openssl libevent zeromq gmp bls-dash backtrace cmake
+packages:=boost openssl libevent gmp chia_bls backtrace
 
 qt_native_packages = native_protobuf
-qt_packages = qrencode protobuf zlib
 
-qt_linux_packages:=qt expat dbus libxcb xcb_proto libXau xproto freetype fontconfig
+qt_packages = protobuf zlib
+
+qrencode_packages = qrencode
+
+qt_linux_packages:=qt expat dbus libxcb xcb_proto libXau xproto freetype fontconfig libX11 xextproto libXext xtrans
+qt_i686_linux_packages:=$(qt_linux_packages)
+qt_android_packages=qt
 
 qt_darwin_packages=qt
 qt_mingw32_packages=qt
 
 wallet_packages=bdb
+
+zmq_packages=zeromq
 
 upnp_packages=miniupnpc
 
