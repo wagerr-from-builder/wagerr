@@ -205,17 +205,17 @@ endef
 define $(package)_preprocess_cmds
   cp $($(package)_patch_dir)/qt.pro qt.pro && \
   cp $($(package)_patch_dir)/qttools_src.pro qttools/src/src.pro && \
-  patch -p1 -i $($(package)_patch_dir)/fix_rcc_determinism.patch
-  patch -p1 -i $($(package)_patch_dir)/fix_riscv64_arch.patch
-  patch -p1 -i $($(package)_patch_dir)/xkb-default.patch
-  patch -p1 -i $($(package)_patch_dir)/no-xlib.patch
-  patch -p1 -i $($(package)_patch_dir)/fix_android_qmake_conf.patch
-  patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch
-  patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch
-  patch -p1 -i $($(package)_patch_dir)/freetype_back_compat.patch
-  patch -p1 -i $($(package)_patch_dir)/drop_lrelease_dependency.patch
-  patch -p1 -i $($(package)_patch_dir)/fix_powerpc_libpng.patch
-  patch -p1 -i $($(package)_patch_dir)/fix_qpainter_non_determinism.patch
+  patch -p1 -i $($(package)_patch_dir)/fix_rcc_determinism.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_riscv64_arch.patch && \
+  patch -p1 -i $($(package)_patch_dir)/xkb-default.patch && \
+  patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_android_qmake_conf.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_android_jni_static.patch && \
+  patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
+  patch -p1 -i $($(package)_patch_dir)/freetype_back_compat.patch && \
+  patch -p1 -i $($(package)_patch_dir)/drop_lrelease_dependency.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_powerpc_libpng.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix_qpainter_non_determinism.patch && \
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/no-xlib.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
