@@ -2,6 +2,9 @@ packages:=boost openssl libevent zeromq gmp backtrace cmake bls-dash
 
 sse2_packages = openssl
 
+qt_native_packages = native_protobuf
+qt_packages = qrencode protobuf zlib
+
 qt_packages = zlib
 
 qrencode_packages = qrencode
