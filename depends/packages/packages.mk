@@ -1,4 +1,4 @@
-packages:=boost libevent gmp
+packages:=boost openssl libevent zeromq gmp backtrace cmake bls-dash
 
 sse2_packages = openssl
 
