@@ -111,6 +111,9 @@ script: |
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
+  echo $CC
+  echo $CXX
+
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
