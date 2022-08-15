@@ -126,7 +126,6 @@ $(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSIO
 $(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
 $(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
 $(package)_config_opts_darwin += -device-option XCODE_VERSION=$(XCODE_VERSION)
-$(package)_config_opts_darwin += -sdk_no_version_check
 endif
 
 # for macOS on Apple Silicon (ARM) see https://bugreports.qt.io/browse/QTBUG-85279
