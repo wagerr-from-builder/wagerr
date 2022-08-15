@@ -46,7 +46,7 @@ lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(s
 # For well-known tools provided by cctools, make sure that their well-known
 # variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
 # would.
-$(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(host)-$(call lc,$(TOOL))))
+$(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(host)-$(call lc,$(TOOL))))
 
 # Flag explanations:
 #
