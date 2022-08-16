@@ -20,16 +20,6 @@ clangxx_prog=$(clang_prog)++
 
 clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
 
-cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL
-
-# Make-only lowercase function
-lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
-
-# For well-known tools provided by cctools, make sure that their well-known
-# variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
-# would.
-$(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(host)-$(call lc,$(TOOL))))
-
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
@@ -47,6 +37,7 @@ clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 
 clang_resource_dir=$(shell clang -print-resource-dir)
+endif
 
 cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL
 
@@ -57,7 +48,6 @@ lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(s
 # variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
 # would.
 $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(host)-$(call lc,$(TOOL))))
-endif
 
 # Flag explanations:
 #
