@@ -142,9 +142,7 @@ script: |
     echo '#!/bin/true' >share/genbuild.sh
     mkdir src/obj
     cp ../src/obj/build.h src/obj/
-    export AR=${BASEPREFIX}/${i}/native/bin/x86_64-apple-darwin16-ar
-    export RANLIB=${BASEPREFIX}/${i}/native/bin/x86_64-apple-darwin16-ranlib
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure RANLIB='ranlib' AR='ar' --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make install-strip DESTDIR=${INSTALLPATH}
 
