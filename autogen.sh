@@ -13,4 +13,4 @@ if [ -z ${LIBTOOLIZE} ] && GLIBTOOLIZE="`which glibtoolize 2>/dev/null`"; then
 fi
 which autoreconf >/dev/null || \
   (echo "configuration failed, please install autoconf first" && exit 1)
-autoreconf --install --force --warnings=all
+autoreconf --install --force --warnings=all -v -d
