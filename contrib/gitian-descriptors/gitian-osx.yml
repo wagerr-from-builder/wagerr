@@ -143,9 +143,9 @@ script: |
     mkdir src/obj
     cp ../src/obj/build.h src/obj/
 
-    AR='/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ar' \
-    RANLIB='/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ranlib' \
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    find . -type f -exec sed -i s#/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin//home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ar#/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ar#g {} \;
+    find . -type f -exec sed -i s#/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin//home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ranlib#/home/ubuntu/build/wagerr/depends/x86_64-apple-darwin16/native/bin/x86_64-apple-darwin16-ranlib#g {} \;
     make ${MAKEOPTS}
     make install-strip DESTDIR=${INSTALLPATH}
 
