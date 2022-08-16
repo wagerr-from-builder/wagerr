@@ -79,7 +79,8 @@ LT_INIT([pic-only])
 
 dnl Check/return PATH for base programs.
 AC_CHECK_TOOL(AR, ar)
-AC_CHECK_TOOL(RANLIB, ranlib)
+dnl AC_CHECK_TOOL(RANLIB, ranlib)
+AC_PROG_RANLIB
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
