@@ -102,6 +102,7 @@ script: |
 
   # Build dependencies for each host
   for i in $HOSTS; do
+    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
   done
 
