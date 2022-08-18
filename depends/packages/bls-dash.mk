@@ -27,6 +27,8 @@ define $(package)_extract_cmds
   echo "$($(package)_relic_sha256_hash)  $($(package)_source_dir)/$($(package)_relic_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   tar --strip-components=1 -xf $($(package)_source) -C . && \
+  echo "Host Prefix $(host_[prefix])"
+  sleep 60
   cp $($(package)_source_dir)/$($(package)_relic_file_name) .
 endef
 
@@ -37,8 +39,8 @@ define $(package)_set_vars
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0
   $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
   $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
-  $(package)_config_opts_darwin+= -DCMAKE_AR="x86_64-apple-darwin16-ar"
-  $(package)_config_opts_darwin+= -DCMAKE_RANLIB="x86_64-apple-darwin16-ranlib"
+  $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)-ar"
+  $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)-ranlib"
   $(package)_config_opts_mingw32=-DOPSYS=WINDOWS -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS=""
   $(package)_config_opts_i686+= -DWSIZE=32
   $(package)_config_opts_x86_64+= -DWSIZE=64
