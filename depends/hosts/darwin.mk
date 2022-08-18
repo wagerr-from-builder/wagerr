@@ -93,12 +93,12 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-  darwin_CC=$(clang_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+  darwin_CC=clang --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
               -isysroot$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
-  darwin_CXX=$(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+  darwin_CXX=clang++ --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
                -isysroot$(OSX_SDK) \
                -stdlib=libc++ \
