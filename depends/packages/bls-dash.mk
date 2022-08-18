@@ -27,7 +27,7 @@ define $(package)_extract_cmds
   echo "$($(package)_relic_sha256_hash)  $($(package)_source_dir)/$($(package)_relic_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   tar --strip-components=1 -xf $($(package)_source) -C . && \
-  echo "Host Prefix $(host_[prefix])" &&\
+  echo "Host Prefix $(host_[prefix])" && \
   echo "Path $(path)" && \
   sleep 60
   cp $($(package)_source_dir)/$($(package)_relic_file_name) .
