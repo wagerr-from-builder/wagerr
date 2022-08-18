@@ -92,20 +92,22 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #         break #include_next's.
 #
 
-ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-  #darwin_CC=clang --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
-  #            -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-  #            -isysroot$(OSX_SDK) \
-  #            -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
-  #            -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
-  #darwin_CXX=clang++ --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
-  #             -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
-  #             -isysroot$(OSX_SDK) \
-  #             -stdlib=libc++ \
-  #             -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
-  #             -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
-  #             -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
-#else
+ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+  darwin_CC=clang --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+              -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
+              -isysroot$(OSX_SDK) \
+              -isystem$(build_prefix)/include \
+              -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
+              -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
+  darwin_CXX=clang++ --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
+               -isysroot$(OSX_SDK) \
+               -isystem$(build_prefix)/include \
+               -stdlib=libc++ \
+               -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
+               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
+               -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
+else
   darwin_CC=`which env` -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH \
