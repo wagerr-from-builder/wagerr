@@ -29,7 +29,7 @@ define $(package)_extract_cmds
   tar --strip-components=1 -xf $($(package)_source) -C . && \
   echo "Host Prefix $(host_[prefix])" && \
   echo "Path $(path)" && \
-  sleep 60
+  sleep 60 && \
   cp $($(package)_source_dir)/$($(package)_relic_file_name) .
 endef
 
