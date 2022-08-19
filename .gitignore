@@ -73,6 +73,8 @@ libconftest.dylib*
 
 *.json.h
 *.raw.h
+!src/zwgr/accumulatorcheckpoints.json.h
+!src/invalid_scripts.json.h
 
 # Only ignore unexpected patches
 *.patch
