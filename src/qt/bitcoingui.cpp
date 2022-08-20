@@ -383,7 +383,7 @@ void BitcoinGUI::stopConnectingAnimation()
 
 void BitcoinGUI::createActions()
 {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
+    sendCoinsMenuAction = new QAction((QIcon(":/icons/send"),tr("&Send"), this);
     sendCoinsMenuAction->setStatusTip(tr("Send coins to a Wagerr address"));
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
