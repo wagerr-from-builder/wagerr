@@ -595,7 +595,7 @@ void BitcoinGUI::createToolBars()
         appToolBar = toolbar;
         toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
         toolbar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
         toolbar->setMovable(false); // remove unused icon in upper left corner
 
         tabGroup = new QButtonGroup(this);
