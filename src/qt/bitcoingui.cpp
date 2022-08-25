@@ -602,7 +602,7 @@ void BitcoinGUI::createToolBars()
 
         overviewButton = new QToolButton(this);
         overviewButton->setText(tr("&Overview"));
-        overviewButton->setIcon(QIcon(":/images/overview"));
+        overviewButton->setIcon(QIcon(":/images/overview.xpm"));
         overviewButton->setStatusTip(tr("Show general overview of wallet"));
         tabGroup->addButton(overviewButton);
 
