@@ -52,7 +52,6 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QShortcut>
-#include <QSize>
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
@@ -602,10 +601,8 @@ void BitcoinGUI::createToolBars()
         tabGroup = new QButtonGroup(this);
 
         overviewButton = new QToolButton(this);
-        overviewIcon = QPixmap(':/images/overview');
-        QSize overviewIcon(80, 80);
         overviewButton->setText(tr("&Overview"));
-        overviewButton->setIcon(QIcon(overviewIcon));
+        overviewButton->setIcon(QIcon(":/images/overview"));
         overviewButton->setStatusTip(tr("Show general overview of wallet"));
         tabGroup->addButton(overviewButton);
 
