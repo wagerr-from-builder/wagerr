@@ -601,7 +601,6 @@ void BitcoinGUI::createToolBars()
         tabGroup = new QButtonGroup(this);
 
         overviewButton = new QToolButton(this);
-        //overviewButton->setPopupMode( QToolButton::InstantPopup );
         overviewButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         overviewButton->setText(tr("&Overview"));
         overviewButton->setIcon(QIcon(":/icons/overview"));
@@ -609,29 +608,39 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
+        sendCOinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         sendCoinsButton->setText(sendCoinsMenuAction->text());
+        sendCoinsButton->setIcon(QIcon(":/icons/send"));
         sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
         tabGroup->addButton(sendCoinsButton);
 
         receiveCoinsButton = new QToolButton(this);
+        receiveCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         receiveCoinsButton->setText(receiveCoinsMenuAction->text());
+        receiveCoinsButton->setIcon(QIcon(":/icons/receive"));
         receiveCoinsButton->setStatusTip(receiveCoinsMenuAction->statusTip());
         tabGroup->addButton(receiveCoinsButton);
 
         historyButton = new QToolButton(this);
+        historyButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         historyButton->setText(tr("&Transactions"));
+        historyButton->setIcon(QIcon(":/icons/history"));
         historyButton->setStatusTip(tr("Browse transaction history"));
         tabGroup->addButton(historyButton);
 
         coinJoinCoinsButton = new QToolButton(this);
+        coinJoinCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         coinJoinCoinsButton->setText(coinJoinCoinsMenuAction->text());
+        coinJoinCoinsButton->setIcon(QIcon(":/icons/coinjoin"));
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsMenuAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
         QSettings settings;
         if (settings.value("fShowMasternodesTab").toBool()) {
             masternodeButton = new QToolButton(this);
+            masternodeButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
             masternodeButton->setText(tr("&Masternodes"));
+            masternodeButton->setIcon(QIcon(":/icons/masternodes"));
             masternodeButton->setStatusTip(tr("Browse masternodes"));
             tabGroup->addButton(masternodeButton);
             connect(masternodeButton, SIGNAL(clicked()), this, SLOT(gotoMasternodePage()));
