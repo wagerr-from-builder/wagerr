@@ -52,6 +52,7 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QShortcut>
+#include <QSize>
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
