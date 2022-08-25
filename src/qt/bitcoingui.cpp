@@ -601,7 +601,7 @@ void BitcoinGUI::createToolBars()
         tabGroup = new QButtonGroup(this);
 
         overviewButton = new QToolButton(this);
-        overviewButton->setPopupMode( QToolButton::InstantPopup );
+        //overviewButton->setPopupMode( QToolButton::InstantPopup );
         overviewButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         overviewButton->setText(tr("&Overview"));
         overviewButton->setIcon(QIcon(":/icons/overview"));
