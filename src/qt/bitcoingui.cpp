@@ -608,7 +608,7 @@ void BitcoinGUI::createToolBars()
         tabGroup->addButton(overviewButton);
 
         sendCoinsButton = new QToolButton(this);
-        sendCOinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
+        sendCoinsButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
         sendCoinsButton->setText(sendCoinsMenuAction->text());
         sendCoinsButton->setIcon(QIcon(":/icons/send"));
         sendCoinsButton->setStatusTip(sendCoinsMenuAction->statusTip());
