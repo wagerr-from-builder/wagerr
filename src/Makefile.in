@@ -865,6 +865,7 @@ am__qt_libwagerrqt_a_SOURCES_DIST = qt/appearancewidget.cpp \
     qt/res/icons/send.png \
     qt/res/icons/receive.png \
     qt/res/icons/history.png \
+    qt/res/icons/masternodes.png \
 	qt/res/icons/editcopy.png qt/res/icons/editpaste.png \
 	qt/res/icons/eye.png qt/res/icons/eye_minus.png \
 	qt/res/icons/eye_plus.png qt/res/icons/hd_enabled.png \
