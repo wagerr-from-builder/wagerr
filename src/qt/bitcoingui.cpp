@@ -383,15 +383,15 @@ void BitcoinGUI::stopConnectingAnimation()
 
 void BitcoinGUI::createActions()
 {
-    sendCoinsMenuAction = new QAction(tr("&Send"), this);
+    sendCoinsMenuAction = new QAction(tr("Send"), this);
     sendCoinsMenuAction->setStatusTip(tr("Send coins to a Wagerr address"));
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    coinJoinCoinsMenuAction = new QAction("&CoinJoin", this);
+    coinJoinCoinsMenuAction = new QAction("CoinJoin", this);
     coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Wagerr address").arg("CoinJoin"));
     coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
 
-    receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
+    receiveCoinsMenuAction = new QAction(tr("Receive"), this);
     receiveCoinsMenuAction->setStatusTip(tr("Request payments (generates QR codes and wagerr: URIs)"));
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
@@ -602,7 +602,7 @@ void BitcoinGUI::createToolBars()
 
         overviewButton = new QToolButton(this);
         overviewButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
-        overviewButton->setText(tr("&Overview"));
+        overviewButton->setText(tr("Overview"));
         overviewButton->setIcon(QIcon(":/icons/overview"));
         overviewButton->setStatusTip(tr("Show general overview of wallet"));
         tabGroup->addButton(overviewButton);
@@ -623,7 +623,7 @@ void BitcoinGUI::createToolBars()
 
         historyButton = new QToolButton(this);
         historyButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
-        historyButton->setText(tr("&Transactions"));
+        historyButton->setText(tr("Transactions"));
         historyButton->setIcon(QIcon(":/icons/history"));
         historyButton->setStatusTip(tr("Browse transaction history"));
         tabGroup->addButton(historyButton);
@@ -639,7 +639,7 @@ void BitcoinGUI::createToolBars()
         if (settings.value("fShowMasternodesTab").toBool()) {
             masternodeButton = new QToolButton(this);
             masternodeButton->setToolButtonStyle( Qt::ToolButtonTextUnderIcon);
-            masternodeButton->setText(tr("&Masternodes"));
+            masternodeButton->setText(tr("Masternodes"));
             masternodeButton->setIcon(QIcon(":/icons/masternodes"));
             masternodeButton->setStatusTip(tr("Browse masternodes"));
             tabGroup->addButton(masternodeButton);
