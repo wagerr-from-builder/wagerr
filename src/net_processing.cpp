@@ -446,7 +446,7 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
             nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
 
-/*    if(addrYou.IsTor() && pnode->nVersion < TORV3_SERVICES_VERSION) {
+    if(addrYou.IsTor() && pnode->nVersion < TORV3_SERVICES_VERSION) {
         LogPrint(BCLog::NET, "send version 1 message: pnode->nVersion %d \n", pnode->nVersion);
         connman->PushMessage(pnode, CNetMsgMaker(SEGWIT_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
                 nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
@@ -454,16 +454,16 @@ void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
         LogPrint(BCLog::NET, "send version 2 message: pnode->nVersion %d \n", pnode->nVersion);
         connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
                 nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
-    } */
+    } 
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
     } else {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d, \n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), nodeid);
     }
-/*    LogPrint(BCLog::NET, "user agent %s send version 2 message: pnode->nVersion %d \n", strSubVersion, pnode->nVersion);
+    LogPrint(BCLog::NET, "user agent %s send version 2 message: pnode->nVersion %d \n", strSubVersion, pnode->nVersion);
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-    nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));*/
+    nonce, strSubVersion, nNodeStartingHeight, ::fRelayTxes, mnauthChallenge, pnode->m_masternode_connection));
 }
 
 // Returns a bool indicating whether we requested this block.
