@@ -209,7 +209,7 @@ class CSubNet
 class CService : public CNetAddr
 {
     protected:
-        unsigned short port; // host order
+        uint16_t port; // host order
 
     public:
         CService();
