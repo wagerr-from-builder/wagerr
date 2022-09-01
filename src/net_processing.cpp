@@ -1310,7 +1310,7 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
              !IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
-            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, connman);
+//            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, connman);
         }
     }
     if (it != mapBlockSource.end())
