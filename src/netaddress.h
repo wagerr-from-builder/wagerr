@@ -247,11 +247,11 @@ class CService : public CNetAddr
             }
         } else {
             if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[16];
+                    unsigned char compatibleIP[41];
                     READWRITE(FLATDATA(compatibleIP));
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
             } else {
-                    unsigned char compatibleIP[16];
+                    unsigned char compatibleIP[41];
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
             }
