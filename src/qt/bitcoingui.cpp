@@ -1184,17 +1184,7 @@ void BitcoinGUI::updateOnionIcon()
 
     std::string display;
 
-    if (g_connman == 0 || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-    {
-        labelOnionIcon->setPixmap(QIcon(":/icons/tor2").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE)); //default icon color
-        display = std::string("Not connected over the Tor Network. The wallet is offline");
-    }
-    else if (!fTorEnabled)
-    {
-        labelOnionIcon->setPixmap(QIcon(":/icons/tor2").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE)); //default icon color
-        display = std::string("Connecting over the Tor Network");
-    }
-    else
+    if (g_connman != 0 || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) != 0)
     {
         labelOnionIcon->setPixmap(QIcon(":/icons/tor").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         //labelOnionIcon->setPixmap(QIcon(":/icons/tor_active").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE)); //default icon color
