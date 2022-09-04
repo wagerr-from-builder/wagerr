@@ -83,6 +83,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     labelConnectionsIcon(0),
     labelBlocksIcon(0),
     progressBarLabel(0),
+    labelOnionIcon(0),
     progressBar(0),
     progressDialog(0),
     appMenuBar(0),
@@ -200,6 +201,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     labelConnectionsIcon = new GUIUtil::ClickableLabel();
 
     labelBlocksIcon = new GUIUtil::ClickableLabel();
+    labelOnionIcon = new QLabel();
     if(enableWallet)
     {
         frameBlocksLayout->addStretch();
@@ -217,6 +219,14 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     // Hide the spinner/synced icon by default to avoid
     // that the spinner starts before we have any connections
     labelBlocksIcon->hide();
+
+    // TOR icon
+    QTimer *timerOnionIcon = new QTimer(labelOnionIcon);
+    connect(timerOnionIcon, SIGNAL(timeout()), this, SLOT(updateOnionIcon()));
+    //QTimer::singleShot(1000, this, SLOT(updateOnionIcon()));
+    timerOnionIcon->start(1000);
+    updateOnionIcon();
+
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -1113,6 +1123,7 @@ void BitcoinGUI::updateNetworkState()
     case 6: case 7: icon = "connect_3"; break;
     default: icon = "connect_4"; color = GUIUtil::ThemedColor::GREEN; break;
     }
+    updateOnionIcon();
 
     labelBlocksIcon->setVisible(count > 0);
     updateProgressBarVisibility();
@@ -1199,6 +1210,7 @@ void BitcoinGUI::setNumConnections(int count)
 void BitcoinGUI::setNetworkActive(bool networkActive)
 {
     updateNetworkState();
+    updateOnionIcon();
 }
 
 void BitcoinGUI::updateHeadersSyncProgressLabel()
