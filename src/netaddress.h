@@ -153,12 +153,12 @@ class CNetAddr
             }
         } else { // backwards compatibility
             if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[16];
                     READWRITE(FLATDATA(compatibleIP));
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
 
             } else {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[16];
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
            }
