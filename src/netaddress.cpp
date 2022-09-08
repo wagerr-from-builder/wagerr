@@ -50,12 +50,12 @@ void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
     switch(network)
     {
         case NET_IPV4:
-            m_net = NET_IPV4;
             memcpy(ip, pchIPv4, 12);
             memcpy(ip+12, ip_in, 4);
             break;
         case NET_IPV6:
-            SetLegacyIPv6(ip_in);
+            //SetLegacyIPv6(ip_in);
+            memcpy(ip, ip_in, 16);
             break;
         default:
             assert(!"invalid network");

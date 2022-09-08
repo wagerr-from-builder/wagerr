@@ -64,7 +64,7 @@ class CNetAddr
         /**
          * Network to which this address belongs.
          */
-        Network m_net{NET_IPV6};
+        Network m_net{NET_IPV4};
         unsigned char ip[41]; // in network byte order
         bool usesTorV3 = false;
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
@@ -72,6 +72,7 @@ class CNetAddr
     public:
         CNetAddr();
         explicit CNetAddr(const struct in_addr& ipv4Addr);
+        void Init();
         void SetIP(const CNetAddr& ip);
 
         /**
@@ -80,7 +81,7 @@ class CNetAddr
          * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
          * `addr` encoding.
          */
-        void SetLegacyIPv6(const uint8_t ipv6[16]);
+        void SetLegacyIPv6(const uint8_t ipv6[41]);
 
     private:
         /**
@@ -145,7 +146,7 @@ class CNetAddr
         if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
                 s.GetVersion() >= TORV3_SERVICES_VERSION || 
                 s.GetType() == SER_DISK
-            ) {
+            ) { 
             READWRITE(FLATDATA(ip));
             // Reads at this point should be Tor v3 address's if they it is a Tor address
             if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
@@ -153,12 +154,13 @@ class CNetAddr
             }
         } else { // backwards compatibility
             if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[sizeof(ip)];
                     READWRITE(FLATDATA(compatibleIP));
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
 
             } else {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[sizeof(ip)];
+                    SetLegacyIPv6(ip);
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
            }
@@ -237,7 +239,7 @@ class CService : public CNetAddr
     inline void SerializationOp(Stream& s, Operation ser_action)
         {
             if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
-                s.GetVersion() >= TORV3_SERVICES_VERSION || 
+                s.GetVersion() >= TORV3_SERVICES_VERSION ||
                 s.GetType() == SER_DISK
             ) {
             READWRITE(FLATDATA(ip));
@@ -247,11 +249,12 @@ class CService : public CNetAddr
             }
         } else {
             if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[sizeof(ip)];
                     READWRITE(FLATDATA(compatibleIP));
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
             } else {
-                    unsigned char compatibleIP[41];
+                    unsigned char compatibleIP[sizeof(ip)];
+                    SetLegacyIPv6(ip);
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
             }
