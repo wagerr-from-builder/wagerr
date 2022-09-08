@@ -50,12 +50,14 @@ void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
     switch(network)
     {
         case NET_IPV4:
+            m_net = NET_IPV4;
             memcpy(ip, pchIPv4, 12);
             memcpy(ip+12, ip_in, 4);
             break;
         case NET_IPV6:
-            //SetLegacyIPv6(ip_in);
-            memcpy(ip, ip_in, 16);
+            SetLegacyIPv6(ip_in);
+            m_net = NET_IPV6;
+            //memcpy(ip, ip_in, 16);
             break;
         default:
             assert(!"invalid network");
@@ -131,10 +133,10 @@ bool CNetAddr::IsBindAny() const
 
 bool CNetAddr::IsIPv4() const { return m_net == NET_IPV4; }
 
-bool CNetAddr::IsIPv6() const
- {
-    return (!IsIPv4() && !IsTor() && !IsTorV3() && !IsInternal());
- }
+bool CNetAddr::IsIPv6() const { return m_net == NET_IPV6; }
+/* {
+    return (m_net == NET_IPV6, !IsIPv4() && !IsTor() && !IsTorV3() && !IsInternal());
+ }*/
 
 bool CNetAddr::IsRFC1918() const
 {

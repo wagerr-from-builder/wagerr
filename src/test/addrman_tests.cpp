@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     // Test: Does Addrman respond correctly when empty.
     BOOST_CHECK_EQUAL(addrman.size(), 0);
     CAddrInfo addr_null = addrman.Select();
-    BOOST_CHECK_EQUAL(addr_null.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_null.ToString(), "0.0.0.0:0");
 
     // Test: Does Addrman::Add work as expected.
     CService addr1 = ResolveService("250.1.1.1", 8333);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     addrman.Clear();
     BOOST_CHECK_EQUAL(addrman.size(), 0);
     CAddrInfo addr_null2 = addrman.Select();
-    BOOST_CHECK_EQUAL(addr_null2.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_null2.ToString(), "0.0.0.0:0");
 
     // Test: AddrMan::Add multiple addresses works as expected
     std::vector<CAddress> vAddr;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(addrman_select)
     addrman.Good(CAddress(addr1, NODE_NONE));
     BOOST_CHECK_EQUAL(addrman.size(), 1);
     CAddrInfo addr_ret2 = addrman.Select(newOnly);
-    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "[::]:0");
+    BOOST_CHECK_EQUAL(addr_ret2.ToString(), "0.0.0.0:0");
 
     CAddrInfo addr_ret3 = addrman.Select();
     BOOST_CHECK_EQUAL(addr_ret3.ToString(), "250.1.1.1:8333");
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
     BOOST_CHECK(addrman.size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 
     // Add twenty two addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
 
         // No collisions yet.
         BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
     }
 
     // Ensure Good handles duplicates well.
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(addrman_selecttriedcollision)
         addrman.Good(addr);
 
         BOOST_CHECK(addrman.size() == 22);
-        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
     }
 
 }
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 
         // No collision yet.
         BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
     }
 
     // Collision between 23 and 19.
@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
 
     // 23 should be discarded and 19 not evicted.
     addrman.ResolveCollisions();
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 
     // Lets create two collisions.
     for (unsigned int i = 24; i < 33; i++) {
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
         addrman.Good(addr);
 
         BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
     }
 
     // Cause a collision.
@@ -624,9 +624,9 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     addrman.Good(addr23);
     BOOST_CHECK(addrman.size() == 33);
 
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() != "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() != "0.0.0.0:0");
     addrman.ResolveCollisions();
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 }
 
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.size() == 0);
 
     // Empty addrman should return blank addrman info.
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 
     // Add twenty two addresses.
     CNetAddr source = ResolveIP("252.2.2.2");
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
         // No collision yet.
         BOOST_CHECK(addrman.size() == i);
-        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+        BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
     }
 
     // Collision between 23 and 19.
@@ -667,13 +667,13 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 
     // Should swap 23 for 19.
     addrman.ResolveCollisions();
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 
     // If 23 was swapped for 19, then this should cause no collisions.
     addrman.Add(CAddress(addr, NODE_NONE), source);
     addrman.Good(addr);
 
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 
     // If we insert 19 is should collide with 23.
     CService addr19 = ResolveService("250.1.1.19");
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "250.1.1.23:0");
 
     addrman.ResolveCollisions();
-    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "[::]:0");
+    BOOST_CHECK(addrman.SelectTriedCollision().ToString() == "0.0.0.0:0");
 }
 
 

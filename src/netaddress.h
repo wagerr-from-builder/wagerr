@@ -81,7 +81,7 @@ class CNetAddr
          * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
          * `addr` encoding.
          */
-        void SetLegacyIPv6(const uint8_t ipv6[41]);
+        void SetLegacyIPv6(const uint8_t ipv6[16]);
 
     private:
         /**
@@ -160,7 +160,7 @@ class CNetAddr
 
             } else {
                     unsigned char compatibleIP[sizeof(ip)];
-                    SetLegacyIPv6(ip);
+                    SetLegacyIPv6(compatibleIP);
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
            }
@@ -254,7 +254,7 @@ class CService : public CNetAddr
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
             } else {
                     unsigned char compatibleIP[sizeof(ip)];
-                    SetLegacyIPv6(ip);
+                    SetLegacyIPv6(compatibleIP);
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
             }
