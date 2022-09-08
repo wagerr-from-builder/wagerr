@@ -64,7 +64,7 @@ class CNetAddr
         /**
          * Network to which this address belongs.
          */
-        Network m_net{NET_IPV6};
+        Network m_net{NET_IPV4};
         unsigned char ip[41]; // in network byte order
         bool usesTorV3 = false;
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
@@ -153,12 +153,12 @@ class CNetAddr
             }
         } else { // backwards compatibility
             if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[16];
+                    unsigned char compatibleIP[41];
                     READWRITE(FLATDATA(compatibleIP));
                     memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
 
             } else {
-                    unsigned char compatibleIP[16];
+                    unsigned char compatibleIP[41];
                     memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
                     READWRITE(FLATDATA(compatibleIP));
            }
