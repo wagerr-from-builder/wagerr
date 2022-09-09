@@ -120,6 +120,13 @@ public:
 public:
     std::string ToString() const;
 
+    /**
+     * Set from a legacy IPv6 address.
+     * Legacy IPv6 address may be a normal IPv6 address, or another address
+     * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
+     * `addr` encoding.
+     */
+    void SetLegacyIPv6(const uint8_t ipv6[41]);
     void ToJson(UniValue& obj) const
     {
         obj.clear();
