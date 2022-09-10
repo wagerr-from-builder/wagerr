@@ -137,7 +137,7 @@ class CNetAddr
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
-    ADD_SERIALIZE_METHODS;
+/*    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -163,9 +163,31 @@ class CNetAddr
                     READWRITE(FLATDATA(compatibleIP));
            }
         }
-    }
+    }*/
 
-    friend class CSubNet;
+        /**
+         * Serialize to a stream.
+         */
+        template <typename Stream>
+        void Serialize(Stream& s) const
+        {
+            s << ip;
+        }
+
+        /**
+         * Unserialize from a stream.
+         */
+        template <typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[sizeof(ip)];
+            s >> ip_temp;
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(ip_temp);
+        }
+
+        friend class CSubNet;
 };
 
 class CSubNet
@@ -200,8 +222,8 @@ class CSubNet
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(network);
-            READWRITE(FLATDATA(netmask));
-            READWRITE(FLATDATA(valid));
+            READWRITE(netmask);
+            READWRITE(valid);
         }
 };
 
@@ -231,7 +253,7 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         explicit CService(const struct sockaddr_in6& addr);
 
-    ADD_SERIALIZE_METHODS;
+    /* ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -260,7 +282,35 @@ class CService : public CNetAddr
         READWRITE(FLATDATA(portN));
         if (ser_action.ForRead())
             port = ntohs(portN);
-    }
+    } */
+
+        /**
+         * Serialize to a stream.
+         */
+        template <typename Stream>
+        void Serialize(Stream& s) const
+        {
+            s << ip;
+            s << WrapBigEndian(port);
+        }
+
+        /**
+         * Unserialize from a stream.
+         */
+        template <typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[sizeof(ip)];
+            s >> ip_temp;
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(ip_temp);
+            s >> WrapBigEndian(port);
+        }
+};
+
+#endif // BITCOIN_NETADDRESS_H
+
 };
 
 #endif // BITCOIN_NETADDRESS_H
