@@ -137,34 +137,6 @@ class CNetAddr
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
-/*    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
-                s.GetVersion() >= TORV3_SERVICES_VERSION || 
-                s.GetType() == SER_DISK
-            ) {
-            READWRITE(FLATDATA(ip));
-            // Reads at this point should be Tor v3 address's if they it is a Tor address
-            if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                usesTorV3 = true;
-            }
-        } else { // backwards compatibility
-            if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[41];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-
-            } else {
-                    unsigned char compatibleIP[41];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-           }
-        }
-    }*/
-
         /**
          * Serialize to a stream.
          */
@@ -252,37 +224,6 @@ class CService : public CNetAddr
 
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         explicit CService(const struct sockaddr_in6& addr);
-
-    /* ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-        {
-            if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
-                s.GetVersion() >= TORV3_SERVICES_VERSION || 
-                s.GetType() == SER_DISK
-            ) {
-            READWRITE(FLATDATA(ip));
-            // Reads at this point should be Tor v3 address's if they are a Tor address
-            if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                usesTorV3 = true;
-            }
-        } else {
-            if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[41];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-            } else {
-                    unsigned char compatibleIP[41];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    READWRITE(FLATDATA(compatibleIP));
-            }
-        }
-        unsigned short portN = htons(port);
-        READWRITE(FLATDATA(portN));
-        if (ser_action.ForRead())
-            port = ntohs(portN);
-    } */
 
         /**
          * Serialize to a stream.
