@@ -137,34 +137,27 @@ class CNetAddr
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
-                s.GetVersion() >= TORV3_SERVICES_VERSION || 
-                s.GetType() == SER_DISK
-            ) {
-            READWRITE(FLATDATA(ip));
-            // Reads at this point should be Tor v3 address's if they it is a Tor address
-            if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                usesTorV3 = true;
-            }
-        } else { // backwards compatibility
-            if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[sizeof(ip)];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-
-            } else {
-                    unsigned char compatibleIP[sizeof(ip)];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                    READWRITE(FLATDATA(compatibleIP));
-           }
+        /**
+         * Serialize to a stream.
+         */
+        template <typename Stream>
+        void Serialize(Stream& s) const
+        {
+            s << ip;
         }
-    }
+
+        /**
+         * Unserialize from a stream.
+         */
+        template <typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[sizeof(ip)];
+            s >> ip_temp;
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(ip_temp);
+        }
 
     friend class CSubNet;
 };
@@ -232,37 +225,29 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         explicit CService(const struct sockaddr_in6& addr);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+        /**
+         * Serialize to a stream.
+         */
+        template <typename Stream>
+        void Serialize(Stream& s) const
         {
-            if((s.GetVersion() == INIT_PROTO_VERSION && !ser_action.ForRead()) ||
-                s.GetVersion() >= TORV3_SERVICES_VERSION || 
-                s.GetType() == SER_DISK
-            ) {
-            READWRITE(FLATDATA(ip));
-            // Reads at this point should be Tor v3 address's if they are a Tor address
-            if(ser_action.ForRead() && IsTor() && ip[40] != '\0') {
-                usesTorV3 = true;
-            }
-        } else {
-            if (ser_action.ForRead()) {
-                    unsigned char compatibleIP[sizeof(ip)];
-                    READWRITE(FLATDATA(compatibleIP));
-                    memcpy(CNetAddr::ip, compatibleIP, sizeof(compatibleIP));
-            } else {
-                    unsigned char compatibleIP[sizeof(ip)];
-                    memcpy(compatibleIP, CNetAddr::ip, sizeof(compatibleIP));
-                    SetLegacyIPv6(compatibleIP);
-                    READWRITE(FLATDATA(compatibleIP));
-            }
+            s << ip;
+            s << WrapBigEndian(port);
         }
-        unsigned short portN = htons(port);
-        READWRITE(FLATDATA(portN));
-        if (ser_action.ForRead())
-            port = ntohs(portN);
-    }
+
+        /**
+         * Unserialize from a stream.
+         */
+        template <typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[sizeof(ip)];
+            s >> ip_temp;
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(ip_temp);
+            s >> WrapBigEndian(port);
+        }
 };
 
 #endif // BITCOIN_NETADDRESS_H
