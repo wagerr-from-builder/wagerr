@@ -31,7 +31,7 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
     memcpy(ip, ipIn.ip, sizeof(ip));
 }
 
-void CNetAddr::SetLegacyIPv6(const uint8_t ipv6[16])
+void CNetAddr::SetLegacyIPv6(const uint8_t ipv6[41])
 {
     if (memcmp(ipv6, pchIPv4, sizeof(pchIPv4)) == 0) {
         m_net = NET_IPV4;
@@ -506,7 +506,7 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         switch(ourNet) {
         default:         return REACH_DEFAULT;
         case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
-        case NET_ONION:    return REACH_PRIVATE;
+        case NET_ONION:  return REACH_PRIVATE;
         }
     case NET_TEREDO:
         switch(ourNet) {

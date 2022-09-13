@@ -80,7 +80,7 @@ class CNetAddr
          * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
          * `addr` encoding.
          */
-        void SetLegacyIPv6(const uint8_t ipv6[16]);
+        void SetLegacyIPv6(const uint8_t ipv6[41]);
 
     private:
         /**
