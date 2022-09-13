@@ -66,7 +66,7 @@ class CNetAddr
          */
         Network m_net{NET_IPV6};
         unsigned char ip[41]; // in network byte order
-        bool usesTorV3 = false;
+        bool usesTorV3 = true;
         uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
 
     public:
