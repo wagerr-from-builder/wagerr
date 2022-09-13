@@ -42,7 +42,7 @@ void CNetAddr::SetLegacyIPv6(const uint8_t ipv6[41])
     } else {
         m_net = NET_IPV6;
     }
-    memcpy(ip, ipv6, 16);
+    memcpy(ip, ipv6, 41);
 }
 
 void CNetAddr::SetRaw(Network network, const uint8_t *ip_in)
