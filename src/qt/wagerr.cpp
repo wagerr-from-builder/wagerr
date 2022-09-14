@@ -259,7 +259,7 @@ private:
 };
 
 #include <qt/wagerr.moc>
-virtual ~BitcoinCore(void){};
+~BitcoinCore(){};
 BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
