@@ -128,7 +128,8 @@ BOOST_AUTO_TEST_CASE(onioncat_test)
 
     // values from https://web.archive.org/web/20121122003543/http://www.cypherpunk.at/onioncat/wiki/OnionCat
     CNetAddr addr1(ResolveIP("hpknlsllgtnpbibizx3zd45jemqk6zj3cnq4s4clilgwcteybqzzqfqd.onion"));
-    //CNetAddr addr2(ResolveIP("fd87:d87e:eb43:3bd4:d5c9:6b34:daf0:a028:cdf7:91f3:a923:20af:653b:1361:c970:4b42:cd61:4c98:0c33:9816:0300"));
+    // Tor resolve does not play nicely with torv3 addresses
+    //CNetAddr addr2(ResolveIP("fd87:d87e:eb43:3bd4:d5c9:6b34:daf0:a028:cdf7:91f3:a923:20af:653b:1361:c970:4b42:cd61:4c98:0c33:9816:03"));
     //BOOST_CHECK(addr1 == addr2);
     BOOST_CHECK(addr1.IsTorV3());
     BOOST_CHECK(addr1.ToStringIP() == "hpknlsllgtnpbibizx3zd45jemqk6zj3cnq4s4clilgwcteybqzzqfqd.onion");
