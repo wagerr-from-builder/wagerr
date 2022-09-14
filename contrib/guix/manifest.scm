@@ -38,7 +38,6 @@
              (guix download)
              (guix gexp)
              (guix git-download)
-             (guix linux-libre-headers)
              ((guix licenses) #:prefix license:)
              (guix packages)
              (guix profiles)
