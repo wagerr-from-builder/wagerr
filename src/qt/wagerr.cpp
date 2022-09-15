@@ -263,6 +263,7 @@ private:
 BitcoinCore::BitcoinCore(interfaces::Node& node) :
     QObject(), m_node(node)
 {
+BitcoinCore::~BitcoinCore();
 }
 
 void BitcoinCore::handleRunawayException(const std::exception_ptr e)
