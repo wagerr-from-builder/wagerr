@@ -1,9 +1,9 @@
 ---
-name: "dash-win-18"
+name: "wagerr-win-5.0.0"
 enable_cache: true
-distro: "ubuntu"
+distro: "debian"
 suites:
-- "focal"
+- "buster"
 architectures:
 - "amd64"
 packages:

@@ -1,9 +1,9 @@
 ---
-name: "dash-osx-18"
+name: "wagerr-osx-5.0.0"
 enable_cache: true
-distro: "ubuntu"
+distro: "debian"
 suites:
-- "focal"
+- "buster"
 architectures:
 - "amd64"
 packages:
@@ -35,12 +35,12 @@ remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
 files:
-- "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz"
+- "Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz"
 script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-apple-darwin19"
+  HOSTS="arm64-apple-darwin16 x86_64-apple-darwin16"
   CONFIGFLAGS="--enable-reduce-exports --disable-miner --disable-bench --disable-gui-tests XORRISOFS=${WRAP_DIR}/xorrisofs DMG=${WRAP_DIR}/dmg --enable-crash-hooks"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg xorrisofs"
@@ -108,7 +108,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
 
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz
 
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -160,7 +160,7 @@ script: |
     find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
     popd
 
-    make deploy OSX_DMG="${OUTDIR}/${DISTNAME}-osx-unsigned.dmg"
+    make deploy OSX_DMG="${OUTDIR}/${DISTNAME}-${i}-osx-unsigned.dmg"
 
     cd installed
     find . -name "lib*.la" -delete
@@ -171,8 +171,8 @@ script: |
     find ${DISTNAME} -path '*.dSYM*' | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
     cd ../../
   done
-  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin19.tar.gz ${OUTDIR}/${DISTNAME}-osx64.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-x86_64-apple-darwin19-debug.tar.gz ${OUTDIR}/${DISTNAME}-osx64-debug.tar.gz
+  mv ${OUTDIR}/${DISTNAME}-${i}-x86_64-apple-darwin19.tar.gz ${OUTDIR}/${DISTNAME}-${i}-osx64.tar.gz
+  mv ${OUTDIR}/${DISTNAME}-${i}-x86_64-apple-darwin19-debug.tar.gz ${OUTDIR}/${DISTNAME}-${i}-osx64-debug.tar.gz
 
   # Compress ccache (otherwise the assert file will get too huge)
   if [ "$CCACHE_DIR" != "" ]; then
