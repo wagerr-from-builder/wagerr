@@ -1,0 +1,29 @@
+--- ./crypto/ui/ui_openssl.c.orig	2022-09-17 14:59:43.248953278 +0100
++++ ./crypto/ui/ui_openssl.c	2022-09-17 15:00:59.045032925 +0100
+@@ -221,7 +221,7 @@
+ #endif
+ 
+ #ifdef TERMIOS
+-# include <termios.h>
++#include <termios.h>
+ # define TTY_STRUCT		struct termios
+ # define TTY_FLAGS		c_lflag
+ # define TTY_get(tty,data)	tcgetattr(tty,data)
+@@ -229,7 +229,7 @@
+ #endif
+ 
+ #ifdef TERMIO
+-# include <termio.h>
++#include <termio.h>
+ # define TTY_STRUCT		struct termio
+ # define TTY_FLAGS		c_lflag
+ # define TTY_get(tty,data)	ioctl(tty,TCGETA,data)
+@@ -237,7 +237,7 @@
+ #endif
+ 
+ #ifdef SGTTY
+-# include <sgtty.h>
++#include <sgtty.h>
+ # define TTY_STRUCT		struct sgttyb
+ # define TTY_FLAGS		sg_flags
+ # define TTY_get(tty,data)	ioctl(tty,TIOCGETP,data)

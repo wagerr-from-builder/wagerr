@@ -5,6 +5,7 @@ $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_sha256_hash=8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c
 $(package)_patches = 0001-Add-OpenSSL-termios-fix-for-musl-libc.patch
 $(package)_patches += 0002-Configuration-for-arm64-apple.patch
+$(package)_patches += 0003-Change-include-spacing.patch
 
 define $(package)_set_vars
 $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)"
@@ -65,6 +66,7 @@ endef
 define $(package)_preprocess_cmds
   patch -p1 < $($(package)_patch_dir)/0001-Add-OpenSSL-termios-fix-for-musl-libc.patch && \
   patch -p1 < $($(package)_patch_dir)/0002-Configuration-for-arm64-apple.patch && \
+  patch -p1 < $($(package)_patch_dir)/0003-Change-include-spacing.patch && \
   sed -i.old "/define DATE/d" util/mkbuildinf.pl && \
   sed -i.old "s|engines apps test|engines|" Makefile.org
 endef
