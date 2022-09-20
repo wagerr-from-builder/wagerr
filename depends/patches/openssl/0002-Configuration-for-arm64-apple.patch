@@ -1,5 +1,5 @@
---- Configure.orig	2022-09-17 14:21:10.446755236 +0100
-+++ Configure	2022-09-20 10:25:29.398043634 +0100
+--- a/Configure	2022-09-17 14:21:10.446755236 +0100
++++ b/Configure	2022-09-20 10:25:29.398043634 +0100
 @@ -137,6 +137,7 @@
  my $mips64_asm=":bn-mips.o mips-mont.o::aes_cbc.o aes-mips.o:::sha1-mips.o sha256-mips.o sha512-mips.o::::::::";
  my $s390x_asm="s390xcap.o s390xcpuid.o:bn-s390x.o s390x-mont.o s390x-gf2m.o::aes-s390x.o aes-ctr.o aes-xts.o:::sha1-s390x.o sha256-s390x.o sha512-s390x.o::rc4-s390x.o:::::ghash-s390x.o:";
@@ -20,13 +20,13 @@
  	    VALUE "ProductVersion", "$version\\0"
  	    // Optional:
  	    //VALUE "Comments", "\\0"
--	    VALUE "LegalCopyright", "Copyright © 1998-2005 The OpenSSL Project. Copyright © 1995-1998 Eric A. Young, Tim J. Hudson. All rights reserved.\\0"
+-	    VALUE "LegalCopyright", "Copyright ï¿½ 1998-2005 The OpenSSL Project. Copyright ï¿½ 1995-1998 Eric A. Young, Tim J. Hudson. All rights reserved.\\0"
 +	    VALUE "LegalCopyright", "Copyright ï¿½ 1998-2005 The OpenSSL Project. Copyright ï¿½ 1995-1998 Eric A. Young, Tim J. Hudson. All rights reserved.\\0"
  	    //VALUE "LegalTrademarks", "\\0"
  	    //VALUE "PrivateBuild", "\\0"
  	    //VALUE "SpecialBuild", "\\0"
---- config.orig	2022-09-20 10:11:30.785318381 +0100
-+++ config	2022-09-20 10:15:55.309510176 +0100
+--- a/config2022-09-20 10:11:30.785318381 +0100
++++ b/config	2022-09-20 10:15:55.309510176 +0100
 @@ -278,7 +278,7 @@
  		echo "ppc-apple-darwin${VERSION}"
  		;;
