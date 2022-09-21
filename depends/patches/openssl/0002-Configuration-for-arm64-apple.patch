@@ -822,7 +822,7 @@
  #include <signal.h>
 -#include <crypto.h>
 +#include <openssl/crypto.h>
-+#include "internal/cryptlib.h"
++#include "crypto/cryptlib.h"
  
  #include "arm_arch.h"
  
