@@ -70,6 +70,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
+   echo ${BUILD} && \
   ./Configure $($(package)_config_opts)
 endef
 
