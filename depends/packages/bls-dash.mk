@@ -37,7 +37,7 @@ define $(package)_set_vars
   $(package)_config_opts+= -DBUILD_BLS_PYTHON_BINDINGS=0 -DBUILD_BLS_TESTS=0 -DBUILD_BLS_BENCHMARKS=0
   $(package)_config_opts_linux=-DOPSYS=LINUX -DCMAKE_SYSTEM_NAME=Linux
   $(package)_config_opts_darwin=-DOPSYS=MACOSX -DCMAKE_SYSTEM_NAME=Darwin
-  ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+  ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
     $(package)_config_opts_darwin+= -DCMAKE_AR=$(host_prefix)/native/bin/$(host)-ar
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB=$(host_prefix)/native/bin/$(host)-ranlib
   else
