@@ -113,6 +113,7 @@ ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
                -isysroot$(OSX_SDK) \
                -stdlib=libc++ \
                -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
+               -fvisibility-inlines-hidden \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 else
@@ -132,6 +133,7 @@ else
                -isysroot$(OSX_SDK) \
                -stdlib=libc++ \
                -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
+               -fvisibility-inlines-hidden \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 endif
