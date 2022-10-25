@@ -8,7 +8,7 @@ OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-
 
 darwin_native_binutils=native_cctools
 
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
 
