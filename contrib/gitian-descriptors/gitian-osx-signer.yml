@@ -13,7 +13,7 @@ remotes:
 - "url": "https://github.com/wagerr-builder/wagerr-detached-sigs.git"
   "dir": "signature"
 - "url": "https://github.com/achow101/signapple.git"
-  "dir": "psignapple"
+  "dir": "signapple"
   "commit": "8a945a2e7583be2665cf3a6a89d665b70ecd1ab6"
 files:
 - "wagerr-osx-unsigned.tar.gz"
