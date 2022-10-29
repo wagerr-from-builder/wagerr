@@ -40,7 +40,7 @@ script: |
   export PATH="$HOME/.local/bin":$PATH
   cd ..
 
-
+  ls -a
   for i in ${HOSTS}; do
     UNSIGNED=wagerr-${i}-osx64-unsigned.tar.gz
     SIGNED=wagerr-${i}-osx64-signed.dmg
