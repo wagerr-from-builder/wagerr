@@ -6,7 +6,7 @@
 export LC_ALL=C
 set -e
 
-ROOTDIR=dist
+ROOTDIR="dist/Wagerr-Qt.app/Contents/MacOS"
 BUNDLE="${ROOTDIR}/Wagerr-Qt.app"
 SIGNAPPLE=signapple
 TEMPDIR=sign.temp
