@@ -45,7 +45,7 @@ script: |
     UNSIGNED=wagerr-${i}-osx64-unsigned.tar.gz
     SIGNED=wagerr-${i}-osx64-signed.dmg
     tar -xf ${UNSIGNED}
-    UNSIGNED_TARBALL=-wagerr-${i}-osx64-unsigned.tar.gz
+    UNSIGNED_TARBALL=-wagerr-osx-unsigned.tar.gz
     UNSIGNED_APP=dist/Wagerr-Qt.app
     SIGNED=wagerr-${i}-osx64-signed.dmg
 
