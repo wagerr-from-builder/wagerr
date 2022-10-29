@@ -20,6 +20,7 @@ files:
 script: |
   set -e -o pipefail
   WRAP_DIR=$HOME/wrapped
+  HOSTS="arm64-apple-darwin16 x86_64-apple-darwin16"
   mkdir -p ${WRAP_DIR}
   export PATH="$PWD":$PATH
   FAKETIME_PROGS="dmg xorrisofs"
@@ -39,15 +40,18 @@ script: |
   export PATH="$HOME/.local/bin":$PATH
   cd ..
 
-  UNSIGNED=wagerr-osx-unsigned.tar.gz
-  SIGNED=wagerr-osx-signed.dmg
-  tar -xf ${UNSIGNED}
-  UNSIGNED_TARBALL=-wagerr-osx-unsigned.tar.gz
-  UNSIGNED_APP=dist/Wagerr-Qt.app
-  SIGNED=wagerr-osx-signed.dmg
 
-  tar -xf ${UNSIGNED_TARBALL}
-  OSX_VOLNAME="$(cat osx_volname)"
-  ./detached-sig-apply.sh ${UNSIGNED} signature/osx
-   ${WRAP_DIR}/xorrisofs -D -l -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -o uncompressed.dmg signed-app
-   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}
+  for i in ${HOSTS}; do
+    UNSIGNED=wagerr-${i}-osx64-unsigned.tar.gz
+    SIGNED=wagerr-${i}-osx64-signed.dmg
+    tar -xf ${UNSIGNED}
+    UNSIGNED_TARBALL=-wagerr-${i}-osx64-unsigned.tar.gz
+    UNSIGNED_APP=dist/Wagerr-Qt.app
+    SIGNED=wagerr-${i}-osx64-signed.dmg
+
+    tar -xf ${UNSIGNED_TARBALL}
+    OSX_VOLNAME="$(cat osx_volname)"
+    ./detached-sig-apply.sh ${UNSIGNED} signature/osx
+     ${WRAP_DIR}/xorrisofs -D -l -V "${OSX_VOLNAME}" -no-pad -r -dir-mode 0755 -o uncompressed.dmg signed-app
+     ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}
+  done
