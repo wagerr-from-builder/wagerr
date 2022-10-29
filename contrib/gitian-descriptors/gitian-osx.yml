@@ -167,6 +167,8 @@ script: |
     rm -rf ${DISTNAME}/lib/pkgconfig
     find ${DISTNAME} | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     cd ../../
+    mv ${OUTDIR}/${DISTNAME}-${i}.tar.gz ${OUTDIR}/${DISTNAME}-${i}-osx64.tar.gz
+    mv ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz ${OUTDIR}/${DISTNAME}-${i}-osx64-debug.tar.gz
     #mv ${OUTDIR}/${DISTNAME}-${i}-osx-unsigned.tar.gz ${OUTDIR}/${DISTNAME}-${i}-osx64.tar.gz
   done
     mkdir -p $OUTDIR/src
