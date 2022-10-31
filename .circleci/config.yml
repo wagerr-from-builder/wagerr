@@ -42,7 +42,7 @@ jobs:
             git subtree add --prefix src/univalue univalue 9f0b9975925b202ab130714e5422f8dd8bf40ac3 --squash
             # snap
             source .circleci/lint_06_script.sh
-  x86_64_bionic_depends:
+  x86_64_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -53,7 +53,7 @@ jobs:
       - checkout
       - restore_cache:
           keys: 
-          - wagerr-bionic-depends-{{ .Branch }}-{{ .Revision }}
+          - wagerr-jammy-depends-{{ .Branch }}-{{ .Revision }}
       - run:
           command: |
             if [ -d depends/x86_64-linux-gnu ]; then
@@ -61,21 +61,21 @@ jobs:
             else
               git submodule update --init --recursive
               apt-get -y update
-              apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3.6-dev python3-distutils bison
-              update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-              update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-              update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-              update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+              apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3-all-dev python3-distutils bison
+              #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+              #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+              #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+              #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
-          key: wagerr-bionic-depends-{{ .Branch }}-{{ .Revision }}
+          key: wagerr-jammy-depends-{{ .Branch }}-{{ .Revision }}
           paths:
             - /root/project/depends/built
             - /root/project/depends/sources
             - /root/project/depends/x86_64-linux-gnu
             - /root/project/depends/work
-  x86_64_bionic:
+  x86_64_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -86,16 +86,16 @@ jobs:
       - checkout
       - restore_cache:
           keys: 
-          - wagerr-bionic-depends-{{ .Branch }}-{{ .Revision }}
+          - wagerr-jammy-depends-{{ .Branch }}-{{ .Revision }}
       - run:
           command: |
             git submodule update --init --recursive
             apt-get -y update
-            apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3.6-dev python3-distutils bison
-            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-            update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-            update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-            update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+            apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3-all-dev python3-distutils bison
+            #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+            #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+            #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+            #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --disable-debug --enable-stacktraces --enable-crash-hooks --enable-bench --enable-gui-test --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
             make -j${JOBS}
@@ -128,10 +128,10 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3.9-dev python3-distutils bison
-              update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-              update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-              update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-              update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+              #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+              #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+              #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+              #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -158,14 +158,14 @@ jobs:
             git submodule update --init --recursive
             apt-get -y update
             apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ libpython3.9-dev python3-distutils bison
-            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-            update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-            update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-            update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+            #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+            #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+            #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+            #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
             make -j${JOBS}
-  i686_bionic_depends:
+  i686_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -185,8 +185,8 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 g++-multilib gcc-multilib gcc g++ bison
-              update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-              update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+              #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+              #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -196,7 +196,7 @@ jobs:
             - /root/project/depends/sources
             - /root/project/depends/i686-linux-gnu
             - /root/project/depends/work
-  i686_bionic:
+  i686_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -213,12 +213,12 @@ jobs:
             git submodule update --init --recursive
             apt-get -y update
             apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 g++-multilib gcc-multilib gcc g++ bison
-            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-            update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+            #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+            #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
             make -j${JOBS}
-  arm32_bionic_depends:
+  arm32_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -239,10 +239,10 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ g++-arm-linux-gnueabihf gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-multilib gcc-multilib bison
-              update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-              update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-              update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-              update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+              #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+              #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+              #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+              #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -252,7 +252,7 @@ jobs:
             - /root/project/depends/sources
             - /root/project/depends/arm-linux-gnueabihf
             - /root/project/depends/work
-  arm32_bionic:
+  arm32_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -270,14 +270,14 @@ jobs:
             git submodule update --init --recursive
             apt-get -y update
             apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ g++-arm-linux-gnueabihf gcc-arm-linux-gnueabihf binutils-arm-linux-gnueabihf g++-multilib gcc-multilib bison
-            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-            update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-            update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-            update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+            #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+            #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+            #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+            #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends//${HOST} --enable-glibc-back-compat --enable-reduce-exports --disable-ccache --disable-maintainer-mode --disable-dependency-tracking CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
             make -j${JOBS}
-  arm64_bionic_depends:
+  arm64_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -297,10 +297,10 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-multilib gcc-multilib bison
-              update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-              update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-              update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-              update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+              #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+              #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+              #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+              #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -310,7 +310,7 @@ jobs:
             - /root/project/depends/sources
             - /root/project/depends/aarch64-linux-gnu
             - /root/project/depends/work
-  arm64_bionic:
+  arm64_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -327,14 +327,14 @@ jobs:
             git submodule update --init --recursive
             apt-get -y update
             apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 gcc g++ g++-aarch64-linux-gnu gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-multilib gcc-multilib bison
-            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
-            update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
-            update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
-            update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
+            #update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc 100
+            #update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++ 100
+            #update-alternatives --install /usr/bin/${HOST}-gcc ${HOST}-gcc /usr/bin/${HOST}-gcc 100
+            #update-alternatives --install /usr/bin/${HOST}-g++ ${HOST}-g++ /usr/bin/${HOST}-g++ 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-glibc-back-compat --enable-reduce-exports
             make -j${JOBS}
-  win64_bionic_depends:
+  win64_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -354,8 +354,8 @@ jobs:
               git submodule update --init --recursive
               apt-get -y update
               apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 mingw-w64 g++-mingw-w64 g++-multilib gcc-multilib bison
-              update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100
-              update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix 100
+              #update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100
+              #update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix 100
               make -j${JOBS} -C depends HOST=${HOST}
             fi
       - save_cache:
@@ -365,7 +365,7 @@ jobs:
             - /root/project/depends/sources
             - /root/project/depends/x86_64-w64-mingw32
             - /root/project/depends/work
-  win64_bionic:
+  win64_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -382,12 +382,12 @@ jobs:
             git submodule update --init --recursive
             apt-get -y update
             apt-get -y install pkg-config autoconf libtool automake bsdmainutils ca-certificates python3 cmake libxkbcommon0 mingw-w64 g++-mingw-w64 g++-multilib gcc-multilib bison
-            update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100
-            update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix 100
+            #update-alternatives --install /usr/bin/x86_64-w64-mingw32-gcc x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix 100
+            #update-alternatives --install /usr/bin/x86_64-w64-mingw32-g++ x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix 100
             ./autogen.sh
             ./configure --host=${HOST} --prefix=`pwd`/depends/${HOST} --enable-reduce-exports
             make -j${JOBS}
-  arm64_mac_bionic_depends:
+  arm64_mac_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -425,7 +425,7 @@ jobs:
             - /root/project/depends/arm64-apple-darwin16
             - /root/project/depends/work
             - /root/project/depends/SDKs
-  arm64_mac_bionic:
+  arm64_mac_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -447,7 +447,7 @@ jobs:
             ./autogen.sh
             CONFIG_SITE=`pwd`/depends/${HOST}/share/config.site ./configure --host=${HOST} --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking --enable-reduce-exports --disable-bench --disable-gui-tests --enable-crash-hooks
             make -j${JOBS}
-  mac_bionic_depends:
+  mac_jammy_depends:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -485,7 +485,7 @@ jobs:
             - /root/project/depends/x86_64-apple-darwin16
             - /root/project/depends/work
             - /root/project/depends/SDKs
-  mac_bionic:
+  mac_jammy:
     docker:
       - image: cimg/base:current-22.04
         user: root
@@ -513,51 +513,51 @@ workflows:
   FullCheck:
     jobs:
       - lint_all
-      - x86_64_bionic_depends:
+      - x86_64_jammy_depends:
           requires:
             - lint_all
-      - x86_64_bionic:
+      - x86_64_jammy:
           requires:
-            - x86_64_bionic_depends
-      - i686_bionic_depends:
+            - x86_64_jammy_depends
+      - i686_jammy_depends:
           requires:
             - lint_all
-      - i686_bionic:
+      - i686_jammy:
           requires:
-            - i686_bionic_depends
+            - i686_jammy_depends
       - x86_64_focal_depends:
           requires:
             - lint_all
       - x86_64_focal:
           requires:
             - x86_64_focal_depends
-      - arm32_bionic_depends:
+      - arm32_jammy_depends:
           requires:
             - lint_all
-      - arm32_bionic:
+      - arm32_jammy:
           requires:
-            - arm32_bionic_depends
-      - arm64_bionic_depends:
-          requires:
-            - lint_all
-      - arm64_bionic:
-          requires:
-            - arm64_bionic_depends
-      - win64_bionic_depends:
+            - arm32_jammy_depends
+      - arm64_jammy_depends:
           requires:
             - lint_all
-      - win64_bionic:
+      - arm64_jammy:
           requires:
-            - win64_bionic_depends
-      - mac_bionic_depends:
-          requires:
-            - lint_all
-      - mac_bionic:
-          requires:
-            - mac_bionic_depends
-      - arm64_mac_bionic_depends:
+            - arm64_jammy_depends
+      - win64_jammy_depends:
           requires:
             - lint_all
-      - arm64_mac_bionic:
+      - win64_jammy:
           requires:
-            - arm64_mac_bionic_depends
+            - win64_jammy_depends
+      - mac_jammy_depends:
+          requires:
+            - lint_all
+      - mac_jammy:
+          requires:
+            - mac_jammy_depends
+      - arm64_mac_jammy_depends:
+          requires:
+            - lint_all
+      - arm64_mac_jammy:
+          requires:
+            - arm64_mac_jammy_depends
