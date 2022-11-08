@@ -167,15 +167,16 @@ public:
         consensus.nGovernanceMinQuorum = 10;
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
+        consensus.V17DeploymentHeight = 1669300;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("000001364c4ed20f1b240810b5aa91fee23ae9b64b6e746b594b611cf6d8c87b");
-        consensus.BIP65Height = std::numeric_limits<int>::max();
+        consensus.BIP65Height = consensus.V17DeploymentHeight;
         consensus.BIP66Height = 1; // 000002f68dbbf1fcfacb8f0b4e64083efdd2f07a906728ee068d573ffa5bcb4e
-        consensus.DIP0001Height = std::numeric_limits<int>::max();
-        consensus.DIP0003Height = std::numeric_limits<int>::max();
+        consensus.DIP0001Height = consensus.V17DeploymentHeight;
+        consensus.DIP0003Height = consensus.V17DeploymentHeight;
         // consensus.DIP0003EnforcementHeight = 1047200;
         consensus.DIP0003EnforcementHash = uint256();
-        consensus.DIP0008Height = std::numeric_limits<int>::max();
+        consensus.DIP0008Height = consensus.V17DeploymentHeight;
         consensus.BRRHeight = 1374912; // 000000000000000c5a124f3eccfbe6e17876dca79cec9e63dfa70d269113c926
         consensus.MinBIP9WarningHeight = 1090656; // dip8 activation height + miner confirmation window
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
@@ -185,6 +186,22 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nPowKGWHeight = 15200;
         consensus.nPowDGWHeight = 34140;
+
+        // Wagerr specific parameters
+        // Proof of Stake parameters
+        consensus.nPosStartHeight = 201;
+        consensus.nBlockTimeProtocolV2 = consensus.V17DeploymentHeight;
+        consensus.posLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 24
+        consensus.posLimit_V2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.nTimeSlotLength = 15;
+        consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
+        consensus.nStakeMinDepth = 600;
+        consensus.nStakeMinAge = 60 * 60; // 1 hour
+        consensus.nBlockStakeModifierV1A = 1000;
+        consensus.nBlockStakeModifierV2 = consensus.V17DeploymentHeight;
+
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 25;
@@ -383,15 +400,16 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.V17DeploymentHeight = 826130;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256S("0000065432f43b3efb23bd0f63fe33d00d02a5f36233fe1b982c08274d58ef12");
-        consensus.BIP65Height = 826130;
+        consensus.BIP65Height = consensus.V17DeploymentHeight;
         consensus.BIP66Height = 1; // 0000065432f43b3efb23bd0f63fe33d00d02a5f36233fe1b982c08274d58ef12
-        consensus.DIP0001Height = 826130;
-        consensus.DIP0003Height = 826130;
+        consensus.DIP0001Height = consensus.V17DeploymentHeight;
+        consensus.DIP0003Height = consensus.V17DeploymentHeight;
 //        consensus.DIP0003EnforcementHeight = std::numeric_limits<int>::max();
         consensus.DIP0003EnforcementHash = uint256();
-        consensus.DIP0008Height = 826130;
+        consensus.DIP0008Height = consensus.V17DeploymentHeight;
         consensus.BRRHeight = 387500; // 0000001537dbfd09dea69f61c1f8b2afa27c8dc91c934e144797761c9f10367b
         consensus.MinBIP9WarningHeight = 80816;  // dip8 activation height + miner confirmation window
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
@@ -401,9 +419,23 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nPowKGWHeight = 4002; // nPowKGWHeight >= nPowDGWHeight means "no KGW"
         consensus.nPowDGWHeight = 4002; // TODO: make sure to drop all spork6 related code on next testnet reset
+        // Wagerr specific parameters
+        // Proof of Stake parameters
+        consensus.nPosStartHeight = 201;
+        consensus.nBlockTimeProtocolV2 = consensus.V17DeploymentHeight;
+        consensus.posLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 24
+        consensus.posLimit_V2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
+        consensus.nTimeSlotLength = 15;
+        consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
+        consensus.nStakeMinDepth = 100;
+        consensus.nStakeMinAge = 60 * 60; // 1 hour
+        consensus.nBlockStakeModifierV1A = 51197;
+        consensus.nBlockStakeModifierV2 = 826130;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 25;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
@@ -584,22 +616,38 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.V17DeploymentHeight = 300;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 300; // BIP65 activated on regtest (Used in rpc activation tests)
+        consensus.BIP65Height = consensus.V17DeploymentHeight; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Height = 2; // DIP0001 activated immediately on devnet
         consensus.DIP0003Height = 2; // DIP0003 activated immediately on devnet
 //        consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
         consensus.DIP0003EnforcementHash = uint256();
         consensus.DIP0008Height = 2; // DIP0008 activated immediately on devnet
-        consensus.BRRHeight = 300;
+        consensus.BRRHeight = consensus.V17DeploymentHeight;
         consensus.MinBIP9WarningHeight = 2018; // dip8 activation height + miner confirmation window
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+
+        // Wagerr specific parameters
+        // Proof of Stake parameters
+        consensus.nPosStartHeight = 201;
+        consensus.nBlockTimeProtocolV2 = consensus.V17DeploymentHeight;
+        consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.posLimit_V2 = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.nTimeSlotLength = 15;
+        consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
+        consensus.nStakeMinDepth = 1;
+        consensus.nStakeMinAge = 0;
+        consensus.nBlockStakeModifierV1A = consensus.nPosStartHeight;
+        consensus.nBlockStakeModifierV2 = consensus.V17DeploymentHeight;
         consensus.nPowKGWHeight = 4001; // nPowKGWHeight >= nPowDGWHeight means "no KGW"
         consensus.nPowDGWHeight = 4001;
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
@@ -855,6 +903,7 @@ public:
         consensus.nGovernanceMinQuorum = 1;
         consensus.nGovernanceFilterElements = 100;
         consensus.nMasternodeMinimumConfirmations = 1;
+        consensus.V17DeploymentHeight = 300;
         consensus.BIP34Height = 100000000; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 300; // BIP65 activated on regtest (Used in functional tests)
@@ -873,6 +922,21 @@ public:
         consensus.fPowNoRetargeting = true;
         consensus.nPowKGWHeight = 15200; // same as mainnet
         consensus.nPowDGWHeight = 34140; // same as mainnet
+
+        // Wagerr specific parameters
+        // Proof of Stake parameters
+        consensus.nPosStartHeight = 201;
+        consensus.nBlockTimeProtocolV2 = consensus.V17DeploymentHeight;
+        consensus.posLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.posLimit_V2 = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
+        consensus.nTimeSlotLength = 15;
+        consensus.nPosTargetSpacing = 1 * 60; // 1 minute
+        consensus.nPosTargetTimespan = 40 * 60; // 40 minutes
+        consensus.nPosTargetTimespan_V2 = 2 * consensus.nTimeSlotLength * 60; // 30 minutes
+        consensus.nStakeMinDepth = 1;
+        consensus.nStakeMinAge = 0;
+        consensus.nBlockStakeModifierV1A = consensus.nPosStartHeight;
+        consensus.nBlockStakeModifierV2 = consensus.V17DeploymentHeight;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 25;
