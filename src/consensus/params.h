@@ -69,6 +69,8 @@ struct Params {
     int nGovernanceMinQuorum; // Min absolute vote count to trigger an action
     int nGovernanceFilterElements;
     int nMasternodeMinimumConfirmations;
+    /** Deployment of v17 Hard Fork */
+    int V17DeploymentHeight;
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
@@ -111,6 +113,23 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    /** Proof of stake parameters */
+    int64_t nPosStartHeight;
+    uint256 posLimit;
+    uint256 posLimit_V2;
+    int64_t nPosTargetSpacing;
+    int64_t nPosTargetTimespan;
+    int64_t nPosTargetTimespan_V2;
+    int32_t nStakeMinDepth;
+    int32_t nStakeMinAge;
+    int64_t nBlockStakeModifierV1A;
+    int64_t nBlockStakeModifierV2;
+
+    /** Time Protocol V2 **/
+    int nBlockTimeProtocolV2;
+    bool IsTimeProtocolV2(const int nHeight) const { return nHeight >= nBlockTimeProtocolV2; }
+    int nTimeSlotLength;
 
     /** these parameters are only used on devnet and can be configured from the outside */
     int nMinimumDifficultyBlocks{0};
