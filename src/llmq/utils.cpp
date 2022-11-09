@@ -845,6 +845,7 @@ bool IsQuorumTypeEnabledInternal(Consensus::LLMQType llmqType, const CQuorumMana
                                 std::optional<bool> optDIP0024IsActive, std::optional<bool> optHaveDIP0024Quorums)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    bool f_dip0020_Active = pindex->nHeight >= consensusParams.V17DeploymentHeight;
 
     switch (llmqType)
     {

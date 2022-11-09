@@ -529,6 +529,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         *pfMissingInputs = false;
     }
 
+/* ZeroCoin to be enabled later    bool fV17Active_context = (unsigned int)chainActive.Height() >= Params().GetConsensus().V17DeploymentHeight;
+    if (fV17Active_context && tx.ContainsZerocoins()) {
+        return state.DoS(30, error("%s: zerocoin has been disabled", __func__), REJECT_INVALID, "bad-txns-xwagerr");
+    } */
+
     if (!CheckTransaction(tx, state))
         return false; // state filled in by CheckTransaction
 
@@ -1863,6 +1868,10 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     LOCK(cs_main);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
+/* ZeroCoin to be anabled later if (pindexPrev->nHeight + 1 >= params.V17DeploymentHeight) {
+        nVersion |= BlockTypeBits::BLOCKTYPE_STAKING;
+    } */
+
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
         Consensus::DeploymentPos pos = Consensus::DeploymentPos(i);
         ThresholdState state = VersionBitsState(pindexPrev, params, pos, versionbitscache);
@@ -1945,6 +1954,10 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_DIP0020, versionbitscache) == ThresholdState::ACTIVE) {
+        flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
+    }
+
+    if (pindex->nHeight >= consensusparams.V17DeploymentHeight) {
         flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
     }
 
@@ -2139,6 +2152,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     std::vector<std::pair<CSpentIndexKey, CSpentIndexValue> > spentIndex;
 
     bool fDIP0001Active_context = pindex->nHeight >= Params().GetConsensus().DIP0001Height;
+    bool fV17Active_context = pindex->nHeight >= Params().GetConsensus().V17DeploymentHeight;
 
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(block, pindex, *m_quorum_block_processor, state, view, fJustCheck, fScriptChecks)) {
