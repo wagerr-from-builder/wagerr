@@ -3535,6 +3535,7 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     if (block.IsProofOfStake()) {
         pindexNew->SetProofOfStake();
     }
+    CValidationState state;
     AcceptPOSParameters(block, state, pindexNew);
     pindexNew->nTx = block.vtx.size();
     pindexNew->nChainTx = 0;
