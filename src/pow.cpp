@@ -212,7 +212,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     }
 
     bool fProofOfStake = pindexLast->nHeight + 1 >= params.nPosStartHeight;
-    if (pindexLast->nHeight + 1 < params.nPivxProtocolV2) {
+    if (pindexLast->nHeight + 1 < params.nPivxProtocolV2StartHeight) {
         return GetNextWorkRequiredOrig(pindexLast, params, fProofOfStake);
     }
 
