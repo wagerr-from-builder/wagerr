@@ -103,6 +103,8 @@ struct Params {
     /** Proof of work parameters */
     uint256 powLimit;
     uint256 posLimit;
+    int64_t nPosTargetSpacing;
+    int32_t nStakeMinDepth;
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
