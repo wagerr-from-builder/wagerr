@@ -194,7 +194,8 @@ public:
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
-    
+      void SetNull();
+
     CBlockIndex()
     {
     }
