@@ -4016,7 +4016,7 @@ bool AcceptPOSParameters(const CBlock& block, CValidationState& state, CBlockInd
     AssertLockHeld(cs_main);
 
     if (!pindexNew->SetStakeEntropyBit(pindexNew->GetStakeEntropyBit()))
-        return state.Invalid(false, REJECT_INVALID, "time-too-new", strprintf("%s : SetStakeEntropyBit() failed", __func__));
+        return error("%s : SetStakeEntropyBit() failed", __func__);
 
     if (pindexNew->nHeight < Params().GetConsensus().nBlockStakeModifierV2) {
         uint64_t nStakeModifier = 0;
