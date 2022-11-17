@@ -199,16 +199,45 @@ public:
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
+        void SetNull()
+    {
+        phashBlock = nullptr;
+        pprev = nullptr;
+        pskip = nullptr;
+        nHeight = 0;
+        nFile = 0;
+        nDataPos = 0;
+        nUndoPos = 0;
+        nChainWork = arith_uint256();
+        nTx = 0;
+        nChainTx = 0;
+        nStatus = 0;
+        nSequenceId = 0;
+        nTimeMax = 0;
 
-    // Start supply of each denomination with 0s
-    for (auto& denom : libzerocoin::zerocoinDenomList) {
-        mapZerocoinSupply.insert(std::make_pair(denom, 0));
+        nFlags = 0;
+
+        nStakeModifier = 0;
+        nStakeModifierV2 = uint256();
+        nStakeModifierChecksum = 0;
+
+        // Start supply of each denomination with 0s
+        for (auto& denom : libzerocoin::zerocoinDenomList) {
+            mapZerocoinSupply.insert(std::make_pair(denom, 0));
+        }
+        vMintDenominationsInBlock.clear();
+        nAccumulatorCheckpoint = uint256();
+
+        nVersion       = 0;
+        hashMerkleRoot = uint256();
+        nTime          = 0;
+        nBits          = 0;
+        nNonce         = 0;
     }
-    vMintDenominationsInBlock.clear();
-    nAccumulatorCheckpoint = uint256();
 
     CBlockIndex()
     {
+        SetNull();
     }
 
     explicit CBlockIndex(const CBlockHeader& block)
