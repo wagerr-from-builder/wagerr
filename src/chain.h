@@ -245,11 +245,11 @@ public:
           hashMerkleRoot{block.hashMerkleRoot},
           nTime{block.nTime},
           nBits{block.nBits},
-          nNonce{block.nNonce},
-          if(block.nVersion > 7)
-              nAccumulatorCheckpoint = block.nAccumulatorCheckpoint;
-    {
-    }
+          nNonce{block.nNonce}
+         {
+            if(block.nVersion > 7)
+                nAccumulatorCheckpoint = block.nAccumulatorCheckpoint;
+         }
 
     FlatFilePos GetBlockPos() const {
         FlatFilePos ret;
