@@ -12,6 +12,7 @@
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
+#include <libzerocoin/Params.h>
 #include <flatfile.h>
 #include <primitives/block.h>
 #include <tinyformat.h>
