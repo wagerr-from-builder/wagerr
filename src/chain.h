@@ -187,6 +187,14 @@ public:
     uint256 nStakeModifierV2{};
     unsigned int nStakeModifierChecksum{0}; // checksum of index; in-memeory only
 
+    // Wagerr specific fields
+    int64_t nMint;
+    int64_t nMoneySupply;
+
+    //! zerocoin specific fields
+    std::map<libzerocoin::CoinDenomination, uint16_t> mapZerocoinSupply;
+    std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
+
     //! ATP specific fields
     //! Number of XDM transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon until after full block validation
@@ -378,10 +386,6 @@ public:
         }
         return nTotal;
     }
-
-    //! zerocoin specific fields
-    std::map<libzerocoin::CoinDenomination, uint16_t> mapZerocoinSupply;
-    std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
 
     /**
      * Total of mints added to the specific accumulator.
