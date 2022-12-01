@@ -12,7 +12,6 @@
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
-#include <libzerocoin/Params.h>
 #include <flatfile.h>
 #include <primitives/block.h>
 #include <tinyformat.h>
@@ -189,8 +188,8 @@ public:
     unsigned int nStakeModifierChecksum{0}; // checksum of index; in-memeory only
 
     //! zerocoin specific fields
-    std::map<libzerocoin::CoinDenomination, uint16_t> mapZerocoinSupply;
-    std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
+    //std::map<libzerocoin::CoinDenomination, uint16_t> mapZerocoinSupply;
+    //std::vector<libzerocoin::CoinDenomination> vMintDenominationsInBlock;
 
     //! ATP specific fields
     //! Number of XDM transactions in this block.
