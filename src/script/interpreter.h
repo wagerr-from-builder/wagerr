@@ -119,6 +119,7 @@ struct PrecomputedTransactionData
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
+PrecomputedTransactionData(const CTransaction & txTo);
 };
 
 enum class SigVersion
