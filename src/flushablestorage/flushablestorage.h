@@ -5,7 +5,7 @@
 #ifndef FLUSHABLE_STORAGE_H
 #define FLUSHABLE_STORAGE_H
 
-#include <util.h>
+#include <util/system.h>
 #include <memory>
 #include "dbwrapper.h"
 #include <boost/optional.hpp>
