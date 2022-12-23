@@ -409,7 +409,7 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_QUORUM_COMMITMENT &&
                 tx.nType != TRANSACTION_GROUP_CREATION_REGULAR &&
                 tx.nType != TRANSACTION_GROUP_CREATION_MGT &&
-                tx.nType != TRANSACTION_GROUP_CREATION_NFT) {
+                tx.nType != TRANSACTION_GROUP_CREATION_NFT &&
                 tx.nType != TRANSACTION_MNHF_SIGNAL) {
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-type");
             }
