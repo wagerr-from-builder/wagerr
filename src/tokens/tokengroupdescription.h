@@ -258,7 +258,7 @@ inline std::string tgDescGetTicker(CTokenGroupDescriptionVariant& tgDesc) {
     return boost::apply_visitor(tgdesc_get_ticker(), tgDesc);
 }
 
-    // ADD_SERIALIZE_METHODS;
+    // //ADD_SERIALIZE_METHODS;
 
 class tgdesc_get_name : public boost::static_visitor<std::string>
 {

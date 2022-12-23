@@ -47,7 +47,7 @@ public:
     uint8_t version;
     uint8_t txType;
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     size_t GetSerializeSize(int nType, int nVersion) const {
         return 3;
@@ -80,7 +80,7 @@ public:
 
     BetTxTypes GetTxType() const override { return mappingTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -149,7 +149,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plEventTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -185,7 +185,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fEventTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -213,7 +213,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fUpdateOddsTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -234,7 +234,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fUpdateModifiersTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -254,7 +254,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fUpdateMarginTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -273,7 +273,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fZeroingOddsTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -294,7 +294,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fResultTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -321,7 +321,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -341,7 +341,7 @@ public:
 
     BetTxTypes GetTxType() const override { return fParlayBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -361,7 +361,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -384,7 +384,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plResultTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -408,7 +408,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plUpdateOddsTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -432,7 +432,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plSpreadsEventTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -458,7 +458,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plTotalsEventTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -480,7 +480,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plEventPatchTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -499,7 +499,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plParlayBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -522,7 +522,7 @@ public:
 
     BetTxTypes GetTxType() const override { return cgEventTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -542,7 +542,7 @@ public:
 
     BetTxTypes GetTxType() const override { return cgBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -562,7 +562,7 @@ public:
 
     BetTxTypes GetTxType() const override { return cgResultTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -587,7 +587,7 @@ public:
 
     BetTxTypes GetTxType() const override { return qgBetTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -606,7 +606,7 @@ public:
 
     BetTxTypes GetTxType() const override { return plEventZeroingOddsTxType; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {

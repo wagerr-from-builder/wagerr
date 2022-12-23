@@ -29,7 +29,7 @@ typedef struct MappingKey {
     MappingKey() {}
     MappingKey(MappingType type, uint32_t id) : nMType(type), nId(id) {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -61,7 +61,7 @@ public:
     static std::string ToTypeName(MappingType type);
     static MappingType FromTypeName(const std::string& name);
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -77,7 +77,7 @@ typedef struct EventKey {
     explicit EventKey(const EventKey& key) : eventId(key.eventId) { }
     explicit EventKey(EventKey&& key) : eventId(key.eventId) { }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -156,7 +156,7 @@ public:
         nStartTime = eventPatchTx.nStartTime;
     }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -210,7 +210,7 @@ public:
     // Default Constructor.
     explicit CPeerlessExtendedEventDB() : CPeerlessBaseEventDB() {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -274,7 +274,7 @@ public:
     explicit CPeerlessResultDB(uint32_t eventId, uint32_t resultType, uint32_t homeScore, uint32_t awayScore) :
         nEventId(eventId), nResultType(resultType), nHomeScore(homeScore), nAwayScore(awayScore) {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -321,7 +321,7 @@ typedef struct ContenderInfo {
         , nModifier(modifier)
     {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -372,7 +372,7 @@ public:
     std::string ToString();
     std::string ContendersToString();
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -429,7 +429,7 @@ public:
         , contendersResults(mContendersResults)
     {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -453,7 +453,7 @@ typedef struct PeerlessBetKey {
         return blockHeight == rhs.blockHeight && outPoint == rhs.outPoint;
     }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -480,7 +480,7 @@ public:
     explicit CPeerlessLegDB() {}
     explicit CPeerlessLegDB(uint32_t eventId, OutcomeType outcome) : nEventId(eventId), nOutcome(outcome) {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -533,7 +533,7 @@ public:
     // for undo
     void SetUncompleted() { completed = false; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -586,7 +586,7 @@ public:
         , nContenderId(contenderId)
     {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -637,7 +637,7 @@ public:
     // for undo
     void SetUncompleted() { completed = false; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -686,7 +686,7 @@ public:
     explicit CChainGamesEventDB() {}
     explicit CChainGamesEventDB(uint32_t eventId, uint32_t entryFee) : nEventId(eventId), nEntryFee(entryFee) {}
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -714,7 +714,7 @@ public:
     explicit CChainGamesBetDB(uint32_t eventId, CAmount amount, CTxDestination address, int64_t time) :
         nEventId(eventId), betAmount(amount), playerAddress(address), betTime(time) { }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -754,7 +754,7 @@ public:
 
     explicit CChainGamesResultDB(uint16_t nEventId) : nEventId(nEventId) {};
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -791,7 +791,7 @@ public:
     // for undo
     void SetUncompleted() { completed = false; }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -863,7 +863,7 @@ public:
         return undoVariant;
     }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
@@ -933,7 +933,7 @@ public:
     explicit CPayoutInfoDB(PeerlessBetKey &betKey, PayoutType payoutType) : betKey{betKey}, payoutType{payoutType} { }
     explicit CPayoutInfoDB(const CPayoutInfoDB& payoutInfo) : betKey{payoutInfo.betKey}, payoutType{payoutInfo.payoutType} { }
 
-    ADD_SERIALIZE_METHODS;
+    //ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp (Stream& s, Operation ser_action) {
