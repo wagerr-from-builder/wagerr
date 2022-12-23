@@ -125,7 +125,6 @@ struct Params {
     int nBlockStakeModifierV1A;
     int nBlockStakeModifierV2;
     int nBlockTimeProtocolV2;
-    int ATPStartHeight;
 
     /** Proof of stake parameters */
     uint256 posLimit;

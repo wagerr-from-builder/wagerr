@@ -22,7 +22,7 @@ unknown files available to cause side-effects.
 
 ### Each package is cached and only rebuilt as needed.
 
-Before building, a unique build-id is generated for each package. This id
+Before building, a unique build-id is generated for each package. This i
 consists of a hash of all files used to build the package (Makefiles, packages,
 etc), and as well as a hash of the same data for each recursive dependency. If
 any portion of a package's build recipe changes, it will be rebuilt as well as
