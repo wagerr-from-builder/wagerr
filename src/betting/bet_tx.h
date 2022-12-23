@@ -5,7 +5,7 @@
 #ifndef WAGERR_BET_TX_H
 #define WAGERR_BET_TX_H
 
-#include <util.h>
+#include <util/system.h>
 #include <serialize.h>
 
 class CTxOut;
