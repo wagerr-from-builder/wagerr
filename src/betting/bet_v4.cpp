@@ -7,7 +7,7 @@
 #include <betting/bet_db.h>
 #include <betting/oracles.h>
 #include <validation.h>
-#include <util.h>
+#include <util/system.h>
 #include <base58.h>
 
 void GetFieldBetPayoutsV4(CBettingsView &bettingsViewCache, const int nNewBlockHeight, std::vector<CBetOut>& vExpectedPayouts, std::vector<CPayoutInfoDB>& vPayoutsInfo)

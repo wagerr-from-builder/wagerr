@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dstencode.h>
-#include <util.h>
+#include <util/system.h>
 #include <betting/bet_tx.h>
 #include <betting/bet_db.h>
 #include <betting/bet_common.h>

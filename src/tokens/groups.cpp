@@ -10,7 +10,7 @@
 #include <wagerraddrenc.h>
 #include <tokens/groups.h>
 #include <streams.h>
-#include <util.h>
+#include <util/system.h>
 
 CTokenGroupID NoGroup; // No group specified.
 

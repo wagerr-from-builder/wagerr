@@ -10,7 +10,7 @@
 #include <dstencode.h>
 #include <pos/kernel.h>
 #include <validation.h>
-#include <util.h>
+#include <util/system.h>
 #include <base58.h>
 
 void GetPLRewardPayoutsV3(const uint32_t nNewBlockHeight, const CAmount fee, std::vector<CBetOut>& vExpectedPayouts, std::vector<CPayoutInfoDB>& vPayoutsInfo)
