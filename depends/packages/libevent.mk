@@ -12,7 +12,7 @@ ifneq (,$(findstring android,$(host)))
   endef
 else
   define $(package)_preprocess_cmds
-    ./autogen.sh && patch -p1 < $($(package)_patch_dir)/0001-Configure-for-arm64-apple.patch
+    ./autogen.sh 
   endef
 endif
 
