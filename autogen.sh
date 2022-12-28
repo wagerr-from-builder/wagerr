@@ -18,8 +18,8 @@ autoreconf --install --force --warnings=all
 cd build-aux
 /bin/rm config.sub
 /bin/rm config.guess
-curl 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=4550d2f15b3a7ce2451c1f29500b9339430c877f' -o config.sub
-curl 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=4550d2f15b3a7ce2451c1f29500b9339430c877f' -o config.guess
+cp ../depends/config.sub .
+cp ../depends/config.guess .
 cd -
 cp build-aux/config.sub src/univalue/build-aux
 cp build-aux/config.guess src/univalue/build-aux
