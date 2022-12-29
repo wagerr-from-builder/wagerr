@@ -33,18 +33,12 @@ packages:
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
-#  - riscv64-linux-gnu
-- "binutils-riscv64-linux-gnu"
-- "g++-8-riscv64-linux-gnu"
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
 - "g++-8-arm-linux-gnueabihf"
 #  - i686-linux-gnu
 - "binutils-i686-linux-gnu"
 - "g++-8-i686-linux-gnu"
-#  - powerpc64le-linux-gnu
-- "binutils-powerpc64le-linux-gnu"
-- "g++-8-powerpc64le-linux-gnu"
 
 remotes:
 - "url": "https://github.com/wagerr/wagerr.git"
@@ -56,8 +50,8 @@ script: |
   WRAP_DIR=$HOME/wrapped
   #HOSTS="x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu"
   #HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu" # powerpc64le-linux-gnu riscv64-linux-gnu s390x-linux-gnu powerpc64-linux-gnu mipsel-linux-gnu mips-linux-gnu
-  #HOSTS="i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu powerpc64le-linux-gnu riscv64-linux-gnu"
-  HOSTS="riscv64-linux-gnu"
+  HOSTS="i686-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  #HOSTS="riscv64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --enable-crash-hooks"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
