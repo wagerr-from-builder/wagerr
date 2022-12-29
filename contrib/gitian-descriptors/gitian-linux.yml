@@ -25,10 +25,11 @@ packages:
 - "python3"
 - "libxkbcommon0"
 - "ccache"
-# Cross compilation HOSTS:
+# Cross compilation:
 # - system multilib
 - "g++-8-multilib"
 - "gcc-8-multilib"
+# Cross compilation HOSTS:
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
