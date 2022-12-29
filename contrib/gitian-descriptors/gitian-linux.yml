@@ -26,6 +26,9 @@ packages:
 - "libxkbcommon0"
 - "ccache"
 # Cross compilation HOSTS:
+# - system multilib
+- "gcc-multilib"
+- "g++-multilib"
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
