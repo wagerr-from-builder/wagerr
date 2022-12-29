@@ -121,14 +121,8 @@ script: |
             echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
             echo "# GCCVERSION=${GCCVERSION}" >> ${WRAP_DIR}/${i}-${prog}
             echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        for var in "\$@"
-        do
-          if [ "\$var" = "-m32" ]; then
             export C_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-linux-gnu"
             export CPLUS_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-linux-gnu"
-            break
-          fi
-        done
             echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
             echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
             echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
