@@ -63,14 +63,14 @@ def build():
         print('\nCompiling ' + args.version + ' Linux')
         subprocess.check_call(['bin/gbuild', '--fetch-tags',  '-j', args.jobs, '-m', args.memory, '--commit', 'wagerr='+args.commit, '--url', 'wagerr='+args.url, '../wagerr/contrib/gitian-descriptors/gitian-linux.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-linux', '--destination', '../gitian.sigs/', '../wagerr/contrib/gitian-descriptors/gitian-linux.yml'])
-        subprocess.check_call('mv build/out/wagerr-*.tar.gz build/out/src/wagerr-*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/wagerr*.tar.gz build/out/src/wagerr*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
 
     if args.windows:
         print('\nCompiling ' + args.version + ' Windows')
         subprocess.check_call(['bin/gbuild', '--fetch-tags',  '-j', args.jobs, '-m', args.memory, '--commit', 'wagerr='+args.commit, '--url', 'wagerr='+args.url, '../wagerr/contrib/gitian-descriptors/gitian-win.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win-unsigned', '--destination', '../gitian.sigs/', '../wagerr/contrib/gitian-descriptors/gitian-win.yml'])
-        subprocess.check_call('mv build/out/wagerr-*-win-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/wagerr-*.zip build/out/wagerr-*.exe build/out/src/wagerr-*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/wagerr*-win-unsigned.tar.gz inputs/', shell=True)
+        subprocess.check_call('mv build/out/wagerr*.zip build/out/wagerr*.exe build/out/src/wagerr*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
 
     if args.macos:
         print('\nCompiling ' + args.version + ' MacOS')
@@ -78,8 +78,8 @@ def build():
         subprocess.check_output(["echo '66c4d0756e3f5c6303643410c99821db8ec91b600f423b29788d1d7b9f35e2c1 inputs/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz' | sha256sum -c"], shell=True)
         subprocess.check_call(['bin/gbuild', '--fetch-tags',  '-j', args.jobs, '-m', args.memory, '--commit', 'wagerr='+args.commit, '--url', 'wagerr='+args.url, '../wagerr/contrib/gitian-descriptors/gitian-osx.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-osx-unsigned', '--destination', '../gitian.sigs/', '../wagerr/contrib/gitian-descriptors/gitian-osx.yml'])
-        subprocess.check_call('mv build/out/wagerr-*-osx-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/wagerr-*.tar.gz build/out/wagerr-*.dmg build/out/src/wagerr-*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/wagerr*-osx-unsigned.tar.gz inputs/', shell=True)
+        subprocess.check_call('mv build/out/wagerr*.tar.gz build/out/wagerr*.dmg build/out/src/wagerr*.tar.gz ../wagerr-binaries/'+args.version, shell=True)
 
     os.chdir(workdir)
 
