@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2021 The Wagerr Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2014-2021 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -141,8 +142,8 @@ void AskPassphraseDialog::accept()
                 if (m_passphrase_out) {
                     m_passphrase_out->assign(newpass1);
                     QMessageBox::warning(this, tr("Wallet to be encrypted"),
-                                         "<qt>" +
-                                         tr("Your wallet is about to be encrypted. ") + encryption_reminder +
+                                         "<qt>"
+                                         tr("Your wallet is about to be encrypted. ") + encryption_reminder
                                          "</b></qt>");
                 } else {
                     assert(model != nullptr);
@@ -150,23 +151,23 @@ void AskPassphraseDialog::accept()
                     {
                         if (model->wallet().hdEnabled()) {
                             QMessageBox::warning(this, tr("Wallet encrypted"),
-                                            "<qt>" +
-                                            tr("Your wallet is now encrypted. ") + encryption_reminder +
-                                             "<br><br><b>" +
+                                            "<qt>"
+                                            tr("Your wallet is now encrypted. ") + encryption_reminder
+                                             "<br><br><b>"
                                             tr("IMPORTANT: Any previous backups you have made of your wallet file "
                                             "should be replaced with the newly generated, encrypted wallet file. "
                                             "Previous backups of the unencrypted wallet file contain the same HD seed and "
-                                            "still have full access to all your funds just like the new, encrypted wallet.") +
+                                            "still have full access to all your funds just like the new, encrypted wallet.")
                                             "</b></qt>");
                         } else {
                             QMessageBox::warning(this, tr("Wallet encrypted"),
-                                            "<qt>" +
-                                            tr("Your wallet is now encrypted. ") + encryption_reminder +
-                                             "<br><br><b>" +
+                                            "<qt>"
+                                            tr("Your wallet is now encrypted. ") + encryption_reminder
+                                             "<br><br><b>"
                                             tr("IMPORTANT: Any previous backups you have made of your wallet file "
                                             "should be replaced with the newly generated, encrypted wallet file. "
                                             "For security reasons, previous backups of the unencrypted wallet file "
-                                            "will become useless as soon as you start using the new, encrypted wallet.") +
+                                            "will become useless as soon as you start using the new, encrypted wallet.")
                                             "</b></qt>");
                         }
                     }

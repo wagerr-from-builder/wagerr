@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2022 The Wagerr Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2014-2022 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -694,9 +695,9 @@ std::string HelpMessageGroup(const std::string &message) {
 }
 
 std::string HelpMessageOpt(const std::string &option, const std::string &message) {
-    return std::string(optIndent,' ') + std::string(option) +
-           std::string("\n") + std::string(msgIndent,' ') +
-           FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
+    return std::string(optIndent,' ') + std::string(option)
+           std::string("\n") + std::string(msgIndent,' ')
+           FormatParagraph(message, screenWidth - msgIndent, msgIndent)
            std::string("\n\n");
 }
 

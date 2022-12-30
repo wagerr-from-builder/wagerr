@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2022 The Wagerr Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2014-2022 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1722,7 +1723,7 @@ void BitcoinGUI::showIncomingTransactions()
     } else {
         for (auto& itx : txs) {
             // On new transaction, make an info balloon
-            QString msg = tr("Date: %1\n").arg(itx.date) +
+            QString msg = tr("Date: %1\n").arg(itx.date)
                           tr("Amount: %1\n").arg(BitcoinUnits::formatWithUnit(itx.unit, itx.amount, true));
             if (m_node.walletClient().getWallets().size() > 1 && !itx.walletName.isEmpty()) {
                 msg += tr("Wallet: %1\n").arg(itx.walletName);

@@ -27,10 +27,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The Wagerr Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The Wagerr developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "Wagerr Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "Wagerr"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2022

@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2022 The Wagerr Core developers
+// Copyright (c) 2018-2022 The Dash Core developers
+// Copyright (c) 2014-2022 The Wagerr developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -146,8 +147,8 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     }
     requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Wagerr block chain.").arg(PACKAGE_NAME) + " " +
-        storageRequiresMsg.arg(requiredSpace) + " " +
+        tr("%1 will download and store a copy of the Wagerr block chain.").arg(PACKAGE_NAME) + " "
+        storageRequiresMsg.arg(requiredSpace) + " "
         tr("The wallet will also be stored in this directory.")
     );
     this->adjustSize();
