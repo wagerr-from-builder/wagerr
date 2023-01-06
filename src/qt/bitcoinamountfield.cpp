@@ -181,7 +181,7 @@ Q_SIGNALS:
     void valueChanged();
 };
 
-#include <qt/wagerramountfield.moc>
+#include <qt/bitcoinamountfield.moc>
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QWidget(parent),
