@@ -206,7 +206,7 @@ RES_ICONS = \
 BITCOIN_QT_BASE_CPP = \
   qt/appearancewidget.cpp \
   qt/bantablemodel.cpp \
-  qt/bitcoin.cpp \
+  qt/wagerr.cpp \
   qt/bitcoinaddressvalidator.cpp \
   qt/bitcoinamountfield.cpp \
   qt/bitcoingui.cpp \
