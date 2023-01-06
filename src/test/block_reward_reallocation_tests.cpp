@@ -31,7 +31,7 @@
 
 using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
-const auto deployment_id = Consensus::DEPLOYMENT_REALLOC;
+const auto deployment_id = Consensus::DEPLOYMENT_DIP0024;
 const int window{500}, th_start{400}, th_end{300};
 
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
