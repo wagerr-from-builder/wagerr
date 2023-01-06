@@ -887,7 +887,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # wagerrd binary #
-wagerrd_SOURCES = bitcoind.cpp
+wagerrd_SOURCES = wagerrd.cpp
 wagerrd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 wagerrd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 wagerrd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
@@ -935,7 +935,7 @@ wagerr_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(G
 #
 
 # wagerr-tx binary #
-wagerr_tx_SOURCES = bitcoin-tx.cpp
+wagerr_tx_SOURCES = wagerr-tx.cpp
 wagerr_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 wagerr_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 wagerr_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
@@ -957,7 +957,7 @@ wagerr_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # wagerr-wallet binary #
-wagerr_wallet_SOURCES = bitcoin-wallet.cpp
+wagerr_wallet_SOURCES = wagerr-wallet.cpp
 wagerr_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 wagerr_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 wagerr_wallet_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
