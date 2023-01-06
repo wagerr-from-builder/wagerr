@@ -957,7 +957,7 @@ wagerr_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BLS_LIBS) $(GMP_LIBS)
 #
 
 # wagerr-wallet binary #
-wagerr_wallet_SOURCES = wagerr-wallet.cpp
+wagerr_wallet_SOURCES = bitcoin-wallet.cpp
 wagerr_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 wagerr_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 wagerr_wallet_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
