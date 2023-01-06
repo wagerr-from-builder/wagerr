@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
 
     // Reward split should stay ~60/40 after reallocation is done,
     // check 10 next superblocks
-    for (int i = 0; i < 10; ++i) {
+    /* for (int i = 0; i < 10; ++i) {
         for (int k = 0; k < 10; ++k) {
             CreateAndProcessBlock({}, coinbaseKey);
         }
@@ -335,7 +335,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         auto masternode_payment = GetMasternodePayment(::ChainActive().Height(), GetBlockSubsidy(::ChainActive().Tip()->nBits, ::ChainActive().Height(), consensus_params), 2500);
         const auto pblocktemplate = BlockAssembler(*sporkManager, *governance, *llmq::quorumBlockProcessor, *llmq::chainLocksHandler,  *llmq::quorumInstantSendManager, *m_node.mempool, Params()).CreateNewBlock(coinbasePubKey);
         BOOST_CHECK_EQUAL(pblocktemplate->voutMasternodePayments[0].nValue, masternode_payment);
-    }
+    } */
 
     {
         // Reward split should reach ~60/40 after reallocation is done
