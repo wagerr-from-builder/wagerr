@@ -247,8 +247,8 @@ inline uint160 Hash160(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1] = {};
     uint160 result;
-    CHash160().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0]))
-              .Finalize((unsigned char*)&result);
+    CHash160().Write({pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])})
+              .Finalize(result);
     return result;
 }
 
