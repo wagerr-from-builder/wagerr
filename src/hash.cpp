@@ -71,10 +71,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64])
 {
     unsigned char num[4];
-    num[0] = (nChild >> 24) & 0xFF;
-    num[1] = (nChild >> 16) & 0xFF;
-    num[2] = (nChild >>  8) & 0xFF;
-    num[3] = (nChild >>  0) & 0xFF;
+    WriteBE32(num, nChild);
     CHMAC_SHA512(chainCode.begin(), chainCode.size()).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
 }
 
@@ -89,83 +86,9 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
     v2 = ROTL(v2, 32); \
 } while (0)
 
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val)
+uint256 SHA256Uint256(const uint256& input)
 {
-    /* Specialized implementation for efficiency */
-    uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
-
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(1);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(2);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(3);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    v3 ^= ((uint64_t)4) << 59;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= ((uint64_t)4) << 59;
-    v2 ^= 0xFF;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    return v0 ^ v1 ^ v2 ^ v3;
-}
-
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra)
-{
-    /* Specialized implementation for efficiency */
-    uint64_t d = val.GetUint64(0);
-
-    uint64_t v0 = 0x736f6d6570736575ULL ^ k0;
-    uint64_t v1 = 0x646f72616e646f6dULL ^ k1;
-    uint64_t v2 = 0x6c7967656e657261ULL ^ k0;
-    uint64_t v3 = 0x7465646279746573ULL ^ k1 ^ d;
-
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(1);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(2);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = val.GetUint64(3);
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    d = (((uint64_t)36) << 56) | extra;
-    v3 ^= d;
-    SIPROUND;
-    SIPROUND;
-    v0 ^= d;
-    v2 ^= 0xFF;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    SIPROUND;
-    return v0 ^ v1 ^ v2 ^ v3;
+    uint256 result;
+    CSHA256().Write(input.begin(), 32).Finalize(result.begin());
+    return result;
 }
