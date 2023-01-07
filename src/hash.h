@@ -30,7 +30,6 @@
 #include <crypto/sha512.h>
 
 #include <iomanip>
-#include <openssl/sha.h>
 #include <sstream>
 #include <vector>
 
@@ -379,8 +378,6 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
  *      .Write(val.GetUint64(3))
  *      .Finalize()
  */
-uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
-uint64_t SipHashUint256Extra(uint64_t k0, uint64_t k1, const uint256& val, uint32_t extra);
 
 /* ----------- X11 Hash ------------------------------------------------ */
 template<typename T1>
