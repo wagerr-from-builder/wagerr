@@ -320,6 +320,8 @@ public:
     }
 };
 
+/** Reads data from an underlying stream, while hashing the read data. */
+template<typename Source>
 class CHashVerifier : public CHashWriter
 {
 private:
