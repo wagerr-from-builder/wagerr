@@ -596,11 +596,11 @@ int GuiMain(int argc, char* argv[])
     app.parameterSetup();
     GUIUtil::LogQtInfo();
     // Load custom application fonts and setup font management
-    /* if (!GUIUtil::loadFonts()) {
+    if (!GUIUtil::loadFonts()) {
         QMessageBox::critical(0, PACKAGE_NAME,
                               QObject::tr("Error: Failed to load application fonts."));
         return EXIT_FAILURE;
-    } */
+    }
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
     // Validate/set font family
