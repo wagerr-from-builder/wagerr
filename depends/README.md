@@ -12,19 +12,16 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-**Wagerr Core's `configure` script by default will ignore the depends output.** In
-order for it to pick up libraries, tools, and settings from the depends build,
-you must set the `CONFIG_SITE` environment variable to point to a `config.site` settings file.
-In the above example, a file named `depends/x86_64-w64-mingw32/share/config.site` will be
-created. To use it during compilation:
+A prefix will be generated that's suitable for plugging into Dash's
+configure. In the above example, a dir named x86_64-w64-mingw32 will be
+created. To use it for Dash:
 
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure
+    ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
 
 Common `host-platform-triplets` for cross compilation are:
 
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin16` for macOS
-- `arm64-apple-darwin16` for macOS
+- `x86_64-apple-darwin19` for macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `riscv32-linux-gnu` for Linux RISC-V 32 bit
@@ -69,7 +66,7 @@ For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
-RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_wagerr` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
+RISC-V known issue: gcc-7.3.0 and gcc-7.3.1 result in a broken `test_dash` executable (see https://github.com/bitcoin/bitcoin/pull/13543),
 this is apparently fixed in gcc-8.1.0.
 
 ### Dependency Options
@@ -108,7 +105,7 @@ system's <code>$PATH</code> rather than the default prebuilt release of Clang
 from llvm.org. Clang 8 or later is required.</dd>
 </dl>
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to Wagerr Core's configure. In this case, `--disable-wallet`.
+options will be passed to Dash Core's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 
