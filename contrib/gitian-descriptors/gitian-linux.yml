@@ -25,13 +25,16 @@ packages:
 - "python3"
 - "libxkbcommon0"
 - "ccache"
+- "g++-8-multilib"
+- "gcc-8-multilib"
+- "binutils-gold"
 # Cross compilation HOSTS:
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
-#  - riscv64-linux-gnu
-- "binutils-riscv64-linux-gnu"
-- "g++-8-riscv64-linux-gnu"
+#  - arm-linux-gnueabihf
+- "binutils-arm-linux-gnueabihf"
+- "g++-8-arm-linux-gnueabihf"
 remotes:
 - "url": "https://github.com/wagerr/wagerr.git"
   "dir": "wagerr"
@@ -40,7 +43,7 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu"
+  HOSTS="arm-linux-gnueabihf x86_64-linux-gnu aarch64-linux-gnu" # powerpc64le-linux-gnu s390x-linux-gnu powerpc64-linux-gnu mipsel-linux-gnu mips-linux-gnu riscv64-linux-gnu i686-linux-gnu
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --enable-crash-hooks"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
@@ -167,7 +170,6 @@ script: |
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
     find ${DISTNAME}/bin -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
-    find ${DISTNAME}/lib -type f -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
     cp ../README.md ${DISTNAME}/
     find ${DISTNAME} -not -name "*.dbg" | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     find ${DISTNAME} -name "*.dbg" | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}-debug.tar.gz
