@@ -1242,7 +1242,7 @@ bool loadFonts()
 
     QString family = fontFamilyToString(FontFamily::Montserrat);
     QMessageBox::critical(0, PACKAGE_NAME,
-                        QObject::tr("Error: Invalid -custom-css-dir path.") + "\n\n" + getFontFamily);
+                        QObject::tr("Error: Invalid -custom-css-dir path.") + "\n\n" + family);
     QString italic = "Italic";
 
     std::map<QString, bool> mapStyles{
