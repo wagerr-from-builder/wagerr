@@ -1241,7 +1241,8 @@ bool loadFonts()
     osDefaultFont = std::make_unique<QFont>(QApplication::font());
 
     QString family = fontFamilyToString(FontFamily::Montserrat);
-    auto char[] FontFamily = family;
+    QMessageBox::critical(0, PACKAGE_NAME,
+        QObject::tr("Error: Specified font-family invalid. Valid values: %1.").arg(fontFamilyFromString));
     QString italic = "Italic";
 
     std::map<QString, bool> mapStyles{
