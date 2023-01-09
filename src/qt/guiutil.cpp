@@ -1241,7 +1241,7 @@ bool loadFonts()
     osDefaultFont = std::make_unique<QFont>(QApplication::font());
 
     QString family = fontFamilyToString(FontFamily::Montserrat);
-    char[] FontFamily = family;
+    auto char[] FontFamily = family;
     QString italic = "Italic";
 
     std::map<QString, bool> mapStyles{
