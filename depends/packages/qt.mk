@@ -32,7 +32,11 @@ $(package)_config_opts_release += -silent
 $(package)_config_opts_debug = -debug
 $(package)_config_opts_debug += -optimized-tools
 $(package)_config_opts += -bindir $(build_prefix)/bin
+ifneq ($(build_os),i686)
+$(package)_config_opts += -c++std c++11
+else
 $(package)_config_opts += -c++std c++1z
+endif
 $(package)_config_opts += -confirm-license
 $(package)_config_opts += -hostprefix $(build_prefix)
 $(package)_config_opts += -no-compile-examples
