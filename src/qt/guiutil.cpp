@@ -26,6 +26,10 @@
 #include <ui_interface.h>
 #include <util/system.h>
 
+// For debugging
+#include <iostream>
+#include <string>
+
 #ifdef WIN32
 #ifdef _WIN32_IE
 #undef _WIN32_IE
@@ -1237,6 +1241,7 @@ bool loadFonts()
     osDefaultFont = std::make_unique<QFont>(QApplication::font());
 
     QString family = fontFamilyToString(FontFamily::Montserrat);
+    string FontFamily = family;
     QString italic = "Italic";
 
     std::map<QString, bool> mapStyles{
