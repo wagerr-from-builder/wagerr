@@ -14,27 +14,27 @@ $(package)_relic_file_name=relic-$($(package)_relic_download_file)
 $(package)_relic_build_subdir=relic
 $(package)_relic_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
 
-$(package)_sodium_version=f73a3fe1afdc4e37ac5fe0ddd401bf521f6bba65
-$(package)_sodium_download_path=https://github.com/AmineKhaldi/libsodium-cmake.git/
-$(package)_sodium_download_file=$($(package)_sodium_version).tar.gz
-$(package)_sodium_file_name=sodium-$($(package)_sodium_download_file)
-$(package)_sodium_build_subdir=sodium-populate
-$(package)_sodium_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
+$(package)_libsodium_version=1.0.18
+$(package)_libsodium_download_path=https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz
+$(package)_libsodium_download_file=$($(package)_libsodium_version).tar.gz
+$(package)_libsodium_file_name=libsodium-$($(package)_libsodium_download_file)
+$(package)_libsodium_build_subdir=sodium-populate
+$(package)_libsodium_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
 
 $(package)_extra_sources=$($(package)_relic_file_name)
-$(package)_extra_sources+=$($(package)_sodium_file_name)
+$(package)_extra_sources+=$($(package)_libsodium_file_name)
 
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
 $(call fetch_file,$(package),$($(package)_relic_download_path),$($(package)_relic_download_file),$($(package)_relic_file_name),$($(package)_relic_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_sodium_download_path),$($(package)_sodium_download_file),$($(package)_sodium_file_name),$($(package)_sodium_sha256_hash))
+$(call fetch_file,$(package),$($(package)_libsodium_download_path),$($(package)_libsodium_download_file),$($(package)_libsodium_file_name),$($(package)_libsodium_sha256_hash))
 endef
 
 define $(package)_extract_cmds
   mkdir -p $($(package)_extract_dir) && \
   echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_relic_sha256_hash)  $($(package)_source_dir)/$($(package)_relic_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  echo "$($(package)_sodium_sha256_hash)  $($(package)_source_dir)/$($(package)_sodium_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$($(package)_libsodium_sha256_hash)  $($(package)_source_dir)/$($(package)_libsodium_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   tar --strip-components=1 -xf $($(package)_source) -C . && \
   cp $($(package)_source_dir)/$($(package)_relic_file_name) .
