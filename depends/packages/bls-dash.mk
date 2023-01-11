@@ -14,7 +14,7 @@ $(package)_relic_file_name=relic-$($(package)_relic_download_file)
 $(package)_relic_build_subdir=relic
 $(package)_relic_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
 
-$(package)_sodium_version=aecdcae7956f542fbee2392c1f0feb0a8ac41dc5
+$(package)_sodium_version=f73a3fe1afdc4e37ac5fe0ddd401bf521f6bba65
 $(package)_sodium_download_path=https://github.com/AmineKhaldi/libsodium-cmake.git/
 $(package)_sodium_download_file=$($(package)_sodium_version).tar.gz
 $(package)_sodium_file_name=sodium-$($(package)_sodium_download_file)
@@ -22,7 +22,7 @@ $(package)_sodium_build_subdir=sodium-populate
 $(package)_sodium_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
 
 $(package)_extra_sources=$($(package)_relic_file_name)
-$(package)_extra_sources=$($(package)_sodium_file_name)
+$(package)_extra_sources+=$($(package)_sodium_file_name)
 
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
