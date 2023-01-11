@@ -16,7 +16,7 @@ $(package)_relic_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550
 
 $(package)_libsodium_version=1.0.18
 $(package)_libsodium_download_path=https://download.libsodium.org/libsodium/releases
-$(package)_libsodium_download_file=$($(package)_libsodium_version).tar.gz
+$(package)_libsodium_download_file=$($(package)_libsodium-libsodium_version).tar.gz
 $(package)_libsodium_file_name=libsodium-$($(package)_libsodium_download_file)
 $(package)_libsodium_build_subdir=sodium-populate
 $(package)_libsodium_sha256_hash=f2de6ebdc9def7077f56c83c8b06f4da5bacc36b709514bd550a92a149e9fa1d
